@@ -1,44 +1,28 @@
 #!/bin/bash
+# Syntalix-Orion - Script de Redespliegue unificado con Ansible
 set -e
 
-# Remove existing stacks
-echo "Removing Portainer and Traefik stacks..."
-docker stack rm portainer || true
-docker stack rm traefik || true
+# Configuración de Colores
+VERDE="\e[32m"
+AZUL="\e[34m"
+RESET="\e[0m"
 
-echo "Waiting for removal (15s)..."
-for i in {15..1}; do echo -n "$i " && sleep 1; done
-echo ""
+log() { echo -e "${AZUL}[REDEPLOY]${RESET} $1"; }
+success() { echo -e "${VERDE}[OK]${RESET} $1"; }
 
-# Create missing volume if needed
-if ! docker volume ls -q | grep -q "^volume_swarm_shared$"; then
-    echo "Creating missing volume: volume_swarm_shared"
-    docker volume create volume_swarm_shared
+VENV_DIR="$(pwd)/.venv"
+ANSIBLE_CMD="$VENV_DIR/bin/ansible-playbook"
+
+if [ ! -f "$ANSIBLE_CMD" ]; then
+    log "Entorno virtual no encontrado. Ejecutando setup.sh primero..."
+    sudo ./setup.sh
+    exit 0
 fi
 
-# Ensure other volumes exist
-if ! docker volume ls -q | grep -q "^portainer_data$"; then
-    echo "Creating missing volume: portainer_data"
-    docker volume create portainer_data
-fi
+log "Iniciando redespliegue de infraestructura y aplicaciones..."
 
-if ! docker volume ls -q | grep -q "^volume_swarm_certificates$"; then
-    echo "Creating missing volume: volume_swarm_certificates"
-    docker volume create volume_swarm_certificates
-fi
+# Ejecutar el playbook centrándose en el desplegador de aplicaciones
+# Se pueden usar tags si se desea filtrar, pero aquí ejecutamos todo para asegurar consistencia
+$ANSIBLE_CMD -i inventory.ini playbook.yml --diff
 
-# Ensure network exists
-if ! docker network ls --format '{{.Name}}' | grep -q "^SyntalixNet$"; then
-    echo "Creating missing network: SyntalixNet"
-    docker network create --driver=overlay SyntalixNet
-fi
-
-# Deploy Traefik
-echo "Deploying Traefik..."
-docker stack deploy -c deploy/traefik_stack.yml traefik
-
-# Deploy Portainer
-echo "Deploying Portainer..."
-docker stack deploy -c deploy/portainer_stack.yml portainer
-
-echo "Done!"
+success "¡Redespliegue completado!"

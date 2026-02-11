@@ -21,9 +21,9 @@
 
 - name: "Establecer defaults detectados"
   ansible.builtin.set_fact:
-    default_dominio: "{{ existing_config.stdout_lines[0] | default(app_actual.nombre + '.localhost') }}"
-    default_pass: "{{ existing_config.stdout_lines[1] | default('admin123') }}"
-    default_admin: "{{ existing_config.stdout_lines[2] | default('admin@' + (existing_config.stdout_lines[0] if existing_config.stdout_lines[0] != '' else app_actual.nombre + '.localhost')) }}"
+    default_dominio: "{{ (existing_config.stdout_lines | length > 0) | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost') }}"
+    default_pass: "{{ (existing_config.stdout_lines | length > 1) | ternary(existing_config.stdout_lines[1], 'admin123') }}"
+    default_admin: "{{ (existing_config.stdout_lines | length > 2) | ternary(existing_config.stdout_lines[2], 'admin@' + ((existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != '') | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost'))) }}"
   when: env_file_check.stat.exists
 
 - name: "Establecer defaults base (si no hay .env)"

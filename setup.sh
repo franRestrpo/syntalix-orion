@@ -67,7 +67,8 @@ echo "-----------------------------------------------------"
 
 # Ejecutamos ansible-playbook usando el binario del entorno virtual
 # Esto asegura que use las librerías que acabamos de instalar
-$ANSIBLE_CMD -i inventory.ini "$PLAYBOOK"
+# Se usa --diff para ver cambios en plantillas y archivos .env
+$ANSIBLE_CMD -i inventory.ini "$PLAYBOOK" --diff
 
 if [ $? -eq 0 ]; then
     echo "-----------------------------------------------------"
