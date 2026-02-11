@@ -1,0 +1,15 @@
+---
+- name: Syntalix-Orion - Despliegue de Infraestructura Moderna
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: "Asegurar compatibilidad de Python"
+      ansible.builtin.raw: "test -e /usr/bin/python3 || (apt -y update && apt install -y python3)"
+      changed_when: false
+      failed_when: false
+
+  roles:
+    - common
+    - docker

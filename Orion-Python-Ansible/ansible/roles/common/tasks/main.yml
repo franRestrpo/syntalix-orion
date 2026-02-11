@@ -1,0 +1,49 @@
+---
+- name: Cargar variables específicas del SO
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_facts['os_family'] }}.yml"
+        - "default.yml"
+      skip: true
+
+- name: Buscar archivos de repositorio de Docker conflictivos
+  ansible.builtin.find:
+    paths: /etc/apt/sources.list.d/
+    patterns: "*docker*.list"
+  register: common_docker_repo_files
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Eliminar archivos de repositorio de Docker conflictivos
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ common_docker_repo_files.files | default([]) }}"
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Actualizar caché de APT e instalar paquetes base
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Asegurar que Python 3 y Venv estén instalados
+  ansible.builtin.package:
+    name: "{{ common_python_packages }}"
+    state: present
+
+- name: Obtener versión de Git
+  ansible.builtin.command: git --version  # noqa: command-instead-of-module
+  register: common_git_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Debug Git version output
+  ansible.builtin.debug:
+    var: common_git_version_output
+
+- name: Establecer fact para la versión de Git
+  ansible.builtin.set_fact:
+    common_installed_git_version: "{{ common_git_version_output.stdout }}"
+  when: common_git_version_output.rc is defined and common_git_version_output.rc == 0

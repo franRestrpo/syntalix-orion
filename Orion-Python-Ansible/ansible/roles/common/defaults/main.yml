@@ -1,0 +1,18 @@
+---
+# Paquetes base para cualquier sistema
+common_packages:
+  - git
+  - curl
+  - wget
+  - htop
+  - neofetch
+  - dialog
+  - apt-utils
+  - jq
+  - apache2-utils
+
+# Paquetes de Python esenciales
+common_python_packages:
+  - python3
+  - python3-pip
+  - python3-venv

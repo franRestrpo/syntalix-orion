@@ -1,0 +1,19 @@
+{
+  "name": "Portainer",
+  "category": "Infrastructure",
+  "description": "Container Management Interface",
+  "version": "latest",
+  "variables": {
+    "PORTAINER_DOMAIN": {
+      "type": "domain",
+      "description": "Domain for Portainer",
+      "required": true
+    },
+    "INTERNAL_NETWORK": {
+      "type": "string",
+      "description": "Internal Docker Network Name",
+      "default": "SyntalixNet"
+    }
+  },
+  "dependencies": ["traefik"]
+}

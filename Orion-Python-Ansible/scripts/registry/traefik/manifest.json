@@ -1,0 +1,35 @@
+{
+  "name": "Traefik",
+  "category": "Infrastructure",
+  "description": "The Cloud Native Application Proxy",
+  "version": "3.5.3",
+  "variables": {
+    "TRAEFIK_DASHBOARD_URL": {
+      "type": "domain",
+      "description": "Domain for Traefik Dashboard",
+      "required": true
+    },
+    "TRAEFIK_USER": {
+      "type": "string",
+      "description": "Traefik Dashboard Username",
+      "default": "admin"
+    },
+    "TRAEFIK_PASSWORD": {
+      "type": "secret",
+      "description": "Traefik Dashboard Password",
+      "auto_generate": false,
+      "transform": "bcrypt"
+    },
+    "ACME_EMAIL": {
+      "type": "email",
+      "description": "Email for Let's Encrypt certificates",
+      "required": true
+    },
+    "INTERNAL_NETWORK": {
+      "type": "string",
+      "description": "Internal Docker Network Name",
+      "default": "SyntalixNet"
+    }
+  },
+  "dependencies": []
+}

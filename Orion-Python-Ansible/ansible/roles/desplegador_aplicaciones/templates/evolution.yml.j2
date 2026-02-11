@@ -1,0 +1,55 @@
+version: "3.7"
+
+services:
+  {{ app_actual.nombre }}_api:
+    image: evoapicloud/evolution-api:latest
+    volumes:
+      - {{ app_actual.nombre }}_instances:/evolution/instances
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet') }}
+    env_file:
+      - ./{{ app_actual.nombre }}.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=1
+        - traefik.http.routers.{{ app_actual.nombre }}.rule=Host(`{{ app_actual.dominio }}`)
+        - traefik.http.routers.{{ app_actual.nombre }}.entrypoints=websecure
+        - traefik.http.routers.{{ app_actual.nombre }}.priority=1
+        - traefik.http.routers.{{ app_actual.nombre }}.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.{{ app_actual.nombre }}.service={{ app_actual.nombre }}
+        - traefik.http.services.{{ app_actual.nombre }}.loadbalancer.server.port=8080
+        - traefik.http.services.{{ app_actual.nombre }}.loadbalancer.passHostHeader=true
+
+  {{ app_actual.nombre }}_redis:
+    image: redis:latest
+    command: ["redis-server", "--appendonly", "yes", "--port", "6379"]
+    volumes:
+      - {{ app_actual.nombre }}_redis:/data
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet') }}
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+
+volumes:
+  {{ app_actual.nombre }}_instances:
+    external: true
+    name: {{ app_actual.nombre }}_instances
+  {{ app_actual.nombre }}_redis:
+    external: true
+    name: {{ app_actual.nombre }}_redis
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet') }}:
+    external: true
+    name: {{ app_actual.internal_network | default('SyntalixNet') }}

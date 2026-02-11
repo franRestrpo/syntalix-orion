@@ -1,0 +1,59 @@
+version: "3.7"
+services:
+
+## --------------------------- ORION --------------------------- ##
+
+  agent:
+    image: portainer/agent:latest ## Versão Agent do Portainer
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+
+    networks:
+      - {{ INTERNAL_NETWORK }} ## Nome da rede interna
+
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.platform.os == linux]
+
+## --------------------------- ORION --------------------------- ##
+
+  portainer:
+    image: portainer/portainer-ce:latest ## Versão do Portainer
+    command: -H tcp://tasks.agent:9001 --tlsskipverify
+
+    volumes:
+      - portainer_data:/data
+
+    networks:
+      - {{ INTERNAL_NETWORK }} ## Nome da rede interna
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.portainer.rule=Host(`{{ PORTAINER_DOMAIN }}`)" ## Dominio do Portainer
+        - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+        - "traefik.http.routers.portainer.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.portainer.service=portainer"
+        - "traefik.docker.network={{ INTERNAL_NETWORK }}" ## Nome da rede interna
+        - "traefik.http.routers.portainer.entrypoints=websecure"
+        - "traefik.http.routers.portainer.priority=1"
+
+## --------------------------- ORION --------------------------- ##
+
+volumes:
+  portainer_data:
+    external: true
+    name: portainer_data
+
+networks:
+  {{ INTERNAL_NETWORK }}: ## Nome da rede interna
+    external: true
+    attachable: true
+    name: {{ INTERNAL_NETWORK }} ## Nome da rede interna

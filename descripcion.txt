@@ -1,0 +1,22 @@
+El proyecto Syntalix-Orion automatiza la instalación y configuración de la plataforma Syntalix-Orion en un entorno Docker Swarm utilizando Ansible.
+
+**Arquitectura:**
+
+El sistema se gestiona a través de un script de Python (`Orion-Python-Ansible/scripts/main.py`) que actúa como un lanzador para los playbooks de Ansible. Toda la lógica de aprovisionamiento, configuración y despliegue está contenida dentro de la estructura de Ansible para asegurar la idempotencia y la modularidad.
+
+**Flujo de Ejecución:**
+
+1.  **`Orion-Python-Ansible/scripts/main.py`**: Es el punto de entrada. Pregunta al usuario qué servicios desea instalar.
+2.  **Playbooks de Ansible**: Orquestan una serie de roles en el siguiente orden:
+    *   `prechecks`: Verifica que el sistema operativo y la arquitectura sean compatibles.
+    *   `base`: Actualiza el sistema e instala paquetes base necesarios.
+    *   `docker`: Instala y configura Docker Engine.
+    *   `swarm`: Inicializa el modo Docker Swarm si no está activo y crea la red overlay para la comunicación interna de los servicios.
+    *   `desplegador_aplicaciones`: Despliega los stacks de aplicaciones solicitados.
+
+**Uso:**
+
+Para ejecutar el instalador, simplemente corra el script de Python y siga las instrucciones:
+```bash
+python3 Orion-Python-Ansible/scripts/main.py
+```

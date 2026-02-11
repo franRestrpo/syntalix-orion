@@ -1,0 +1,6 @@
+---
+# Fichero de configuración para ansible-lint
+
+# Un objeto YAML vacío para que el fichero sea válido.
+# Puedes añadir configuraciones aquí en el futuro.
+{}

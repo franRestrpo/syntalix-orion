@@ -1,0 +1,21 @@
+# Catálogo de Aplicaciones de Usuario
+aplicaciones_syntalix:
+  - nombre: chatwoot
+    habilitado: true
+    dependencias:
+      redis: interna
+      postgres: interna
+      traefik: interna
+
+  - nombre: n8n
+    habilitado: true
+    dependencias:
+      redis: interna
+      postgres: interna
+      traefik: interna
+
+  - nombre: evolution
+    habilitado: true
+    dependencias:
+      postgres: interna
+      traefik: interna

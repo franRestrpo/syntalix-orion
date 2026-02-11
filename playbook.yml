@@ -1,0 +1,35 @@
+---
+- name: Syntalix-Orion - Modern Infrastructure Setup
+  hosts: servers
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Verificar/Instalar Python3 en el destino (Raw)
+      ansible.builtin.raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3-minimal)
+      changed_when: false
+      failed_when: false
+
+  roles:
+    - { role: common, tags: ["common"] }
+    - { role: docker, tags: ["docker"] }
+    - {
+        role: desplegador_aplicaciones,
+        tags: ["desplegador_aplicaciones", "apps"],
+      }
+
+  post_tasks:
+    - name: "Informe Final: Resumen de Versiones"
+      ansible.builtin.debug:
+        msg:
+          - ""
+          - "======================================================="
+          - "  ✅ Despliegue de Infraestructura Completado ✅"
+          - "======================================================="
+          - ""
+          - "  - Git:            {{ common_installed_git_version | trim | default('No detectado') }}"
+          - "  - Docker:         {{ docker_installed_version | trim | default('No detectado') }}"
+          - "  - Docker Compose: {{ docker_installed_compose_version | trim | default('No detectado') }}"
+          - "  - Docker Swarm:   {{ docker_swarm_active_state | trim | default('Inactivo') }}"
+          - ""
+          - "======================================================="
