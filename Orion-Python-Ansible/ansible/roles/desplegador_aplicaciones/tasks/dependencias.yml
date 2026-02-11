@@ -1,0 +1,18 @@
+---
+# Gestión de dependencias (Redis, Postgres)
+
+- name: "Verificar dependencia Redis para {{ app_actual.nombre }}"
+  block:
+    - name: "Asegurar que existe volumen para Redis de {{ app_actual.nombre }}"
+      ansible.builtin.command: "docker volume create {{ app_actual.nombre }}_redis_data"
+
+    # Aquí podríamos desplegar un servicio de Redis dedicado si no existe
+    # Por simplicidad inicial, asumiremos que se inyecta en el stack de la app
+    # o se despliega un servicio global compartido.
+  when: app_actual.dependencias.redis is defined
+
+- name: "Verificar dependencia Postgres para {{ app_actual.nombre }}"
+  block:
+    - name: "Asegurar que existe volumen para Postgres de {{ app_actual.nombre }}"
+      ansible.builtin.command: "docker volume create {{ app_actual.nombre }}_pg_data"
+  when: app_actual.dependencias.postgres is defined

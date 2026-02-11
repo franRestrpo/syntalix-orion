@@ -1,0 +1,178 @@
+# Lógica de procesamiento para una aplicación individual
+
+- name: "Inicializar variable app_actual"
+  ansible.builtin.set_fact:
+    app_actual: "{{ app_item }}"
+
+- name: "Verificar si existe archivo .env previo"
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env"
+  register: env_file_check
+
+- name: "Detectar configuración existente (Dominio/Admin/Pass) si existe .env"
+  # Se ajustan las rutas para leer desde deploy/nombre.env
+  ansible.builtin.shell: |
+    grep -E "^(FRONTEND_URL|N8N_HOST|DOMAIN|URL)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 | sed 's/https:\/\///g' | sed 's/http:\/\///g' | sed 's/\///g' || echo ""
+    grep -E "^(POSTGRES_PASSWORD|DB_POSTGRESDB_PASSWORD|DB_PASSWORD)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 || echo ""
+    grep -E "^(MAILER_SENDER_EMAIL|N8N_SMTP_SENDER|ADMIN_EMAIL)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 || echo ""
+  register: existing_config
+  changed_when: false
+  when: env_file_check.stat.exists
+
+- name: "Establecer defaults detectados"
+  ansible.builtin.set_fact:
+    default_dominio: "{{ existing_config.stdout_lines[0] | default(app_actual.nombre + '.localhost') }}"
+    default_pass: "{{ existing_config.stdout_lines[1] | default('admin123') }}"
+    default_admin: "{{ existing_config.stdout_lines[2] | default('admin@' + (existing_config.stdout_lines[0] if existing_config.stdout_lines[0] != '' else app_actual.nombre + '.localhost')) }}"
+  when: env_file_check.stat.exists
+
+- name: "Establecer defaults base (si no hay .env)"
+  ansible.builtin.set_fact:
+    default_dominio: "{{ app_actual.nombre }}.localhost"
+    default_pass: "admin123"
+    default_admin: "admin@{{ app_actual.nombre }}.localhost"
+  when: not env_file_check.stat.exists
+
+- name: "Solicitar Dominio para {{ app_actual.nombre }}"
+  ansible.builtin.pause:
+    prompt: "Ingrese el dominio para {{ app_actual.nombre }} (Enter para usar {{ default_dominio }}):"
+  register: input_dominio
+  when: app_actual.dominio is not defined
+
+- name: "Establecer Dominio Final"
+  ansible.builtin.set_fact:
+    dominio_final: "{{ (input_dominio.user_input | default('') | length > 0) | ternary(input_dominio.user_input, default_dominio) }}"
+  when: app_actual.dominio is not defined
+
+- name: "Establecer Dominio desde Config"
+  ansible.builtin.set_fact:
+    dominio_final: "{{ app_actual.dominio }}"
+  when: app_actual.dominio is defined
+
+- name: "Solicitar Email Admin para {{ app_actual.nombre }}"
+  ansible.builtin.pause:
+    prompt: "Ingrese el email admin para {{ app_actual.nombre }} (Enter para usar {{ default_admin }}):"
+  register: input_admin
+  when: app_actual.usuario_admin is not defined
+
+- name: "Establecer Admin Final"
+  ansible.builtin.set_fact:
+    admin_final: "{{ (input_admin.user_input | default('') | length > 0) | ternary(input_admin.user_input, default_admin) }}"
+  when: app_actual.usuario_admin is not defined
+
+- name: "Establecer Admin desde Config"
+  ansible.builtin.set_fact:
+    admin_final: "{{ app_actual.usuario_admin }}"
+  when: app_actual.usuario_admin is defined
+
+- name: "Solicitar Password DB para {{ app_actual.nombre }}"
+  ansible.builtin.pause:
+    prompt: "Ingrese el password de DB para {{ app_actual.nombre }} (Enter para usar {{ default_pass }}):"
+    echo: no
+  register: input_pass_db
+  when: app_actual.password_db is not defined
+
+- name: "Establecer Password DB Final"
+  ansible.builtin.set_fact:
+    pass_db_final: "{{ (input_pass_db.user_input | default('') | length > 0) | ternary(input_pass_db.user_input, default_pass) }}"
+  when: app_actual.password_db is not defined
+
+- name: "Establecer Password DB desde Config"
+  ansible.builtin.set_fact:
+    pass_db_final: "{{ app_actual.password_db }}"
+  when: app_actual.password_db is defined
+
+- name: "Actualizar diccionario de aplicación con valores finales"
+  ansible.builtin.set_fact:
+    app_actual: "{{ app_actual | combine({
+      'dominio': dominio_final,
+      'usuario_admin': admin_final,
+      'password_db': pass_db_final
+    }) }}"
+
+- name: "Validar datos requeridos para {{ app_actual.nombre }}"
+  ansible.builtin.fail:
+    msg: "Falta el dominio para la aplicación {{ app_actual.nombre }}"
+  when: app_actual.dominio is not defined
+
+- name: "Verificar si el stack {{ app_actual.nombre }} ya existe"
+  ansible.builtin.command: docker stack ls --format '{{ "{{" }}.Name{{ "}}" }}'
+  register: stacks_existentes
+  changed_when: false
+
+- name: "Advertencia si {{ app_actual.nombre }} ya existe"
+  ansible.builtin.debug:
+    msg: "El stack {{ app_actual.nombre }} ya existe. Se actualizará la configuración."
+  when: app_actual.nombre in stacks_existentes.stdout_lines
+
+# Gestión de Dependencias (Redis, Postgres, etc.)
+- name: "Procesar dependencias para {{ app_actual.nombre }}"
+  include_tasks: dependencias.yml
+  when: app_actual.dependencias is defined
+
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Generar/Recuperar Clave de Encriptación para N8N"
+  ansible.builtin.set_fact:
+    clave_encriptacion_n8n: "{{ lookup('password', 'credenciales/' + app_actual.nombre + '_encryption_key chars=hex length=16') }}"
+  when: app_actual.nombre == 'n8n'
+
+- name: "Generar archivo .env para {{ app_actual.nombre }}"
+  ansible.builtin.template:
+    src: "{{ app_actual.nombre }}.env.j2"
+    dest: "{{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para {{ app_actual.nombre }}"
+  ansible.builtin.template:
+    src: "{{ app_actual.nombre }}.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/{{ app_actual.nombre }}_stack.yml"
+  register: config_stack
+
+- name: "Desplegar Stack {{ app_actual.nombre }}"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/{{ app_actual.nombre }}_stack.yml {{ app_actual.nombre }}"
+  when: config_stack.changed or config_env.changed or (app_actual.nombre not in stacks_existentes.stdout_lines)
+
+- name: "Esperar a que Postgres esté listo para {{ app_actual.nombre }}"
+  ansible.builtin.shell: "docker service logs {{ app_actual.nombre }}_postgres 2>&1 | grep 'ready to accept connections' | tail -n 1"
+  register: postgres_ready
+  until: postgres_ready.rc == 0
+  retries: 30
+  delay: 5
+  when: app_actual.nombre == 'chatwoot' and config_stack.changed
+
+- name: "Inicializar base de datos via Servicio (Swarm)"
+  block:
+    - name: "Eliminar servicio de migración anterior si existe"
+      ansible.builtin.shell: "docker service rm {{ app_actual.nombre }}_migrator || true"
+      ignore_errors: true
+
+    - name: "Crear servicio de migración para {{ app_actual.nombre }}"
+      ansible.builtin.command:
+        cmd: >
+          docker service create 
+          --name {{ app_actual.nombre }}_migrator
+          --network SyntalixNet
+          --restart-condition none
+          --env-file {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env
+          chatwoot/chatwoot:latest
+          bundle exec rails db:chatwoot_prepare
+
+    - name: "Esperar a que termine la migración"
+      ansible.builtin.shell: "docker service ps {{ app_actual.nombre }}_migrator --no-trunc --format '{{ '{{' }}.CurrentState{{ '}}' }}' | head -n 1"
+      register: migration_status
+      until: "migration_status.stdout is search('Complete|Shutdown')"
+      retries: 60
+      delay: 5
+      failed_when: "migration_status.stdout is search('Failed|Rejected')"
+
+    - name: "Limpiar servicio de migración"
+      ansible.builtin.command: "docker service rm {{ app_actual.nombre }}_migrator"
+
+  when: app_actual.nombre == 'chatwoot' and (config_stack.changed or config_env.changed)

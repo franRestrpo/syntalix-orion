@@ -1,0 +1,96 @@
+version: '3.7'
+
+services:
+  # Servicio Editor
+  editor:
+    image: n8nio/n8n:latest
+    command: start
+    env_file: {{ app_actual.nombre }}.env
+    volumes:
+      - {{ app_actual.nombre }}_data:/home/node/.n8n
+    networks:
+      - SyntalixNet
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.{{ app_actual.nombre }}_editor.rule=Host(`{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.{{ app_actual.nombre }}_editor.entrypoints=websecure"
+        - "traefik.http.routers.{{ app_actual.nombre }}_editor.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.{{ app_actual.nombre }}_editor.loadbalancer.server.port=5678"
+      placement:
+        constraints:
+          - node.role == manager
+
+  # Servicio Webhook
+  webhook:
+    image: n8nio/n8n:latest
+    command: webhook
+    env_file: {{ app_actual.nombre }}.env
+    volumes:
+      - {{ app_actual.nombre }}_data:/home/node/.n8n
+    networks:
+      - SyntalixNet
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.{{ app_actual.nombre }}_webhook.rule=Host(`webhook.{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.{{ app_actual.nombre }}_webhook.entrypoints=websecure"
+        - "traefik.http.routers.{{ app_actual.nombre }}_webhook.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.{{ app_actual.nombre }}_webhook.loadbalancer.server.port=5678"
+      placement:
+        constraints:
+          - node.role == manager
+
+  # Servicio Worker
+  worker:
+    image: n8nio/n8n:latest
+    command: worker --concurrency=10
+    env_file: {{ app_actual.nombre }}.env
+    volumes:
+      - {{ app_actual.nombre }}_data:/home/node/.n8n
+    networks:
+      - SyntalixNet
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+{% if app_actual.dependencias.postgres is defined %}
+  postgres:
+    image: postgres:15
+    volumes:
+      - {{ app_actual.nombre }}_pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB={{ app_actual.nombre }}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD={{ app_actual.password_db | default('secretDBpass') }}
+    networks:
+      - SyntalixNet
+{% endif %}
+
+{% if app_actual.dependencias.redis is defined %}
+  redis:
+    image: redis:6.2-alpine
+    volumes:
+      - {{ app_actual.nombre }}_redis_data:/data
+    networks:
+      - SyntalixNet
+{% endif %}
+
+volumes:
+  {{ app_actual.nombre }}_data: {}
+{% if app_actual.dependencias.postgres is defined %}
+  {{ app_actual.nombre }}_pg_data:
+    external: true
+{% endif %}
+{% if app_actual.dependencias.redis is defined %}
+  {{ app_actual.nombre }}_redis_data:
+    external: true
+{% endif %}
+
+networks:
+  SyntalixNet:
+    external: true

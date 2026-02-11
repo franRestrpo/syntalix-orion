@@ -1,0 +1,18 @@
+---
+# Archivo principal de tareas para desplegador_aplicaciones
+
+- name: Verificar aplicaciones configuradas
+  ansible.builtin.debug:
+    msg: "Iniciando despliegue de aplicaciones..."
+
+- name: Cargar variables de aplicaciones
+  ansible.builtin.include_vars:
+    file: aplicaciones.yml
+  failed_when: false
+
+- name: "Iterar sobre cada aplicación definida"
+  include_tasks: procesar_aplicacion.yml
+  loop: "{{ aplicaciones_syntalix }}"
+  loop_control:
+    loop_var: app_item
+  when: app_item.habilitado | default(false)

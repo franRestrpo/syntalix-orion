@@ -1,0 +1,52 @@
+---
+- name: Incluir tareas de instalación de Docker para el SO correspondiente
+  ansible.builtin.include_tasks: "install_{{ ansible_facts['os_family'] | lower }}.yml"
+  when: ansible_facts['os_family'] in ['Debian', 'RedHat']
+
+- name: Verificar la instalación de Docker
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+  failed_when: docker_version.rc != 0
+
+- name: Almacenar versión de Docker como fact
+  ansible.builtin.set_fact:
+    docker_installed_version: "{{ docker_version.stdout }}"
+
+- name: Verificar la instalación de Docker Compose
+  ansible.builtin.command: docker compose version
+  register: docker_compose_version
+  changed_when: false
+  failed_when: false
+
+- name: Almacenar versión de Docker Compose como fact
+  ansible.builtin.set_fact:
+    docker_installed_compose_version: "{{ docker_compose_version.stdout }}"
+  when: docker_compose_version.rc == 0
+
+- name: Verificar estado de Docker Swarm
+  ansible.builtin.command: docker info --format '{{ "{{" }}.Swarm.LocalNodeState{{ "}}" }}'
+  register: docker_swarm_status
+  changed_when: false
+  failed_when: false
+
+- name: Inicializar Docker Swarm
+  ansible.builtin.command: docker swarm init
+  when: docker_swarm_status.stdout != "active"
+  changed_when: true
+
+- name: Verificar estado de Docker Swarm después de inicializar
+  ansible.builtin.command: docker info --format '{{ "{{" }}.Swarm.LocalNodeState{{ "}}" }}'
+  register: docker_swarm_status_final
+  changed_when: false
+  failed_when: false
+
+- name: Almacenar estado de Docker Swarm como fact
+  ansible.builtin.set_fact:
+    docker_swarm_active_state: "{{ docker_swarm_status_final.stdout }}"
+
+- name: Crear red interna 'SyntalixNet'
+  ansible.builtin.command: docker network create --driver=overlay SyntalixNet
+  register: docker_network_create
+  changed_when: docker_network_create.rc == 0
+  failed_when: docker_network_create.rc != 0 and "network with name SyntalixNet already exists" not in docker_network_create.stderr

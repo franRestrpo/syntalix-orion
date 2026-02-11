@@ -1,0 +1,5 @@
+DEFAULT_NETWORK = "SyntalixNet"
+
+MIN_RAM_GB = 2
+MIN_CPU_CORES = 2
+MIN_DISK_GB = 10

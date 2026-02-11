@@ -1,0 +1,16 @@
+# Catálogo de Aplicaciones
+aplicaciones_syntalix:
+  - nombre: chatwoot
+    habilitado: true
+    dependencias:
+      redis: interna
+      postgres: interna
+
+  - nombre: n8n
+    habilitado: true
+    #    dominio: "n8n.local"
+    #    password_db: "secretDBpass"
+    dependencias:
+      redis: interna
+      #      postgres: interna # N8N uses internal postgres definition in template, but dependency logic ensures volume exists if 'postgres' key is present.
+      postgres: interna
