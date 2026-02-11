@@ -2,7 +2,9 @@ version: "3.7"
 services:
 
   traefik:
-    image: traefik:v3.5.3
+    image: traefik:latest
+    environment:
+      - DOCKER_API_VERSION=1.44
     command:
       - "--api.dashboard=true"
       - "--providers.swarm=true"
@@ -18,7 +20,7 @@ services:
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencryptresolver.acme.email={{ app_actual.acme_email | default('admin@' + app_actual.dominio) }}"
+      - "--certificatesresolvers.letsencryptresolver.acme.email={{ app_actual.acme_email | default('admin@syntalix.net') }}"
       - "--log.level=DEBUG"
       - "--log.format=common"
       - "--log.filePath=/var/log/traefik/traefik.log"
