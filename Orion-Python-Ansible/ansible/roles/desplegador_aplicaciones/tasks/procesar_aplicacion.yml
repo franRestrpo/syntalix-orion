@@ -97,15 +97,9 @@
     msg: "Falta el dominio para la aplicación {{ app_actual.nombre }}"
   when: app_actual.dominio is not defined
 
-- name: "Verificar si el stack {{ app_actual.nombre }} ya existe"
-  ansible.builtin.command: docker stack ls --format '{{ "{{" }}.Name{{ "}}" }}'
-  register: stacks_existentes
-  changed_when: false
-
-- name: "Advertencia si {{ app_actual.nombre }} ya existe"
+- name: "Informar estado de procesamiento para {{ app_actual.nombre }}"
   ansible.builtin.debug:
-    msg: "El stack {{ app_actual.nombre }} ya existe. Se actualizará la configuración."
-  when: app_actual.nombre in stacks_existentes.stdout_lines
+    msg: "Procesando configuración para {{ app_actual.nombre }}..."
 
 # Gestión de Dependencias (Redis, Postgres, etc.)
 - name: "Procesar dependencias para {{ app_actual.nombre }}"
@@ -148,8 +142,9 @@
 
 - name: "Desplegar Stack {{ app_actual.nombre }}"
   ansible.builtin.command:
-    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/{{ app_actual.nombre }}_stack.yml {{ app_actual.nombre }}"
-  when: config_stack.changed or config_env.changed or (app_actual.nombre not in stacks_existentes.stdout_lines)
+    cmd: "docker stack deploy -c {{ app_actual.nombre }}_stack.yml {{ app_actual.nombre }}"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: config_stack.changed or config_env.changed or (app_actual.nombre not in (stacks_activos.stdout_lines | default([])))
 
 - name: "Esperar a que Postgres esté listo para {{ app_actual.nombre }}"
   ansible.builtin.shell: "docker service logs {{ app_actual.nombre }}_postgres 2>&1 | grep 'ready to accept connections' | tail -n 1"

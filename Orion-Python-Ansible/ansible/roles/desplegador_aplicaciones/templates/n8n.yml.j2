@@ -5,7 +5,8 @@ services:
   editor:
     image: n8nio/n8n:latest
     command: start
-    env_file: {{ app_actual.nombre }}.env
+    env_file:
+      - ./{{ app_actual.nombre }}.env
     volumes:
       - {{ app_actual.nombre }}_data:/home/node/.n8n
     networks:
@@ -26,7 +27,8 @@ services:
   webhook:
     image: n8nio/n8n:latest
     command: webhook
-    env_file: {{ app_actual.nombre }}.env
+    env_file:
+      - ./{{ app_actual.nombre }}.env
     volumes:
       - {{ app_actual.nombre }}_data:/home/node/.n8n
     networks:
@@ -47,7 +49,8 @@ services:
   worker:
     image: n8nio/n8n:latest
     command: worker --concurrency=10
-    env_file: {{ app_actual.nombre }}.env
+    env_file:
+      - ./{{ app_actual.nombre }}.env
     volumes:
       - {{ app_actual.nombre }}_data:/home/node/.n8n
     networks:

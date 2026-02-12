@@ -4,7 +4,8 @@ version: '3.7'
 services:
   web:
     image: chatwoot/chatwoot:latest
-    env_file: {{ app_actual.nombre }}.env
+    env_file:
+      - ./{{ app_actual.nombre }}.env
     volumes:
       - {{ app_actual.nombre }}_storage:/app/storage
     networks:
@@ -27,7 +28,8 @@ services:
 
   sidekiq:
     image: chatwoot/chatwoot:latest
-    env_file: {{ app_actual.nombre }}.env
+    env_file:
+      - ./{{ app_actual.nombre }}.env
     volumes:
       - {{ app_actual.nombre }}_storage:/app/storage
     networks:

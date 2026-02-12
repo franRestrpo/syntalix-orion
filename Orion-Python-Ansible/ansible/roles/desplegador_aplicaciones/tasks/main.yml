@@ -39,9 +39,32 @@
   ansible.builtin.debug:
     msg: "Se han cargado {{ aplicaciones_syntalix | length }} aplicaciones en total."
 
-- name: "Iterar sobre cada aplicación definida"
-  include_tasks: procesar_aplicacion.yml
+- name: "Obtener stacks actualmente en ejecución"
+  ansible.builtin.command: docker stack ls --format '{{ "{{" }}.Name{{ "}}" }}'
+  register: stacks_activos
+  changed_when: false
+  ignore_errors: true
+
+- name: "Filtrar aplicaciones a procesar (Idempotencia Estricta)"
+  ansible.builtin.set_fact:
+    apps_a_procesar: "{{ apps_a_procesar | default([]) + [item] }}"
   loop: "{{ aplicaciones_syntalix }}"
+  when: >
+    (especifica_app is defined and especifica_app == item.nombre) or
+    (ansible_run_tags is defined and item.nombre in ansible_run_tags) or
+    (full_deploy | default(false) and item.habilitado | default(false)) or
+    (not (item.nombre in (stacks_activos.stdout_lines | default([]))) and item.habilitado | default(false))
+
+- name: "Asegurar que apps_a_procesar sea una lista incluso si está vacía"
+  ansible.builtin.set_fact:
+    apps_a_procesar: "{{ apps_a_procesar | default([]) }}"
+
+- name: "Informar sobre aplicaciones que se saltarán"
+  ansible.builtin.debug:
+    msg: "Se procesarán {{ apps_a_procesar | length }} aplicaciones. Las demás se saltarán por estar ya desplegadas y estables."
+
+- name: "Iterar sobre cada aplicación seleccionada"
+  include_tasks: procesar_aplicacion.yml
+  loop: "{{ apps_a_procesar }}"
   loop_control:
     loop_var: app_item
-  when: (app_item.habilitado | default(false)) or (ansible_run_tags is defined and app_item.nombre in ansible_run_tags) or (especifica_app is defined and especifica_app == app_item.nombre)
