@@ -9,39 +9,40 @@
     path: "{{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env"
   register: env_file_check
 
-- name: "Detectar configuración existente (Dominio/Admin/Pass) si existe .env"
-  # Se ajustan las rutas para leer desde deploy/nombre.env
+- name: "Cargar configuración existente del .env si existe"
   ansible.builtin.shell: |
-    grep -E "^(FRONTEND_URL|N8N_HOST|DOMAIN|URL)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 | sed 's/https:\/\///g' | sed 's/http:\/\///g' | sed 's/\///g' || echo ""
-    grep -E "^(POSTGRES_PASSWORD|DB_POSTGRESDB_PASSWORD|DB_PASSWORD)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 || echo ""
-    grep -E "^(MAILER_SENDER_EMAIL|N8N_SMTP_SENDER|ADMIN_EMAIL)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 || echo ""
+    grep -E "^(FRONTEND_URL|N8N_HOST|DOMAIN|URL|TRAEFIK_DASHBOARD_URL|PORTAINER_DOMAIN)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 | sed 's/https:\/\///g' | sed 's/http:\/\///g' | sed 's/\///g' || echo ""
+    grep -E "^(POSTGRES_PASSWORD|DB_POSTGRESDB_PASSWORD|DB_PASSWORD|TRAEFIK_PASSWORD|PASSWORD)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 || echo ""
+    grep -E "^(MAILER_SENDER_EMAIL|N8N_SMTP_SENDER|ADMIN_EMAIL|ACME_EMAIL|TRAEFIK_USER)=" {{ playbook_dir }}/deploy/{{ app_actual.nombre }}.env | head -n 1 | cut -d= -f2 || echo ""
   register: existing_config
   changed_when: false
   when: env_file_check.stat.exists
 
-- name: "Establecer defaults detectados"
-  ansible.builtin.set_fact:
-    default_dominio: "{{ (existing_config.stdout_lines | length > 0) | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost') }}"
-    default_pass: "{{ (existing_config.stdout_lines | length > 1) | ternary(existing_config.stdout_lines[1], 'admin123') }}"
-    default_admin: "{{ (existing_config.stdout_lines | length > 2) | ternary(existing_config.stdout_lines[2], 'admin@' + ((existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != '') | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost'))) }}"
-  when: env_file_check.stat.exists
+- name: "Preguntar si se mantienen los valores para {{ app_actual.nombre }}"
+  ansible.builtin.pause:
+    prompt: "Se detectó configuración previa para {{ app_actual.nombre }}. ¿Desea mantener los valores actuales? (s/n, Enter para s):"
+  register: keep_config
+  when: env_file_check.stat.exists and existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != ""
 
-- name: "Establecer defaults base (si no hay .env)"
+- name: "Establecer flag de actualización"
   ansible.builtin.set_fact:
-    default_dominio: "{{ app_actual.nombre }}.localhost"
-    default_pass: "admin123"
-    default_admin: "admin@{{ app_actual.nombre }}.localhost"
-  when: not env_file_check.stat.exists
+    update_needed: "{{ not env_file_check.stat.exists or (keep_config.user_input | default('s') | lower) == 'n' }}"
+
+- name: "Establecer defaults desde .env o base"
+  ansible.builtin.set_fact:
+    default_dominio: "{{ (env_file_check.stat.exists and existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != '') | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost') }}"
+    default_pass: "{{ (env_file_check.stat.exists and existing_config.stdout_lines | length > 1 and existing_config.stdout_lines[1] != '') | ternary(existing_config.stdout_lines[1], 'admin123') }}"
+    default_admin: "{{ (env_file_check.stat.exists and existing_config.stdout_lines | length > 2 and existing_config.stdout_lines[2] != '') | ternary(existing_config.stdout_lines[2], 'admin@' + ((env_file_check.stat.exists and existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != '') | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost'))) }}"
 
 - name: "Solicitar Dominio para {{ app_actual.nombre }}"
   ansible.builtin.pause:
     prompt: "Ingrese el dominio para {{ app_actual.nombre }} (Enter para usar {{ default_dominio }}):"
   register: input_dominio
-  when: app_actual.dominio is not defined
+  when: app_actual.dominio is not defined and update_needed
 
 - name: "Establecer Dominio Final"
   ansible.builtin.set_fact:
-    dominio_final: "{{ (input_dominio.user_input | default('') | length > 0) | ternary(input_dominio.user_input, default_dominio) }}"
+    dominio_final: "{{ (input_dominio.user_input is defined and input_dominio.user_input | length > 0) | ternary(input_dominio.user_input, default_dominio) }}"
   when: app_actual.dominio is not defined
 
 - name: "Establecer Dominio desde Config"
@@ -53,11 +54,11 @@
   ansible.builtin.pause:
     prompt: "Ingrese el email admin para {{ app_actual.nombre }} (Enter para usar {{ default_admin }}):"
   register: input_admin
-  when: app_actual.usuario_admin is not defined
+  when: app_actual.usuario_admin is not defined and update_needed
 
 - name: "Establecer Admin Final"
   ansible.builtin.set_fact:
-    admin_final: "{{ (input_admin.user_input | default('') | length > 0) | ternary(input_admin.user_input, default_admin) }}"
+    admin_final: "{{ (input_admin.user_input is defined and input_admin.user_input | length > 0) | ternary(input_admin.user_input, default_admin) }}"
   when: app_actual.usuario_admin is not defined
 
 - name: "Establecer Admin desde Config"
@@ -70,11 +71,11 @@
     prompt: "Ingrese el password de DB para {{ app_actual.nombre }} (Enter para usar {{ default_pass }}):"
     echo: no
   register: input_pass_db
-  when: app_actual.password_db is not defined
+  when: app_actual.password_db is not defined and update_needed
 
 - name: "Establecer Password DB Final"
   ansible.builtin.set_fact:
-    pass_db_final: "{{ (input_pass_db.user_input | default('') | length > 0) | ternary(input_pass_db.user_input, default_pass) }}"
+    pass_db_final: "{{ (input_pass_db.user_input is defined and input_pass_db.user_input | length > 0) | ternary(input_pass_db.user_input, default_pass) }}"
   when: app_actual.password_db is not defined
 
 - name: "Establecer Password DB desde Config"
