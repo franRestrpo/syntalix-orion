@@ -5,14 +5,43 @@
   ansible.builtin.debug:
     msg: "Iniciando despliegue de aplicaciones..."
 
-- name: Cargar variables de aplicaciones
+- name: Inicializar lista maestra de aplicaciones
+  ansible.builtin.set_fact:
+    aplicaciones_syntalix: []
+
+- name: Cargar variables de aplicaciones (Legacy/Main)
   ansible.builtin.include_vars:
-    file: aplicaciones.yml
-  failed_when: false
+    file: "{{ playbook_dir }}/aplicaciones.yml"
+  register: legacy_vars
+  ignore_errors: true
+
+- name: Acumular aplicaciones de aplicaciones.yml
+  ansible.builtin.set_fact:
+    aplicaciones_syntalix: "{{ aplicaciones_syntalix + (aplicaciones_syntalix_legacy | default([])) }}"
+  vars:
+    aplicaciones_syntalix_legacy: "{{ lookup('vars', 'aplicaciones_syntalix', default=[]) }}"
+  when: legacy_vars is success
+
+- name: Buscar archivos de configuración modular en aplicaciones.d/
+  ansible.builtin.find:
+    paths: "{{ playbook_dir }}/aplicaciones.d"
+    patterns: "*.yml,*.yaml"
+  register: config_files
+
+- name: Cargar y combinar aplicaciones modulares
+  ansible.builtin.set_fact:
+    aplicaciones_syntalix: "{{ aplicaciones_syntalix + (item_content.aplicaciones_syntalix | default([])) }}"
+  vars:
+    item_content: "{{ lookup('file', item.path) | from_yaml }}"
+  loop: "{{ config_files.files | sort(attribute='path') }}"
+
+- name: "Resumen de aplicaciones cargadas"
+  ansible.builtin.debug:
+    msg: "Se han cargado {{ aplicaciones_syntalix | length }} aplicaciones en total."
 
 - name: "Iterar sobre cada aplicación definida"
   include_tasks: procesar_aplicacion.yml
   loop: "{{ aplicaciones_syntalix }}"
   loop_control:
     loop_var: app_item
-  when: app_item.habilitado | default(false)
+  when: (app_item.habilitado | default(false)) or (ansible_run_tags is defined and app_item.nombre in ansible_run_tags) or (especifica_app is defined and especifica_app == app_item.nombre)

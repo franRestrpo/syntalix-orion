@@ -1,0 +1,11 @@
+# Catálogo de Infraestructura
+aplicaciones_syntalix:
+  - nombre: traefik
+    habilitado: true
+    internal_network: "SyntalixNet"
+
+  - nombre: portainer
+    habilitado: true
+    internal_network: "SyntalixNet"
+    dependencias:
+      traefik: interna

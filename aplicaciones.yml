@@ -1,35 +1,5 @@
-# Catálogo de Aplicaciones
-aplicaciones_syntalix:
-  - nombre: traefik
-    habilitado: true
-    # Se solicitarán interactivamente si no están definidos
-    # dominio: "traefik.localhost"
-    # usuario_admin: "admin"
-    # password_db: "admin123"
-    # acme_email: "admin@localhost"
-    internal_network: "SyntalixNet"
+# Catálogo de Aplicaciones (Legacy)
+# Las aplicaciones ahora se gestionan de forma modular en el directorio 'aplicaciones.d/'
+# Puedes añadir archivos .yml allí para categorizar tus despliegues.
 
-  - nombre: portainer
-    habilitado: true
-    # Se solicitará interactivamente
-    # dominio: "portainer.localhost"
-    internal_network: "SyntalixNet"
-    dependencias:
-      traefik: interna
-
-  - nombre: chatwoot
-    habilitado: true
-    dependencias:
-      redis: interna
-      postgres: interna
-      traefik: interna
-
-  - nombre: n8n
-    habilitado: true
-    #    dominio: "n8n.local"
-    #    password_db: "secretDBpass"
-    dependencias:
-      redis: interna
-      #      postgres: interna # N8N uses internal postgres definition in template, but dependency logic ensures volume exists if 'postgres' key is present.
-      postgres: interna
-      traefik: interna
+aplicaciones_syntalix: []
