@@ -106,7 +106,7 @@ def _prompt_input(self, var_name: str, description: str, default: str, required:
                 
             return value
 
-    def _prompt_secret(self, var_name: str, description: str) -> str:
+def _prompt_secret(self, var_name: str, description: str) -> str:
         """Solicita un secreto de forma oculta."""
         while True:
             try:
@@ -119,12 +119,12 @@ def _prompt_input(self, var_name: str, description: str, default: str, required:
                 return value
             print(f"Error: {var_name} is required.")
 
-    def _generate_secret(self, length: int = 32) -> str:
+def _generate_secret(self, length: int = 32) -> str:
         """Genera una cadena aleatoria segura."""
         alphabet = string.ascii_letters + string.digits
         return ''.join(secrets.choice(alphabet) for i in range(length))
 
-    def generate_env_file(self, output_path: str, variables: Dict[str, str]) -> None:
+def generate_env_file(self, output_path: str, variables: Dict[str, str]) -> None:
         """Escribe las variables en un archivo .env."""
         with open(output_path, 'w') as f:
             for key, value in variables.items():

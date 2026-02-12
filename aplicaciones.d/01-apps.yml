@@ -13,3 +13,9 @@ aplicaciones_syntalix:
       redis: interna
       postgres: interna
       traefik: interna
+
+  - nombre: evolution
+    habilitado: true
+    dependencias:
+      postgres: interna
+      traefik: interna

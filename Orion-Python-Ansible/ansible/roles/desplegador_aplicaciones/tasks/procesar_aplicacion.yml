@@ -128,6 +128,11 @@
     chatwoot_secret_key_base: "{{ lookup('password', 'credenciales/' + app_actual.nombre + '_secret_key chars=ascii_letters,digits length=64') }}"
   when: app_actual.nombre == 'chatwoot'
 
+- name: "Generar/Recuperar Global API Key para Evolution"
+  ansible.builtin.set_fact:
+    evolution_api_key: "{{ lookup('password', 'credenciales/' + app_actual.nombre + '_api_key chars=hex length=16') }}"
+  when: app_actual.nombre == 'evolution'
+
 - name: "Generar archivo .env para {{ app_actual.nombre }}"
   ansible.builtin.template:
     src: "{{ app_actual.nombre }}.env.j2"
