@@ -248,6 +248,14 @@ sudo ./setup.sh
 
 ---
 
+## 🛠️ Soporte y Mantenimiento
+
+Para asegurar un despliegue sin fricciones, hemos documentado las soluciones a los desafíos más comunes (redes, persistencia y comunicación de nodos).
+
+👉 **[Consulta la Guía de Troubleshooting aquí](./docs/TROUBLESHOOTING.md)**
+
+---
+
 ## 📜 Licencia
 
 Este proyecto se distribuye bajo la licencia **GNU General Public License v3.0**. Consulte el archivo [LICENSE](LICENSE) para obtener más información.
