@@ -14,14 +14,17 @@ Uso:
     python tui.py
 
 Dependencias:
-    pip install textual
+    pip install textual pyyaml
 
 Autor: Syntalix-Orion Team
-Versión: 2.0.0
+Versión: 2.0.1
 """
 
 import sys
 import os
+import stat
+import subprocess
+import yaml
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
@@ -67,12 +70,14 @@ from core.logging_config import get_logger, setup_logging
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.work import work
 from textual.widgets import (
     Header,
     Footer,
     Static,
     Checkbox,
     Button,
+    RichLog,
 )
 
 
@@ -95,6 +100,12 @@ CORE_CATEGORIES: Set[str] = {"Core"}
 
 # Umbral de RAM para warnings visuales
 RAM_WARNING_THRESHOLD: int = 6000  # MB
+
+# Rutas de Ansible
+ANSIBLE_DIR = PROJECT_ROOT  # Directorio donde está site.yml e inventory
+ANSIBLE_VARS_FILE = PROJECT_ROOT / "ansible_vars.yml"
+ANSIBLE_PLAYBOOK = ANSIBLE_DIR / "site.yml"
+ANSIBLE_INVENTORY = ANSIBLE_DIR / "inventory.ini"
 
 
 # =============================================================================
@@ -187,6 +198,18 @@ Screen {
 
 /* Botón de acción */
 #deploy-button {
+    width: 100%;
+}
+
+/* RichLog para streaming de Ansible */
+#ansible-log {
+    height: 40%;
+    border: solid $accent;
+    background: $surface-darken-1;
+    padding: 1;
+}
+
+#ansible-log .ansible-line {
     width: 100%;
 }
 """
@@ -462,6 +485,13 @@ usando los checkboxes del panel izquierdo.
                         markup=True
                     )
 
+                # Widget de streaming de logs de Ansible (oculto por defecto)
+                yield RichLog(
+                    id="ansible-log",
+                    highlight=True,
+                    auto_scroll=True,
+                )
+
                 # Contenedor de accion
                 with Vertical(id="action-container"):
                     yield Static("---")
@@ -608,13 +638,13 @@ Por favor, revisa las dependencias seleccionadas."""
         """
         Inicia el proceso de despliegue.
 
-        Esta fase:
+        Este metodo:
         1. Verifica que haya apps seleccionadas
-        2. Muestra mensaje de inicio en el panel
-        3. Simula el logging seguro de contrasenas generadas
-        4. (Futuro) Ejecutara el playbook de Ansible
+        2. Genera el archivo YAML con variables
+        3. Inicia el worker para ejecutar Ansible
         """
         if self.is_deploying:
+            self.notify("[WARN] Despliegue ya en progreso", severity="warning")
             logger.warning("Despliegue ya en progreso")
             return
 
@@ -623,6 +653,14 @@ Por favor, revisa las dependencias seleccionadas."""
             return
 
         self.is_deploying = True
+        
+        # Deshabilitar boton durante el despliegue
+        try:
+            deploy_button = self.query_one("#deploy-button", Button)
+            deploy_button.disabled = True
+        except Exception:
+            pass
+
         logger.info(
             "INICIANDO DESPLIEGUE",
             extra={
@@ -632,20 +670,340 @@ Por favor, revisa las dependencias seleccionadas."""
             }
         )
 
-        # Mensaje de inicio
+        # Actualizar mensaje de estado
         status_widget = self.query_one("#status-content", Static)
         status_widget.update("""## [HOURGLASS] Despliegue en Progreso
 
 Espera mientras se procesa el despliegue...
 
-[INFO] Verificando configuracion...
-[INFO] Validando dependencias...
-[INFO] Generando variables de entorno...
-
+[INFO] Generando ansible_vars.yml...
+[INFO] Ejecutando ansible-playbook...
 """)
 
-        # Simular procesamiento y mostrar logging seguro
-        self._process_with_secure_logging()
+        # Limpiar y mostrar RichLog
+        try:
+            ansible_log = self.query_one("#ansible-log", RichLog)
+            ansible_log.clear()
+            ansible_log.write("[INIT] Iniciando log de Ansible...")
+        except Exception:
+            pass
+
+        # Guardar YAML de forma segura
+        yaml_success, yaml_error = self._save_yaml_securely()
+
+        if not yaml_success:
+            self._show_error(f"Error generando vars.yml:\n{yaml_error}")
+            self.is_deploying = False
+            return
+
+        # Iniciar ejecucion de Ansible via worker (no bloqueante)
+        self.run_ansible_worker()
+
+    def _save_yaml_securely(self) -> tuple[bool, Optional[str]]:
+        """
+        Guarda el diccionario de variables en un archivo YAML de forma segura.
+
+        El archivo se escribe con permisos restrictivos (600) ya que contiene
+        secretos generados.
+
+        Returns:
+            Tupla (exito: bool, error: str|None)
+        """
+        if not self.deployment_result:
+            return False, "No hay resultado de despliegue"
+
+        try:
+            plan_data = {
+                "deployment": {
+                    "apps": self.deployment_result.plan,
+                    "selected_apps": self.deployment_result.selected_apps,
+                    "dependencies": self.deployment_result.dependencies,
+                    "ram_total_mb": self.deployment_result.ram_total_mb,
+                },
+                "vars": self.deployment_result.vars_generated,
+            }
+
+            # Escribir archivo YAML
+            vars_file = ANSIBLE_VARS_FILE
+            vars_file.write_text(
+                yaml.dump(
+                    plan_data,
+                    default_flow_style=False,
+                    sort_keys=False,
+                    allow_unicode=True
+                ),
+                encoding="utf-8"
+            )
+
+            # Establecer permisos restrictivos (solo propietario puede leer/escribir)
+            # En Windows esto puede no tener efecto, pero en Unix protege el archivo
+            try:
+                os.chmod(vars_file, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
+            except Exception:
+                pass  # Ignorar errores de chmod en Windows
+
+            logger.info(
+                "Archivo YAML guardado de forma segura",
+                extra={"file": str(vars_file), "size": vars_file.stat().st_size}
+            )
+
+            # Escribir en RichLog
+            try:
+                ansible_log = self.query_one("#ansible-log", RichLog)
+                ansible_log.write(f"[OK] vars.yml generado: {vars_file}")
+                ansible_log.write(f"[INFO] Tamano: {vars_file.stat().st_size} bytes")
+                ansible_log.write(f"[SECURE] Permisos: 0600 (solo root puede leer)")
+            except Exception:
+                pass
+
+            return True, None
+
+        except PermissionError as e:
+            error_msg = f"Permiso denegado al escribir {ANSIBLE_VARS_FILE}"
+            logger.error(error_msg, extra={"error": str(e)})
+            return False, error_msg
+
+        except yaml.YAMLError as e:
+            error_msg = f"Error serializando YAML: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
+
+        except Exception as e:
+            error_msg = f"Error desconocido: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
+
+    def _log_to_rich(self, message: str) -> None:
+        """
+        Escribe un mensaje en el widget RichLog de forma segura.
+
+        Usa call_from_thread para asegurar que la actualizacion
+        se hace desde el hilo correcto de Textual.
+
+        Args:
+            message: Mensaje a escribir
+        """
+        try:
+            self.call_from_thread(self._write_to_rich, message)
+        except Exception:
+            pass
+
+    def _write_to_rich(self, message: str) -> None:
+        """Escribe directamente al RichLog (debe llamarse desde el hilo de UI)."""
+        try:
+            ansible_log = self.query_one("#ansible-log", RichLog)
+            ansible_log.write(message)
+        except Exception:
+            pass
+
+    def _clear_rich_log(self) -> None:
+        """Limpia el RichLog."""
+        try:
+            self.call_from_thread(self._do_clear_rich)
+        except Exception:
+            pass
+
+    def _do_clear_rich(self) -> None:
+        """Limpia el RichLog directamente."""
+        try:
+            ansible_log = self.query_one("#ansible-log", RichLog)
+            ansible_log.clear()
+        except Exception:
+            pass
+
+    def _update_status(self, message: str) -> None:
+        """Actualiza el widget de estado de forma segura."""
+        try:
+            self.call_from_thread(self._do_update_status, message)
+        except Exception:
+            pass
+
+    def _do_update_status(self, message: str) -> None:
+        """Actualiza el widget de estado directamente."""
+        try:
+            status_widget = self.query_one("#status-content", Static)
+            status_widget.update(message)
+        except Exception:
+            pass
+
+    def _enable_deploy_button(self) -> None:
+        """Habilita el boton de despliegue."""
+        try:
+            self.call_from_thread(self._do_enable_button)
+        except Exception:
+            pass
+
+    def _do_enable_button(self) -> None:
+        """Habilita el boton directamente."""
+        try:
+            deploy_button = self.query_one("#deploy-button", Button)
+            deploy_button.disabled = False
+        except Exception:
+            pass
+
+    def _on_deployment_complete(self, success: bool, message: str) -> None:
+        """
+        Callback cuando el despliegue termina.
+
+        Args:
+            success: True si el despliegue fue exitoso
+            message: Mensaje de resultado
+        """
+        self.is_deploying = False
+        self._enable_deploy_button()
+
+        if success:
+            final_message = f"""## [OK] Despliegue Completado
+
+{message}
+
+---
+
+El despliegue se ha completado exitosamente.
+Revisa el log de Ansible arriba para mas detalles.
+"""
+        else:
+            final_message = f"""## [ERROR] Despliegue Fallido
+
+{message}
+
+---
+
+Consulta el log de Ansible arriba para diagnosticar el problema.
+
+Sugerencias:
+- Verifica que Ansible este instalado: `ansible --version`
+- Verifica que el inventory exista: `{ANSIBLE_INVENTORY}`
+- Verifica que el playbook exista: `{ANSIBLE_PLAYBOOK}`
+"""
+
+        self._update_status(final_message)
+        self._log_to_rich(f"\n[{'OK' if success else 'ERROR'}] {message}")
+
+    def run_ansible_worker(self) -> None:
+        """
+        Worker que ejecuta ansible-playbook de forma no bloqueante.
+
+        Este metodo se ejecuta en un hilo separado gracias al decorador
+        @work(thread=True), evitando que la UI se congele.
+
+        Utiliza subprocess.Popen para capturar stdout/stderr en tiempo real
+        y enviarlos al widget RichLog via call_from_thread.
+        """
+        self._run_ansible_deploy()
+
+    @work(thread=True, exit_on_error=False)
+    def _run_ansible_deploy(self) -> None:
+        """
+        Metodo worker que ejecuta ansible-playbook.
+
+        Decorador @work(thread=True):
+        - Ejecuta en hilo separado (no bloquea UI)
+        - exit_on_error=False: No cierra la app si hay error
+
+        El streaming de logs se hace via call_from_thread().
+        """
+        # Verificar que Ansible esta instalado
+        try:
+            result = subprocess.run(
+                ["ansible-playbook", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode != 0:
+                self._on_deployment_complete(False, "Ansible no esta instalado")
+                return
+        except FileNotFoundError:
+            self._on_deployment_complete(False, "Ansible no encontrado. Instala ansible-playbook")
+            return
+        except subprocess.TimeoutExpired:
+            self._on_deployment_complete(False, "Timeout verificando Ansible")
+            return
+
+        # Verificar que los archivos existen
+        if not ANSIBLE_PLAYBOOK.exists():
+            self._on_deployment_complete(
+                False,
+                f"Playbook no encontrado: {ANSIBLE_PLAYBOOK}"
+            )
+            return
+
+        if not ANSIBLE_INVENTORY.exists():
+            self._on_deployment_complete(
+                False,
+                f"Inventory no encontrado: {ANSIBLE_INVENTORY}"
+            )
+            return
+
+        # Construir comando
+        cmd = [
+            "ansible-playbook",
+            str(ANSIBLE_PLAYBOOK),
+            "-i", str(ANSIBLE_INVENTORY),
+            "-e", f"@{ANSIBLE_VARS_FILE}",
+            "--diff",  # Mostrar cambios
+        ]
+
+        self._log_to_rich(f"\n[EXEC] Ejecutando: {' '.join(cmd)}")
+        self._log_to_rich("[INFO] Presiona Ctrl+C para cancelar\n")
+
+        try:
+            # Usar Popen para streaming
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Unir stderr a stdout
+                text=True,
+                bufsize=1,  # Line buffered
+                cwd=str(ANSIBLE_DIR),
+            )
+
+            # Leer linea por linea (iteracion no bloqueante)
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+
+                if line:
+                    # Limpiar ANSI y enviar al RichLog via call_from_thread
+                    clean_line = self._clean_ansi(line.rstrip())
+                    self._log_to_rich(clean_line)
+
+            # Obtener codigo de salida
+            returncode = process.wait()
+
+            if returncode == 0:
+                self._log_to_rich("\n[OK] Ansible playbook completado exitosamente")
+                self._on_deployment_complete(True, "Playbook completado exitosamente")
+            else:
+                self._log_to_rich(f"\n[ERROR] Ansible playbook fallido (codigo: {returncode})")
+                self._on_deployment_complete(False, f"Playbook fallido con codigo {returncode}")
+
+        except FileNotFoundError:
+            self._on_deployment_complete(False, "ansible-playbook no encontrado en PATH")
+        except PermissionError:
+            self._on_deployment_complete(False, "Permiso denegado para ejecutar ansible-playbook")
+        except Exception as e:
+            error_msg = f"Error ejecutando Ansible: {str(e)}"
+            logger.error(error_msg)
+            self._on_deployment_complete(False, error_msg)
+
+    @staticmethod
+    def _clean_ansi(text: str) -> str:
+        """
+        Limpia secuencias ANSI de un texto.
+
+        Args:
+            text: Texto con secuencias ANSI
+
+        Returns:
+            Texto sin secuencias ANSI
+        """
+        import re
+        # Patrones comunes de secuencias ANSI
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        return ansi_escape.sub('', text)
 
     def _process_with_secure_logging(self) -> None:
         """
