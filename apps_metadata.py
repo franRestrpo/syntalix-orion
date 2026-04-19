@@ -83,8 +83,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "type": "secret",
                 "description": "PostgreSQL admin password",
                 "auto_generate": True,
-                "transform": "bcrypt",
                 "length": 32
+            },
+            "POSTGRES_USER": {
+                "type": "string",
+                "description": "Default database user",
+                "default": "orion_admin"
             },
             "POSTGRES_DB": {
                 "type": "string",
@@ -228,23 +232,10 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 1536,
         "dependencies": ["postgres_pgvector", "redis", "qdrant", "traefik"],
         "variables": {
-            "DIFY_ADMIN_PASSWORD": {
+            "DIFY_INIT_PASSWORD": {
                 "type": "secret",
-                "description": "Dify admin password",
-                "auto_generate": True,
-                "transform": "bcrypt"
-            },
-            "DB_PASSWORD": {
-                "type": "secret",
-                "description": "Postgres DB password for Dify",
-                "auto_generate": True,
-                "transform": "bcrypt"
-            },
-            "REDIS_PASSWORD": {
-                "type": "secret",
-                "description": "Redis password for Dify",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "description": "Dify init admin password",
+                "auto_generate": True
             }
         }
     },
@@ -263,7 +254,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "category": "AI",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["traefik"],
+        "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {}
     },
     "n8n": {
@@ -288,7 +279,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "category": "Automation",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["traefik"],
+        "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {}
     },
 
@@ -299,18 +290,34 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "category": "Communication",
         "version": "latest",
         "ram_mb": 1024,
-        "dependencies": ["postgres_pgvector", "redis", "traefik"],
+        "dependencies": ["postgres_pgvector", "redis", "rabbitmq", "traefik"],
         "variables": {
-            "POSTGRES_PASSWORD": {
+            "SECRET_KEY_BASE": {
                 "type": "secret",
-                "description": "Postgres Password for Chatwoot",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "description": "Chatwoot secret key base",
+                "auto_generate": True
             },
             "ACME_EMAIL": {
                 "type": "email",
                 "description": "Email for TLS certificates",
                 "required": True
+            }
+        }
+    },
+
+    # Evolution API (requires MongoDB)
+    "evolution_api": {
+        "id": "evolution_api",
+        "name": "Evolution API",
+        "category": "Automation",
+        "version": "latest",
+        "ram_mb": 512,
+        "dependencies": ["mongodb", "traefik"],
+        "variables": {
+            "EV_API_KEY": {
+                "type": "secret",
+                "description": "Evolution API key",
+                "auto_generate": True
             }
         }
     },
@@ -324,12 +331,6 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 1024,
         "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {
-            "POSTGRES_PASSWORD": {
-                "type": "secret",
-                "description": "Postgres Password for Odoo",
-                "auto_generate": True,
-                "transform": "bcrypt"
-            },
             "ADMIN_PASSWORD": {
                 "type": "secret",
                 "description": "Admin password for Odoo",
