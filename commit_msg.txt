@@ -1,0 +1,205 @@
+feat: Implementación del Playbook Maestro site.yml - Syntalix-Orion V2
+
+## Resumen
+Creación del playbook maestro de orquestación para Syntalix-Orion V2.
+Este playbook ejecuta dinámicamente roles según las aplicaciones
+seleccionadas desde la TUI.
+
+## Cambios Principales
+
+### 1. Playbook Maestro: site.yml
+
+**Archivo: site.yml** (~350 líneas)
+
+Playbook principal que:
+- Valida que `ansible_enabled_roles` esté definido (seguridad)
+- Verifica/crea la red Docker overlay `SyntalixNet`
+- Ejecuta roles condicionalmente según selección del usuario
+- Muestra resumen final del despliegue
+
+**Estructura**:
+```yaml
+- name: "Syntalix-Orion V2 - Despliegue de Infraestructura"
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  pre_tasks:
+    - Validación de seguridad (assert)
+    - Verificación de red Docker
+    - Resumen pre-despliegue
+
+  roles:
+    # 28 roles mapeados con condiciones when:
+    # Core (4), Data (7), Monitoring (4), AI (3)
+    # Automation (2), Communication (3), Management (4)
+
+  post_tasks:
+    - Resumen final
+    - URLs de acceso
+    - Comandos útiles
+```
+
+### 2. Estructura de Roles
+
+**Directorios: roles/**
+
+Creada la estructura de directorios para los roles:
+```
+roles/
+├── core/              # Infraestructura base
+├── data/              # Bases de datos
+├── monitoring/         # Observabilidad
+├── apps_ai/           # Aplicaciones IA
+├── apps_automation/   # Automatización
+├── apps_comms/        # Comunicación
+└── apps_management/   # Gestión empresarial
+```
+
+Cada directorio incluye `.gitkeep` y documentación en `README.md`.
+
+### 3. Requirements Actualizado
+
+**Archivo: requirements.yml**
+
+Añadida la colección `community.docker` requerida para:
+- `community.docker.docker_network_info`
+- `community.docker.docker_network`
+
+### 4. .gitignore Actualizado
+
+**Archivo: .gitignore**
+
+Añadidas reglas para archivos sensibles generados por la TUI:
+- `ansible_vars.yml`
+- `vars.yml`
+- `vault.yml`
+
+## Catálogo de Roles Mapeados (28 roles)
+
+### 🔧 CORE (4)
+- `core/traefik` - Proxy reverso con SSL
+- `core/crowdsec` - WAF y protección
+- `core/authentik` - SSO y autenticación
+- `core/portainer` - Gestión visual
+
+### 💾 DATA (7)
+- `data/postgres_pgvector` - PostgreSQL + vector
+- `data/mariadb` - Base de datos MySQL
+- `data/mongodb` - Base de datos NoSQL
+- `data/redis` - Sistema de caché
+- `data/rabbitmq` - Cola de mensajes
+- `data/qdrant` - Búsqueda vectorial
+- `data/minio` - Almacenamiento S3
+
+### 📊 MONITORING (4)
+- `monitoring/prometheus` - Métricas
+- `monitoring/grafana` - Dashboards
+- `monitoring/loki` - Logs
+- `monitoring/uptime_kuma` - Uptime
+
+### 🤖 AI (3)
+- `apps_ai/dify` - LLMOps platform
+- `apps_ai/openwebui` - Web UI para LLMs
+- `apps_ai/flowise` - Flow orchestration
+
+### ⚡ AUTOMATION (2)
+- `apps_automation/n8n` - Workflow automation
+- `apps_automation/activepieces` - Open source automation
+
+### 💬 COMMUNICATION (3)
+- `apps_comms/chatwoot` - CRM chat
+- `apps_comms/evolution_api` - WhatsApp API
+- `apps_comms/typebot` - Chatbots
+
+### 📋 MANAGEMENT (4)
+- `apps_management/glpi` - Helpdesk IT
+- `apps_management/odoo` - ERP
+- `apps_management/nocodb` - Spreadsheet DB
+- `apps_management/vaultwarden` - Password manager
+
+## Flujo de Ejecución
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                       TUI (tui.py)                           │
+│  1. Usuario selecciona apps                                 │
+│  2. DependencyGraph.plan_with_vars_multi()                  │
+│  3. Genera ansible_vars.yml con secrets seguros             │
+│  4. Contiene: ansible_enabled_roles = ["traefik", "n8n"]    │
+└─────────────────────────┬────────────────────────────────────┘
+                          │
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   ansible-playbook                          │
+│  ansible-playbook -i inventory site.yml -e @ansible_vars.yml│
+└─────────────────────────┬────────────────────────────────────┘
+                          │
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     site.yml                                │
+│                                                              │
+│  pre_tasks:                                                  │
+│    - assert: ansible_enabled_roles defined?                  │
+│    - Verificar/Crear red SyntalixNet                        │
+│                                                              │
+│  roles:                                                      │
+│    - core/traefik (when: "'traefik' in ansible_enabled_roles")│
+│    - apps_automation/n8n (when: "'n8n' in ansible_enabled_roles")
+│                                                              │
+│  post_tasks:                                                 │
+│    - Mostrar resumen final                                  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## Validación de Seguridad
+
+El playbook valida que:
+1. `ansible_enabled_roles` esté definido
+2. La lista no esté vacía
+
+Si no se cumple, muestra error instructivo:
+```
+ERROR: La variable 'ansible_enabled_roles' no está definida.
+SOLUCIÓN: Ejecuta con -e @ansible_vars.yml
+```
+
+## Tags Disponibles
+
+Permiten ejecución filtrada:
+```bash
+# Solo roles Core y Data
+ansible-playbook site.yml -e @vars.yml --tags "core,data"
+
+# Solo monitoreo
+ansible-playbook site.yml -e @vars.yml --tags "monitoring"
+
+# Solo aplicaciones
+ansible-playbook site.yml -e @vars.yml --tags "ai,automation"
+```
+
+## Archivos Creados/Modificados (10)
+
+| Archivo | Descripción |
+|---------|-------------|
+| `site.yml` | Playbook maestro |
+| `requirements.yml` | Dependencias Ansible Galaxy |
+| `.gitignore` | Actualizado con archivos sensibles |
+| `roles/README.md` | Documentación de estructura |
+| `roles/core/.gitkeep` | Placeholder directorio |
+| `roles/data/.gitkeep` | Placeholder directorio |
+| `roles/monitoring/.gitkeep` | Placeholder directorio |
+| `roles/apps_ai/.gitkeep` | Placeholder directorio |
+| `roles/apps_automation/.gitkeep` | Placeholder directorio |
+| `roles/apps_comms/.gitkeep` | Placeholder directorio |
+| `roles/apps_management/.gitkeep` | Placeholder directorio |
+
+## Próximos Pasos
+
+- [ ] Implementar tareas de cada rol
+- [ ] Crear plantillas Jinja2 para servicios
+- [ ] Añadir handlers para restart de servicios
+- [ ] Integrar con molecule para testing
+- [ ] Documentar cada rol individualmente
+
+Closes: #FASE-3-SITE-PLAYBOOK

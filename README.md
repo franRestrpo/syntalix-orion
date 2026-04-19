@@ -234,7 +234,18 @@ cd Syntalix-Orion
 sudo ./setup.sh
 ```
 
-> Para una guía detallada paso a paso, consulte la [Guía de Configuración y Despliegue](docs/CONFIG_DEPLOY.md).
+-> Para una guía detallada paso a paso, consulte la [Guía de Configuración y Despliegue](docs/CONFIG_DEPLOY.md).
+
+## 🚀 Syntalix-Orion v2: Migración y Arquitectura por Capas
+
+La versión 2 introduce una estructura en 3 capas:
+- Capa de Metadatos (Fuente de Verdad) con apps_metadata.py
+- Capa de Presentación y Lógica (Textual UI) para construir un grafo de dependencias y generar vars.yml
+- Capa de Orquestación (Ansible) refactorizada en Roles (core, data, monitoring, apps)
+
+La implementación actual en este PR/branch establece los cimientos para la V2: se han añadido apps_metadata.py y DependencyGraph, y se ha documentado la estrategia en docs/V2_ARCHITECTURE.md. El siguiente paso es integrar la Textual UI y refactorizar los roles de Ansible para que site.yml dependa exclusivamente de vars.yml generado por la UI.
+
+Para probar localmente: inicie el flujo de V2 cuando esté integrada, o corre un script de prueba que consuma DependencyGraph para generar un plan y el vars.yml de ejemplo.
 
 ---
 

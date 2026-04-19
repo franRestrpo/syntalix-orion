@@ -1,0 +1,3 @@
+- name: Display centralized vars (demo)
+  debug:
+    msg: "Using shared_postgres_password={{ shared_postgres_password }}, shared_db_password={{ shared_db_password }}"

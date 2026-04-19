@@ -28,6 +28,9 @@ El script `setup.sh` automatiza la creación de un entorno virtual de Python, la
 sudo ./setup.sh
 ```
 
+## 🔄 Migración a Syntalix-Orion v2 (TUI + 3 Capas)
+La versión 2 introduce una Terminal User Interface (Textual) y una separación en 3 capas: Metadatos, Presentación/Lógica y Orquestación. A la fecha de este documento, la implementación se encuentra en progreso y permite la generación de un plan de despliegue basado en un catálogo de apps. Consulte docs/V2_ARCHITECTURE.md para los detalles y el estado actual.
+
 **¿Qué hace este script?**
 1. Actualiza los repositorios del sistema.
 2. Instala dependencias base (`curl`, `git`, `python3-venv`).

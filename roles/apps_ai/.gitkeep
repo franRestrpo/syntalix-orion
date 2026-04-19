@@ -1,0 +1,6 @@
+# Directorio de roles AI para Syntalix-Orion V2
+
+Este directorio contiene los roles de Ansible para aplicaciones de IA:
+- dify: Plataforma LLMOps
+- openwebui: Interfaz web para LLMs
+- flowise: Orquestación visual de IA

@@ -31,7 +31,8 @@
 - name: "Establecer defaults desde .env o base"
   ansible.builtin.set_fact:
     default_dominio: "{{ (env_file_check.stat.exists and existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != '') | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost') }}"
-    default_pass: "{{ (env_file_check.stat.exists and existing_config.stdout_lines | length > 1 and existing_config.stdout_lines[1] != '') | ternary(existing_config.stdout_lines[1], 'admin123') }}"
+    # Generar password seguro: 32 caracteres (reemplaza 'admin123' - NUNCA usar passwords débiles)
+    default_pass: "{{ lookup('password', '/dev/null', length=32, chars='ascii_letters,digits') }}"
     default_admin: "{{ (env_file_check.stat.exists and existing_config.stdout_lines | length > 2 and existing_config.stdout_lines[2] != '') | ternary(existing_config.stdout_lines[2], 'admin@' + ((env_file_check.stat.exists and existing_config.stdout_lines | length > 0 and existing_config.stdout_lines[0] != '') | ternary(existing_config.stdout_lines[0], app_actual.nombre + '.localhost'))) }}"
 
 - name: "Solicitar Dominio para {{ app_actual.nombre }}"

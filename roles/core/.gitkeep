@@ -1,0 +1,7 @@
+# Directorio de roles Core para Syntalix-Orion V2
+
+Este directorio contiene los roles de Ansible para la infraestructura base:
+- traefik: Proxy reverso con SSL automático
+- crowdsec: WAF y protección
+- authentik: SSO y autenticación
+- portainer: Gestión visual del clúster
