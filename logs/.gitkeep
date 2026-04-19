@@ -1,0 +1,18 @@
+# Directorio de logs de Syntalix-Orion
+
+Este directorio contiene los archivos de log generados por la aplicación.
+
+## Archivos generados
+
+- `orion.log` - Log principal de la aplicación
+
+## Configuración
+
+La configuración de logging se encuentra en:
+`Orion-Python-Anible/scripts/core/logging_config.py`
+
+## Rotación
+
+Los logs rotan automáticamente cuando alcanzan 10MB:
+- Se mantienen hasta 5 archivos de backup
+- Los archivos antiguos se renombran con extensión `.1`, `.2`, etc.
