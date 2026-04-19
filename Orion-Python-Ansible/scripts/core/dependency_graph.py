@@ -358,6 +358,120 @@ class DependencyGraph:
             "categories": list(categories),
         }
 
+    def plan_with_vars_multi(self, app_ids: List[str]) -> Dict[str, Any]:
+        """
+        Genera un plan completo para múltiples aplicaciones seleccionadas.
+
+        Este método:
+        1. Calcula el grafo de dependencias unifydo para todas las apps
+        2. Genera variables seguras para todo el plan
+        3. Calcula la RAM total
+
+        Args:
+            app_ids: Lista de IDs de aplicaciones seleccionadas por el usuario
+
+        Returns:
+            Diccionario con:
+            - plan: Lista ordenada de apps (incluye dependencias transitivas)
+            - ram_mb_total: RAM total requerida
+            - vars: Variables generadas para todas las apps
+            - selected_apps: Lista de apps originalmente seleccionadas
+            - dependencies: Lista de dependencias auto-añadidas
+
+        Raises:
+            KeyError: Si alguna app o dependencia no existe
+            ValueError: Si hay dependencias circulares
+        """
+        if not app_ids:
+            logger.warning("plan_with_vars_multi llamado con lista vacía")
+            return {
+                "plan": [],
+                "ram_mb_total": 0,
+                "vars": {},
+                "selected_apps": [],
+                "dependencies": []
+            }
+
+        logger.debug("Generando plan multi-app", extra={"app_ids": app_ids})
+
+        # Validar que todas las apps existan
+        for app_id in app_ids:
+            if app_id not in self.catalog:
+                raise KeyError(f"Aplicación '{app_id}' no encontrada en el catálogo")
+
+        # Conjunto para tracking de apps en el plan
+        plan_set: Set[str] = set()
+        ordered_plan: List[str] = []
+        visited: Set[str] = set()
+
+        def resolve_with_deps(app_id: str) -> None:
+            """Resuelve dependencias recursivamente."""
+            if app_id in visited:
+                return
+            visited.add(app_id)
+
+            # Añadir todas las dependencias primero
+            deps = self.catalog.get(app_id, {}).get("dependencies", [])
+            for dep in deps:
+                if dep not in self.catalog:
+                    raise KeyError(f"Dependencia '{dep}' no encontrada")
+                resolve_with_deps(dep)
+                if dep not in plan_set:
+                    plan_set.add(dep)
+                    ordered_plan.append(dep)
+
+            # Añadir la app misma
+            if app_id not in plan_set:
+                plan_set.add(app_id)
+                ordered_plan.append(app_id)
+
+        # Resolver todas las apps seleccionadas
+        for app_id in app_ids:
+            resolve_with_deps(app_id)
+
+        # Calcular RAM total
+        ram_total = 0
+        for aid in ordered_plan:
+            meta = self.catalog.get(aid, {})
+            ram_total += int(meta.get("ram_mb", 0))
+
+        # Generar variables para todas las apps del plan
+        all_vars: Dict[str, Any] = {}
+        for aid in ordered_plan:
+            meta = self.catalog.get(aid, {})
+            vars_def = meta.get("variables", {}) or {}
+
+            for var_name, var_def in vars_def.items():
+                key = f"{aid}__{var_name}".upper()
+
+                if var_def.get("type") == "secret":
+                    value = self._generate_secret_value(var_def)
+                    all_vars[key] = value
+                else:
+                    value = var_def.get("default", "")
+                    all_vars[key] = value
+
+        # Separar selected_apps de dependencies
+        selected_apps = [aid for aid in ordered_plan if aid in app_ids]
+        dependencies = [aid for aid in ordered_plan if aid not in app_ids]
+
+        result = {
+            "plan": ordered_plan,
+            "ram_mb_total": ram_total,
+            "vars": all_vars,
+            "selected_apps": selected_apps,
+            "dependencies": dependencies
+        }
+
+        logger.info("Plan multi-app generado", extra={
+            "total_apps": len(ordered_plan),
+            "selected": len(selected_apps),
+            "dependencies": len(dependencies),
+            "ram_total": ram_total
+        })
+
+        return result
+
 
 # Ejemplo de uso directo
 if __name__ == "__main__":

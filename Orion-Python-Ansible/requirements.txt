@@ -12,6 +12,9 @@ bcrypt>=4.1.0
 # Validación y modelos
 pydantic>=2.0.0
 
+# TUI (Terminal User Interface)
+textual>=0.50.0
+
 # Utilidades
 pyyaml>=6.0.0
 jsondiff>=2.0.0
