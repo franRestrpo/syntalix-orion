@@ -1,0 +1,5 @@
+# Directorio de roles Automation para Syntalix-Orion V2
+
+Este directorio contiene los roles de Ansible para automatización:
+- n8n: Workflow automation
+- activepieces: Automatización open source

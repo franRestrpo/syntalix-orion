@@ -1,0 +1,6 @@
+# Directorio de roles Communication para Syntalix-Orion V2
+
+Este directorio contiene los roles de Ansible para comunicación:
+- chatwoot: CRM de atención al cliente
+- evolution_api: API de WhatsApp
+- typebot: Chatbots interactivos

@@ -1,6 +1,47 @@
 ---
-roles: []
-# roles:
-#   # Ejemplo de cómo añadir un rol de Ansible Galaxy:
-#   # - src: geerlingguy.docker
-#   #   version: 4.1.2
+# =============================================================================
+# Syntalix-Orion V2 - Ansible Requirements
+# =============================================================================
+# Archivo de dependencias de Ansible Galaxy para Syntalix-Orion V2.
+#
+# Instalación:
+#   ansible-galaxy collection install -r requirements.yml
+#
+# =============================================================================
+
+collections:
+  # ---------------------------------------------------------------------------
+  # Docker/MariaDB Collections
+  # ---------------------------------------------------------------------------
+  # Requerido para gestión de redes Docker, contenedores y stacks
+  - name: community.docker
+    version: ">=3.4.0"
+
+  # ---------------------------------------------------------------------------
+  # AWS Collection (para integraciones S3/MinIO)
+  # ---------------------------------------------------------------------------
+  - name: amazon.aws
+    version: ">=8.0.0"
+
+  # ---------------------------------------------------------------------------
+  #HAProxy Collection (para balanceo si se necesita)
+  # ---------------------------------------------------------------------------
+  # - name: community.haproxy
+  #   version: ">=2.0.0"
+
+roles:
+  # ---------------------------------------------------------------------------
+  # Roles externos de Ansible Galaxy
+  # ---------------------------------------------------------------------------
+
+  # Docker Engine installation
+  # - name: geerlingguy.docker
+  #   version: "4.1.2"
+
+  # Python (para scripts de gestión)
+  # - name: geerlingguy.python
+  #   version: "3.0.0"
+
+  # Certbot para Let's Encrypt
+  # - name: certbot.certbot
+  #   version: ">=1.0.0"

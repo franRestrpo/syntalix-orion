@@ -1,0 +1,10 @@
+# Directorio de roles Data para Syntalix-Orion V2
+
+Este directorio contiene los roles de Ansible para bases de datos y almacenamiento:
+- postgres_pgvector: PostgreSQL con extensión vectorial
+- mariadb: Base de datos MySQL compatible
+- mongodb: Base de datos NoSQL
+- redis: Sistema de caché
+- rabbitmq: Cola de mensajes
+- qdrant: Motor de búsqueda vectorial
+- minio: Almacenamiento S3 compatible

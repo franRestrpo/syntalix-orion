@@ -1,0 +1,395 @@
+---
+# =============================================================================
+# Syntalix-Orion V2 - Site Master Playbook
+# =============================================================================
+# Playbook maestro de orquestación para Syntalix-Orion V2.
+#
+# Este playbook es ejecutado por la TUI después de generar ansible_vars.yml.
+# Instala dinámicamente únicamente los roles seleccionados por el usuario.
+#
+# Uso:
+#   ansible-playbook -i inventory site.yml -e @ansible_vars.yml
+#
+# Ejecución filtrada por tags:
+#   ansible-playbook -i inventory site.yml -e @ansible_vars.yml --tags "core,data"
+#
+# =============================================================================
+
+- name: "Syntalix-Orion V2 - Despliegue de Infraestructura"
+  hosts: all
+  become: yes
+  gather_facts: yes
+  serial: 1  # Ejecutar en un nodo a la vez para evitar conflictos
+
+  # ---------------------------------------------------------------------------
+  # VARIABLES DEL PLAYBOOK
+  # ---------------------------------------------------------------------------
+  vars:
+    # Red interna de Docker Swarm
+    docker_network_name: "{{ TRAEFIK__INTERNAL_NETWORK | default('SyntalixNet') }}"
+    docker_network_driver: overlay
+    docker_network_attachable: yes
+
+    # Configuración de logging
+    ansible_enhanced_logging: yes
+
+  # ---------------------------------------------------------------------------
+  # PRE-TASKS: Validación y Configuración Inicial
+  # ---------------------------------------------------------------------------
+  pre_tasks:
+
+    # -------------------------------------------------------------------------
+    # Validación de Seguridad Obligatoria
+    # -------------------------------------------------------------------------
+    - name: "🔒 Validar que ansible_enabled_roles esté definido"
+      ansible.builtin.assert:
+        that:
+          - ansible_enabled_roles is defined
+          - ansible_enabled_roles | length > 0
+        fail_msg: |
+          ╔═══════════════════════════════════════════════════════════════════════╗
+          ║                        ERROR DE SEGURIDAD                           ║
+          ╠═══════════════════════════════════════════════════════════════════════╣
+          ║ La variable 'ansible_enabled_roles' no está definida.              ║
+          ║                                                                          ║
+          ║ Esto impide instalaciones accidentales de toda la infraestructura.  ║
+          ║                                                                          ║
+          ║ SOLUCIÓN:                                                            ║
+          ║ Ejecuta el playbook usando el archivo generado por la TUI:          ║
+          ║                                                                          ║
+          ║   ansible-playbook -i inventory site.yml -e @ansible_vars.yml        ║
+          ║                                                                          ║
+          ║ El archivo ansible_vars.yml es generado automáticamente por la TUI║
+          ║ con las aplicaciones seleccionadas y sus variables seguras.         ║
+          ╚═══════════════════════════════════════════════════════════════════════╝
+        success_msg: "✓ Variables de despliegue validadas correctamente"
+
+    # -------------------------------------------------------------------------
+    # Mostrar Resumen de Roles
+    # -------------------------------------------------------------------------
+    - name: "📋 Mostrar roles habilitados para este despliegue"
+      ansible.builtin.debug:
+        msg:
+          - ""
+          - "════════════════════════════════════════════════════════════════"
+          - " ROLES A INSTALAR: {{ ansible_enabled_roles | join(', ') }}"
+          - "════════════════════════════════════════════════════════════════"
+          - ""
+
+    # -------------------------------------------------------------------------
+    # Crear/Verificar Red Docker Overlay
+    # -------------------------------------------------------------------------
+    - name: "🌐 Verificar si la red Docker existe"
+      community.docker.docker_network_info:
+        name: "{{ docker_network_name }}"
+      register: network_info
+
+    - name: "🌐 Crear red Docker overlay si no existe"
+      community.docker.docker_network:
+        name: "{{ docker_network_name }}"
+        driver: "{{ docker_network_driver }}"
+        attachable: "{{ docker_network_attachable }}"
+        driver_options:
+          encrypted: "true"
+      when: "not network_info.exists"
+
+    - name: "🌐 Mostrar estado de la red Docker"
+      ansible.builtin.debug:
+        msg: "✓ Red '{{ docker_network_name }}' lista para uso"
+
+    # -------------------------------------------------------------------------
+    # Resumen Pre-Despliegue
+    # -------------------------------------------------------------------------
+    - name: "📊 Resumen de Pre-Despliegue"
+      ansible.builtin.debug:
+        msg:
+          - ""
+          - "╔══════════════════════════════════════════════════════════════════╗"
+          - "║              SYNTALIX-ORION V2 - PRE-DESPLIEGUE              ║"
+          - "╠══════════════════════════════════════════════════════════════════╣"
+          - "║ Hostname: {{ inventory_hostname }}                                    ║"
+          - "║ Roles habilitados: {{ ansible_enabled_roles | length }}                                  ║"
+          - "║ Red Docker: {{ docker_network_name }}                                   ║"
+          - "╚══════════════════════════════════════════════════════════════════╝"
+          - ""
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE INFRAESTRUCTURA CORE
+  # ---------------------------------------------------------------------------
+  # Roles fundamentales que proporcionan la base del sistema
+  # - Traefik: Proxy reverso con SSL automático y routing dinámico
+  # - CrowdSec: WAF y protección contra amenazas
+  # - Authentik: SSO y autenticación centralizada
+  # - Portainer: Gestión visual del clúster Docker
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🔧 CORE - Infraestructura Base
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: core/traefik
+      when: "'traefik' in ansible_enabled_roles"
+      tags: [core, traefik, proxy, ssl, tls]
+
+    - name: core/crowdsec
+      when: "'crowdsec' in ansible_enabled_roles"
+      tags: [core, crowdsec, security, waf, honeypot]
+
+    - name: core/authentik
+      when: "'authentik' in ansible_enabled_roles"
+      tags: [core, authentik, auth, sso, identity]
+
+    - name: core/portainer
+      when: "'portainer' in ansible_enabled_roles"
+      tags: [core, portainer, management, ui, docker]
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE DATA BACKENDS
+  # ---------------------------------------------------------------------------
+  # Servicios de datos necesarios para las aplicaciones
+  # - Postgres con pgvector para datos vectoriales y IA
+  # - MariaDB/MySQL para bases de datos relacionales
+  # - MongoDB para bases de datos NoSQL
+  # - Redis para caché y sesiones
+  # - RabbitMQ para colas de mensajes
+  # - Qdrant para búsqueda vectorial
+  # - MinIO para almacenamiento compatible S3
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 💾 DATA - Bases de Datos y Almacenamiento
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: data/postgres_pgvector
+      when: "'postgres_pgvector' in ansible_enabled_roles"
+      tags: [data, postgres, database, pgvector, vector, ai]
+
+    - name: data/mariadb
+      when: "'mariadb' in ansible_enabled_roles"
+      tags: [data, mariadb, database, mysql, relational]
+
+    - name: data/mongodb
+      when: "'mongodb' in ansible_enabled_roles"
+      tags: [data, mongodb, database, nosql, document]
+
+    - name: data/redis
+      when: "'redis' in ansible_enabled_roles"
+      tags: [data, redis, cache, session, broker]
+
+    - name: data/rabbitmq
+      when: "'rabbitmq' in ansible_enabled_roles"
+      tags: [data, rabbitmq, queue, message, amqp]
+
+    - name: data/qdrant
+      when: "'qdrant' in ansible_enabled_roles"
+      tags: [data, qdrant, vector, search, similarity]
+
+    - name: data/minio
+      when: "'minio' in ansible_enabled_roles"
+      tags: [data, minio, s3, storage, object]
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE MONITORING
+  # ---------------------------------------------------------------------------
+  # Stack de monitoreo y observabilidad
+  # - Prometheus: Recolección de métricas
+  # - Grafana: Dashboards y visualización
+  # - Loki: Agregación de logs
+  # - Uptime Kuma: Monitor de uptime
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 📊 MONITORING - Observabilidad
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: monitoring/prometheus
+      when: "'prometheus' in ansible_enabled_roles"
+      tags: [monitoring, prometheus, metrics, alerting]
+
+    - name: monitoring/grafana
+      when: "'grafana' in ansible_enabled_roles"
+      tags: [monitoring, grafana, dashboards, visualization]
+
+    - name: monitoring/loki
+      when: "'loki' in ansible_enabled_roles"
+      tags: [monitoring, loki, logs, aggregation]
+
+    - name: monitoring/uptime_kuma
+      when: "'uptime_kuma' in ansible_enabled_roles"
+      tags: [monitoring, uptime_kuma, uptime, status, heartbeat]
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE APLICACIONES AI
+  # ---------------------------------------------------------------------------
+  # Plataformas de Inteligencia Artificial y ML
+  # - Dify: Plataforma de LLMOps y workflow de IA
+  # - OpenWebUI: Interfaz web para LLMs locales
+  # - Flowise: Orquestación visual de flujos de IA
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🤖 AI APPLICATIONS - Inteligencia Artificial
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: apps_ai/dify
+      when: "'dify' in ansible_enabled_roles"
+      tags: [ai, dify, llm, workflow, llmops]
+
+    - name: apps_ai/openwebui
+      when: "'openwebui' in ansible_enabled_roles"
+      tags: [ai, openwebui, interface, ollama, chat]
+
+    - name: apps_ai/flowise
+      when: "'flowise' in ansible_enabled_roles"
+      tags: [ai, flowise, flow, automation, langchain]
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE AUTOMATION
+  # ---------------------------------------------------------------------------
+  # Plataformas de automatización de flujos de trabajo
+  # - n8n: Automatización de workflows (alternativa a Zapier)
+  # - ActivePieces: Automatización open source
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # ⚡ AUTOMATION - Automatización
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: apps_automation/n8n
+      when: "'n8n' in ansible_enabled_roles"
+      tags: [automation, n8n, workflow, integration]
+
+    - name: apps_automation/activepieces
+      when: "'activepieces' in ansible_enabled_roles"
+      tags: [automation, activepieces, flow, integration]
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE COMMUNICATION
+  # ---------------------------------------------------------------------------
+  # Plataformas de comunicación omnicanal
+  # - Chatwoot: CRM de atención al cliente
+  # - Evolution API: API para WhatsApp y mensajería
+  # - Typebot: Chatbots y formularios interactivos
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 💬 COMMUNICATION - Comunicación
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: apps_comms/chatwoot
+      when: "'chatwoot' in ansible_enabled_roles"
+      tags: [comms, chatwoot, chat, crm, support]
+
+    - name: apps_comms/evolution_api
+      when: "'evolution_api' in ansible_enabled_roles"
+      tags: [comms, evolution_api, whatsapp, messaging, whatsapp_api]
+
+    - name: apps_comms/typebot
+      when: "'typebot' in ansible_enabled_roles"
+      tags: [comms, typebot, chatbot, form, survey]
+
+  # ---------------------------------------------------------------------------
+  # ROLES DE MANAGEMENT
+  # ---------------------------------------------------------------------------
+  # Sistemas de gestión empresarial
+  # - GLPI: Helpdesk y gestión de activos IT
+  # - Odoo: ERP completo
+  # - NocoDB: Base de datos como spreadsheet
+  # - Vaultwarden: Gestor de contraseñas
+  # ---------------------------------------------------------------------------
+  roles:
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 📋 MANAGEMENT - Gestión Empresarial
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: apps_management/glpi
+      when: "'glpi' in ansible_enabled_roles"
+      tags: [management, glpi, helpdesk, itsm, asset]
+
+    - name: apps_management/odoo
+      when: "'odoo' in ansible_enabled_roles"
+      tags: [management, odoo, erp, crm, business]
+
+    - name: apps_management/nocodb
+      when: "'nocodb' in ansible_enabled_roles"
+      tags: [management, nocodb, database, spreadsheet, nocode]
+
+    - name: apps_management/vaultwarden
+      when: "'vaultwarden' in ansible_enabled_roles"
+      tags: [management, vaultwarden, password, vault, security]
+
+  # ---------------------------------------------------------------------------
+  # POST-TASKS: Resumen y Verificación Final
+  # ---------------------------------------------------------------------------
+  post_tasks:
+
+    - name: "✅ Resumen de Despliegue Completado"
+      ansible.builtin.debug:
+        msg:
+          - ""
+          - "╔══════════════════════════════════════════════════════════════════╗"
+          - "║           SYNTALIX-ORION V2 - DESPLIEGUE COMPLETADO          ║"
+          - "╠══════════════════════════════════════════════════════════════════╣"
+          - "║ Roles instalados: {{ ansible_enabled_roles | length }}                               ║"
+          - "╠══════════════════════════════════════════════════════════════════╣"
+
+    - name: "📦 Listar servicios desplegados"
+      ansible.builtin.debug:
+        msg: "{{ ansible_enabled_roles | map('regex_replace', '^', '  ✓ ') | list | join('\n') }}"
+
+    - name: "🔗 URLs de Acceso (configuradas con Traefik)"
+      ansible.builtin.debug:
+        msg: |
+          ║                                                                          ║
+          ║  URLs de Acceso (configuradas con Traefik):                              ║
+          ║    - Traefik Dashboard: https://traefik.{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('localhost') }}/dashboard    ║
+          ║    - Portainer: https://portainer.{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('localhost') }}                          ║
+          ╚══════════════════════════════════════════════════════════════════╝
+
+    - name: "⚡ Comandos útiles post-despliegue"
+      ansible.builtin.debug:
+        msg: |
+          ⚡ Comandos útiles post-despliegue:
+
+          Ver servicios Docker Swarm:
+            docker stack ls
+            docker stack services <stack_name>
+
+          Ver logs de un servicio:
+            docker service logs <service_name> --tail 100
+
+          Escalar un servicio:
+            docker service scale <service_name>=3
+
+          Ver estado de un nodo:
+            docker node ls
+            docker node inspect <node_name>
+
+    - name: "🔄 Mensaje Final"
+      when: "ansible_check_mode | default(false) == false"
+      ansible.builtin.debug:
+        msg: |
+          ╔══════════════════════════════════════════════════════════════════╗
+          ║                    ¡DESPLIEGUE EXITOSO!                        ║
+          ║                                                                      ║
+          ║ Syntalix-Orion V2 ha completado la instalación de los roles   ║
+          ║ seleccionados en este servidor.                                 ║
+          ║                                                                      ║
+          ║ RECORDATORIOS IMPORTANTES:                                       ║
+          ║                                                                      ║
+          ║   ⚠️ Los secretos están en ansible_vars.yml                       ║
+          ║      (¡NUNCA COMMITEAR este archivo a Git!)                     ║
+          ║                                                                      ║
+          ║   🔐 Usa ansible-vault para cifrar en producción:               ║
+          ║      ansible-vault encrypt ansible_vars.yml                      ║
+          ║                                                                      ║
+          ║   📊 Revisa los logs de cada servicio regularmente              ║
+          ║                                                                      ║
+          ╚══════════════════════════════════════════════════════════════════╝

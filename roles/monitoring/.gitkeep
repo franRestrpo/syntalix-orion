@@ -1,0 +1,7 @@
+# Directorio de roles Monitoring para Syntalix-Orion V2
+
+Este directorio contiene los roles de Ansible para monitoreo y observabilidad:
+- prometheus: Recolección de métricas
+- grafana: Dashboards y visualización
+- loki: Agregación de logs
+- uptime_kuma: Monitor de uptime
