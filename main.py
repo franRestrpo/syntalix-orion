@@ -23,7 +23,7 @@ from textual.widgets import (
     Static,
     Header,
     Footer,
-    TextLog,
+    RichLog as TextLog,
     ProgressBar,
 )
 
