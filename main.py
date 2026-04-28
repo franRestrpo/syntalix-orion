@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+from rich.text import Text
 from textual.app import App, Screen, ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widgets import (
@@ -58,7 +59,7 @@ def load_state(path: str = "state.json") -> Dict[str, Any]:
 
 class WelcomeScreen(Screen):
     def compose(self) -> ComposeResult:
-        yield Static(ASCII_LOGO, style="bold cyan", id="logo")
+        yield Static(Text(ASCII_LOGO, style="bold cyan"), id="logo")
         yield Static("Verifying local dependencies (ansible, ssh, python-venv)...", id="checks")
         yield Static("Detected system: Python {} | OS unknown".format("3.10+"), id="summary")
         yield Button("Continue", id="continue")
@@ -84,7 +85,7 @@ class ConfigWizardScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical():
-            yield Static("Proxmox Connection", style="bold cyan")
+            yield Static(Text("Proxmox Connection", style="bold cyan"))
             self.ip_input = Input(placeholder="IP address (e.g., 192.168.1.100)")
             yield self.ip_input
             self.token_input = Input(placeholder="Proxmox Token", password=True)
@@ -92,7 +93,7 @@ class ConfigWizardScreen(Screen):
             self.user_input = Input(placeholder="User")
             yield self.user_input
 
-            yield Static("Modules", style="bold cyan")
+            yield Static(Text("Modules", style="bold cyan"))
             yield Button("Hardening", id="mod_hardening")
             yield Button("Docker", id="mod_docker")
             yield Button("Monitoring", id="mod_monitoring")
@@ -142,7 +143,7 @@ class DeployMonitorScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical():
-            yield Static("Deploy Monitor", style="bold cyan")
+            yield Static(Text("Deploy Monitor", style="bold cyan"))
             self._progress = ProgressBar(total=100)
             yield self._progress
             yield TextLog(highlight=True, markup=True, id="log")
@@ -170,7 +171,7 @@ class DeployMonitorScreen(Screen):
                 level = event.get("level", "info")
                 msg = event.get("message", "")
                 color = {"info": "white", "warning": "yellow", "error": "red"}.get(level, "white")
-                log_widget.write(f"[{level.upper()}] {msg}", style=color)
+                log_widget.write(Text(f"[{level.upper()}] {msg}", style=color))
             elif etype == "progress":
                 value = int(event.get("value", 0))
                 self._progress.update(value)
@@ -181,9 +182,9 @@ class DeployMonitorScreen(Screen):
             elif etype == "done":
                 ok = event.get("success", True)
                 if ok:
-                    log_widget.write("Deployment completed successfully ✅", style="green")
+                    log_widget.write(Text("Deployment completed successfully ✅", style="green"))
                 else:
-                    log_widget.write("Deployment failed ❌", style="red")
+                    log_widget.write(Text("Deployment failed ❌", style="red"))
                 # Persist final state for recovery
                 try:
                     with open("state.json", "w", encoding="utf-8") as f:
