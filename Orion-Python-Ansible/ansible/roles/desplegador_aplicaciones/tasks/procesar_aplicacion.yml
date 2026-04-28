@@ -148,12 +148,26 @@
   when: config_stack.changed or config_env.changed or (app_actual.nombre not in (stacks_activos.stdout_lines | default([])))
 
 - name: "Esperar a que Postgres esté listo para {{ app_actual.nombre }}"
-  ansible.builtin.shell: "docker service logs {{ app_actual.nombre }}_postgres 2>&1 | grep 'ready to accept connections' | tail -n 1"
+  ansible.builtin.shell: >
+    CONTAINER=$(docker ps -q -f name={{ app_actual.nombre }}_postgres | head -n 1) &&
+    if [ -n "$CONTAINER" ]; then
+      docker exec -u postgres $CONTAINER pg_isready -U {{ app_actual.nombre }} -d {{ app_actual.nombre }}
+    else
+      exit 1
+    fi
   register: postgres_ready
   until: postgres_ready.rc == 0
-  retries: 30
-  delay: 5
-  when: app_actual.nombre == 'chatwoot' and config_stack.changed
+  retries: 60
+  delay: 10
+  when: app_actual.nombre == 'chatwoot'
+
+- name: "Sincronizar contraseña de Postgres para {{ app_actual.nombre }} (Evitar Auth Failures)"
+  ansible.builtin.shell: >
+    CONTAINER=$(docker ps -q -f name={{ app_actual.nombre }}_postgres | head -n 1) &&
+    if [ -n "$CONTAINER" ]; then
+      docker exec -u postgres $CONTAINER psql -U {{ app_actual.nombre }} -d {{ app_actual.nombre }} -c "ALTER USER {{ app_actual.nombre }} WITH PASSWORD '{{ shared_db_password | default(app_actual.password_db | default('chatwoot123')) }}';" || true
+    fi
+  when: app_actual.nombre == 'chatwoot'
 
 - name: "Inicializar base de datos via Servicio (Swarm)"
   block:
@@ -176,11 +190,11 @@
       ansible.builtin.shell: "docker service ps {{ app_actual.nombre }}_migrator --no-trunc --format '{{ '{{' }}.CurrentState{{ '}}' }}' | head -n 1"
       register: migration_status
       until: "migration_status.stdout is search('Complete|Shutdown')"
-      retries: 60
-      delay: 5
+      retries: 120
+      delay: 15
       failed_when: "migration_status.stdout is search('Failed|Rejected')"
 
     - name: "Limpiar servicio de migración"
       ansible.builtin.command: "docker service rm {{ app_actual.nombre }}_migrator"
 
-  when: app_actual.nombre == 'chatwoot' and (config_stack.changed or config_env.changed)
+  when: app_actual.nombre == 'chatwoot'

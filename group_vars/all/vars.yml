@@ -1,6 +1,9 @@
 # Centralized vars for Migration V2 (Phase 3: Ansible refactor)
 # These are placeholders to be replaced with secrets managed via Vault or a secure store.
 shared_db_password: "REDACTED"
+postgres_password: "{{ shared_postgres_password }}"
+POSTGRES_PASSWORD: "{{ shared_postgres_password }}"
+CHATWOOT_DB_PASSWORD: "{{ shared_db_password }}"
 shared_postgres_password: "REDACTED"
 central_ram_gb: 8
 traefik_enabled: true
