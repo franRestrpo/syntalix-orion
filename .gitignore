@@ -69,3 +69,15 @@ deploy/
 credenciales/
 .venv/
 node_modules/
+# General
+state.json
+textual.log
+logs/
+.venv/
+venv/
+env/
+__pycache__/
+build/
+dist/
+pytest_cache/
+*.pyc
