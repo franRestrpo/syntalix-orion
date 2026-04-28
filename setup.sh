@@ -41,39 +41,27 @@ fi
 # Usamos la ruta absoluta al pip del entorno virtual para no activar/desactivar
 PIP_CMD="$VENV_DIR/bin/pip"
 
-log "Instalando Ansible y librerías necesarias dentro del entorno virtual..."
-# Instalamos 'ansible' (core + community), 'docker' (SDK para módulos) y 'requests'
+log "Instalando Ansible, Textual y librerías necesarias dentro del entorno virtual..."
 $PIP_CMD install --upgrade pip > /dev/null
-$PIP_CMD install ansible docker requests websocket-client jsondiff pyyaml
+$PIP_CMD install ansible ansible-runner docker requests websocket-client jsondiff pyyaml textual
 
-#$PIP_CMD install --force-reinstall ansible docker requests websocket-client jsondiff pyyaml
-
-# Forzamos la reinstalación de requests y el SDK de docker para asegurar compatibilidad
 log "Forzando actualización de librerías críticas..."
 $PIP_CMD install --upgrade requests docker > /dev/null 2>&1
 
-success "Entorno Python listo (Ansible + Docker SDK instalados)."
+success "Entorno Python listo (Ansible + Docker SDK + UI Textual instalados)."
 
-# 5. Ejecución del Playbook
-PLAYBOOK="playbook.yml"
-ANSIBLE_CMD="$VENV_DIR/bin/ansible-playbook"
+# 5. Ejecución del Instalador (UI o Playbook)
+# Vamos a habilitar la ejecución automática del nuevo TUI
+export RUNNER_MODE=real
 
-if [ ! -f "$PLAYBOOK" ]; then
-    error "No se encuentra el archivo $PLAYBOOK en este directorio."
-fi
-
-log "Lanzando orquestación con Ansible..."
+log "Lanzando el instalador automatizado (Syntalix-Orion TUI)..."
 echo "-----------------------------------------------------"
 
-# Ejecutamos ansible-playbook usando el binario del entorno virtual
-# Esto asegura que use las librerías que acabamos de instalar
-# Se usa --diff para ver cambios en plantillas y archivos .env
-$ANSIBLE_CMD -i inventory.ini "$PLAYBOOK" --diff
+$VENV_DIR/bin/python main.py
 
 if [ $? -eq 0 ]; then
     echo "-----------------------------------------------------"
-    success "¡Despliegue finalizado correctamente!"
-    echo -e "${VERDE}Tu infraestructura está lista.${RESET}"
+    success "¡Despliegue finalizado o TUI cerrada correctamente!"
 else
-    error "Hubo un error durante la ejecución del playbook."
+    error "Hubo un error durante la ejecución de la UI."
 fi
