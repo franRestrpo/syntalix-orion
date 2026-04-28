@@ -6,6 +6,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Static, ListView, ListItem
 from textual.containers import Container, Horizontal
 from textual import events
+from .dep_graph import DependencyGraph
 
 
 class DeploymentUI(App):
@@ -20,13 +21,9 @@ class DeploymentUI(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        # Seed with a mocked DependencyGraph-like structure
-        self.deployments = [
-            {"name": "Core", "status": "planned"},
-            {"name": "Data", "status": "planned"},
-            {"name": "Monitoring", "status": "planned"},
-            {"name": "Apps", "status": "planned"},
-        ]
+        # Initialize a DependencyGraph and seed the UI with its deployments
+        self.graph = DependencyGraph()
+        self.deployments = self.graph.get_deployments()
         self.selected = 0
         # populate list
         list_view = self.query_one("#deployments", ListView)
@@ -37,10 +34,11 @@ class DeploymentUI(App):
     def render_detail(self) -> None:
         detail = self.query_one("#detail", Static)
         d = self.deployments[self.selected]
+        details = d.get("dependencies", [])
         detail_text = (
             f"Selected: {d['name']}\n"
             f"Status: {d['status']}\n"
-            f"Dependencies: Core, Data, Platform"  # placeholder for real graph
+            f"Dependencies: {', '.join(details) if details else 'None'}"  # pulled from graph if present
         )
         detail.update(detail_text)
 
@@ -58,13 +56,7 @@ class DeploymentUI(App):
     def generate_plan(self) -> None:
         # Simple generated plan based on the selected deployment
         d = self.deployments[self.selected]
-        plan = (
-            f"Deployment Plan for {d['name']}:\n"
-            "- Validate dependencies and resources\n"
-            "- Prepare environment and config\n"
-            "- Deploy components in order: Core, Data, Monitoring, Apps\n"
-            "- Run health checks and validation\n"
-        )
+        plan = self.graph.get_plan(d["name"])
         detail = self.query_one("#detail", Static)
         detail.update(plan)
 
