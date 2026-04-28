@@ -6,6 +6,7 @@
 
 import asyncio
 import random
+import os
 from typing import Any, Callable, Dict, Optional
 
 EventCallback = Callable[[Dict[str, Any]], None]
@@ -55,3 +56,20 @@ class AnsibleRunner:
         except Exception:
             # Never crash the UI; log silently
             pass
+
+
+def get_runner(on_event: Optional[EventCallback] = None, debug: bool = False):
+    """Factory to obtain a runner based on RUNNER_MODE (mock or real).
+
+    Falls back to the mock AnsibleRunner if Real runner is not available.
+    """
+    mode = os.environ.get("RUNNER_MODE", "mock").lower()
+    if mode == "real":
+        try:
+            from .ansible_runner_real import RealAnsibleRunner  # type: ignore
+            return RealAnsibleRunner(on_event=on_event, debug=debug)
+        except Exception:
+            # Fallback to mock if real runner module is not available
+            return AnsibleRunner(on_event=on_event, debug=debug)
+    else:
+        return AnsibleRunner(on_event=on_event, debug=debug)

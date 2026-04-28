@@ -27,7 +27,8 @@ from textual.widgets import (
     ProgressBar,
 )
 
-from engine.ansible_runner import AnsibleRunner
+from engine.ansible_runner import get_runner
+import os
 
 # Simple ASCII logo
 ASCII_LOGO = r"""
@@ -153,7 +154,7 @@ class DeployMonitorScreen(Screen):
 
     async def on_mount(self) -> None:
         self._details_panel.visible = False
-        self._runner = AnsibleRunner(on_event=self.enqueue_event, debug=getattr(self.app, "_debug", False))
+        self._runner = get_runner(on_event=self.enqueue_event, debug=getattr(self.app, "_debug", False))
         asyncio.create_task(self._runner.run(self.config, self.modules, debug=getattr(self.app, "_debug", False)))
         asyncio.create_task(self._process_events())
         
@@ -211,6 +212,7 @@ class SyntalixApp(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("f12", "toggle_debug", "Toggle Debug"),
+        ("r", "toggle_runner_mode", "Toggle Runner Mode"),
         ("tab", "focus_next", "Next Focus"),
     ]
 
@@ -218,6 +220,8 @@ class SyntalixApp(App):
         super().__init__(*args, **kwargs)
         self._state = load_state()
         self._debug = False
+        # Runner mode: 'mock' or 'real'
+        self._runner_mode = os.environ.get("RUNNER_MODE", "mock")
         self._deploy_screen = None
         self._runner = None
 
@@ -229,7 +233,7 @@ class SyntalixApp(App):
         screen = DeployMonitorScreen(config, modules)
         self._deploy_screen = screen
         self.push_screen(screen)
-        self._runner = AnsibleRunner(on_event=screen.enqueue_event, debug=self._debug)
+        self._runner = get_runner(on_event=screen.enqueue_event, debug=self._debug, mode=self._runner_mode)
         asyncio.create_task(self._runner.run(config, modules, debug=self._debug))
 
     def action_debug_toggle(self) -> None:
@@ -237,6 +241,16 @@ class SyntalixApp(App):
         # Inform the running monitor if present
         if self._deploy_screen and hasattr(self._deploy_screen, "enqueue_event"):
             self._deploy_screen.enqueue_event({"type": "log", "level": "info", "message": f"Debug mode {'ON' if self._debug else 'OFF'}"})
+
+    def action_toggle_runner_mode(self) -> None:
+        # Toggle between mock and real runner modes at runtime
+        self._runner_mode = "real" if self._runner_mode == "mock" else "mock"
+        # Persist preference for subsequent runs? Optional: write to env-like storage
+        self.push_screen(WelcomeScreen())  # Reset flow for safety
+        # Notify UI
+        # Since we might be mid-run, just log the change
+        if self._deploy_screen and hasattr(self._deploy_screen, 'enqueue_event'):
+            self._deploy_screen.enqueue_event({"type": "log", "level": "info", "message": f"Runner mode set to {self._runner_mode}"})
 
 
 if __name__ == "__main__":
