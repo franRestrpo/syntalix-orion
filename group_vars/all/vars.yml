@@ -1,0 +1,10 @@
+# Centralized vars for Migration V2 (Phase 3: Ansible refactor)
+# These are placeholders to be replaced with secrets managed via Vault or a secure store.
+shared_db_password: "REDACTED"
+shared_postgres_password: "REDACTED"
+central_ram_gb: 8
+traefik_enabled: true
+dependencies_default:
+  - Postgres_pgvector
+  - Redis
+  - RabbitMQ
