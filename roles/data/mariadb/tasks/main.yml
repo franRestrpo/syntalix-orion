@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para mariadb"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "mariadb"
+      dominio: "{{ lookup('vars', 'MARIADB__DOMAIN', default=lookup('vars', 'MARIADB_DOMAIN', default=lookup('vars', 'MARIADB__TRAEFIK_DASHBOARD_URL', default='mariadb.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'MARIADB__ADMIN_EMAIL', default=lookup('vars', 'MARIADB__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'MARIADB__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'MARIADB__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para mariadb"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/mariadb.env.j2"
+    dest: "{{ playbook_dir }}/deploy/mariadb.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para mariadb"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/mariadb.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/mariadb_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack mariadb"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c mariadb_stack.yml mariadb"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

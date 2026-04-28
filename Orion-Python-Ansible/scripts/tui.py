@@ -63,14 +63,28 @@ from core.models import load_app_catalog, AppMetadata
 from core.security import mask_secret
 from core.logging_config import get_logger, setup_logging
 
+# Inicializar logger para este módulo (con fallback)
+try:
+    logger = get_logger(__name__)
+except Exception:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(handler)
+
 # =============================================================================
 # IMPORTS - TEXTUAL
 # =============================================================================
 
+import asyncio
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.work import work
+
+import threading
+
 from textual.widgets import (
     Header,
     Footer,
@@ -496,7 +510,7 @@ usando los checkboxes del panel izquierdo.
                 with Vertical(id="action-container"):
                     yield Static("---")
                     yield Button(
-                        "[RUN] Generar vars.yml e Instalar",
+                        "[🚀] Instalar Aplicaciones en el Servidor",
                         id="deploy-button",
                         variant="primary"
                     )
@@ -713,34 +727,42 @@ Espera mientras se procesa el despliegue...
             return False, "No hay resultado de despliegue"
 
         try:
-            plan_data = {
-                "deployment": {
-                    "apps": self.deployment_result.plan,
-                    "selected_apps": self.deployment_result.selected_apps,
-                    "dependencies": self.deployment_result.dependencies,
-                    "ram_total_mb": self.deployment_result.ram_total_mb,
-                },
-                "vars": self.deployment_result.vars_generated,
-            }
-
             # Escribir archivo YAML
             vars_file = ANSIBLE_VARS_FILE
-            vars_file.write_text(
-                yaml.dump(
-                    plan_data,
-                    default_flow_style=False,
-                    sort_keys=False,
-                    allow_unicode=True
-                ),
-                encoding="utf-8"
-            )
+            
+            # DEBUG: Imprimir ruta absoluta de intento de escritura
+            print(f"[DEBUG] Intentando escribir YAML en: {vars_file.absolute()}")
+            
+            # Aplanar vars para que sean accesibles en la raiz de Ansible
+            final_vars = self.deployment_result.vars_generated.copy()
+            final_vars["deployment"] = {
+                "apps": self.deployment_result.plan,
+                "selected_apps": self.deployment_result.selected_apps,
+                "dependencies": self.deployment_result.dependencies,
+                "ram_total_mb": self.deployment_result.ram_total_mb,
+            }
 
-            # Establecer permisos restrictivos (solo propietario puede leer/escribir)
-            # En Windows esto puede no tener efecto, pero en Unix protege el archivo
             try:
-                os.chmod(vars_file, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
+                vars_file.write_text(
+                    yaml.dump(
+                        final_vars,
+                        default_flow_style=False,
+                        sort_keys=False,
+                        allow_unicode=True
+                    ),
+                    encoding="utf-8"
+                )
+                print(f"[DEBUG] Archivo escrito exitosamente en: {vars_file.absolute()}")
+            except Exception as e:
+                print(f"[ERROR CRÍTICO] No se pudo escribir en {vars_file.absolute()}: {e}")
+                raise e
+
+            # Establecer permisos (lectura para todos, escritura solo propietario)
+            # 0o644 -> rw-r--r--
+            try:
+                os.chmod(vars_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
             except Exception:
-                pass  # Ignorar errores de chmod en Windows
+                pass  # Ignorar errores en Windows
 
             logger.info(
                 "Archivo YAML guardado de forma segura",
@@ -883,16 +905,13 @@ Sugerencias:
     def run_ansible_worker(self) -> None:
         """
         Worker que ejecuta ansible-playbook de forma no bloqueante.
-
-        Este metodo se ejecuta en un hilo separado gracias al decorador
-        @work(thread=True), evitando que la UI se congele.
-
-        Utiliza subprocess.Popen para capturar stdout/stderr en tiempo real
-        y enviarlos al widget RichLog via call_from_thread.
+        
+        Ejecuta en hilo separado para no bloquear la UI.
         """
-        self._run_ansible_deploy()
+        import threading
+        thread = threading.Thread(target=self._run_ansible_deploy, daemon=True)
+        thread.start()
 
-    @work(thread=True, exit_on_error=False)
     def _run_ansible_deploy(self) -> None:
         """
         Metodo worker que ejecuta ansible-playbook.
@@ -903,10 +922,14 @@ Sugerencias:
 
         El streaming de logs se hace via call_from_thread().
         """
+        # Configurar ruta de ansible-playbook
+        import sys
+        ansible_path = Path(sys.executable).parent / "ansible-playbook"
+
         # Verificar que Ansible esta instalado
         try:
             result = subprocess.run(
-                ["ansible-playbook", "--version"],
+                [str(ansible_path), "--version"],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -936,9 +959,21 @@ Sugerencias:
             )
             return
 
+        # DEBUG: Verificar existencia y contenido antes de ejecutar
+        if not ANSIBLE_VARS_FILE.exists():
+            self._log_to_rich(f"[ERROR CRÍTICO] Archivo de variables no encontrado en: {ANSIBLE_VARS_FILE}")
+            return
+        
+        try:
+            content = ANSIBLE_VARS_FILE.read_text(encoding="utf-8")
+            self._log_to_rich(f"[DEBUG] Contenido de {ANSIBLE_VARS_FILE}:\n{content[:200]}...")
+        except Exception as e:
+            self._log_to_rich(f"[ERROR CRÍTICO] No se pudo leer {ANSIBLE_VARS_FILE}: {e}")
+            return
+
         # Construir comando
         cmd = [
-            "ansible-playbook",
+            str(ansible_path),
             str(ANSIBLE_PLAYBOOK),
             "-i", str(ANSIBLE_INVENTORY),
             "-e", f"@{ANSIBLE_VARS_FILE}",

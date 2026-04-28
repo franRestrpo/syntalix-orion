@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para crowdsec"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "crowdsec"
+      dominio: "{{ lookup('vars', 'CROWDSEC__DOMAIN', default=lookup('vars', 'CROWDSEC_DOMAIN', default=lookup('vars', 'CROWDSEC__TRAEFIK_DASHBOARD_URL', default='crowdsec.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'CROWDSEC__ADMIN_EMAIL', default=lookup('vars', 'CROWDSEC__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'CROWDSEC__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'CROWDSEC__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para crowdsec"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/crowdsec.env.j2"
+    dest: "{{ playbook_dir }}/deploy/crowdsec.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para crowdsec"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/crowdsec.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/crowdsec_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack crowdsec"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c crowdsec_stack.yml crowdsec"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

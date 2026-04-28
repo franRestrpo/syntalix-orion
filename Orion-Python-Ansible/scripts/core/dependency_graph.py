@@ -437,6 +437,10 @@ class DependencyGraph:
 
         # Generar variables para todas las apps del plan
         all_vars: Dict[str, Any] = {}
+        
+        # Añadir la lista de roles activos para Ansible
+        all_vars["ansible_enabled_roles"] = ordered_plan
+        
         for aid in ordered_plan:
             meta = self.catalog.get(aid, {})
             vars_def = meta.get("variables", {}) or {}

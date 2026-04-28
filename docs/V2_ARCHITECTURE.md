@@ -5,6 +5,7 @@ Visión general: Syntalix-Orion v2 transforma el despliegue en un asistente de s
 1) Capa de Metadatos (Fuente de Verdad)
 - Archivo: apps_metadata.py
 - Contenido: catálogo de aplicaciones con dependencias y consumo de RAM (en MB).
+- Componentes de Datos: Postgres_pgvector (SQL vectorial), MongoDB (NoSQL), Redis (Cache/Broker), RabbitMQ (Message Queue).
 - Regla: Postgres se expone como una única opción con PostgreSQL + pgvector integrados, usando la imagen pgvector y un init para CREAR EXTENSION vector.
 
 2) Capa de Presentación y Lógica (Textual UI)

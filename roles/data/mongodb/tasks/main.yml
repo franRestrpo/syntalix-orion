@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para mongodb"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "mongodb"
+      dominio: "{{ lookup('vars', 'MONGODB__DOMAIN', default=lookup('vars', 'MONGODB_DOMAIN', default=lookup('vars', 'MONGODB__TRAEFIK_DASHBOARD_URL', default='mongodb.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'MONGODB__ADMIN_EMAIL', default=lookup('vars', 'MONGODB__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'MONGODB__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'MONGODB__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para mongodb"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/mongodb.env.j2"
+    dest: "{{ playbook_dir }}/deploy/mongodb.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para mongodb"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/mongodb.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/mongodb_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack mongodb"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c mongodb_stack.yml mongodb"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

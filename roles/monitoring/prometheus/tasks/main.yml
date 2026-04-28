@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para prometheus"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "prometheus"
+      dominio: "{{ lookup('vars', 'PROMETHEUS__DOMAIN', default=lookup('vars', 'PROMETHEUS_DOMAIN', default=lookup('vars', 'PROMETHEUS__TRAEFIK_DASHBOARD_URL', default='prometheus.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'PROMETHEUS__ADMIN_EMAIL', default=lookup('vars', 'PROMETHEUS__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'PROMETHEUS__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'PROMETHEUS__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para prometheus"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/prometheus.env.j2"
+    dest: "{{ playbook_dir }}/deploy/prometheus.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para prometheus"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/prometheus.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/prometheus_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack prometheus"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c prometheus_stack.yml prometheus"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

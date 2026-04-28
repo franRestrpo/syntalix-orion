@@ -39,7 +39,9 @@ class RealAnsibleRunner:
             # The exact invocation depends on repository layout; this is a best-effort
             private_data_dir = str(Path.cwd())
             # You should adjust the playbook path according to your repo structure
-            pb = "playbooks/deploy.yml"
+            pb = "playbook.yml"
+            if not Path(pb).exists():
+                pb = "playbooks/deploy.yml"
             if not Path(pb).exists():
                 pb = "playbooks/site.yml"
             if not Path(pb).exists():

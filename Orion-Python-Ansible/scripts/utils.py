@@ -1,48 +1,51 @@
 """
 Utilidades generales para Syntalix-Orion.
 
-Funciones helper para:
-- Ejecución de comandos
-- Validación de sistema
-- Generación de contraseñas seguras
-- Logging
+Este módulo re-exporta funciones desde los módulos core unificados:
+- core.security: Generación de passwords, validación
+- core.state: Manejo de estado
+- core.preflight: Verificaciones del sistema
+- core.logging_config: Logging
+
+Funciones específicas de utils que no están en core:
+- run(): Ejecución genérica de comandos
+- run_docker_command(): Wrapper específico para Docker
 """
 
 import subprocess
-import sys
 import os
-from typing import List, Optional, Tuple, Any
 from pathlib import Path
+from typing import List, Optional, Tuple
 
-# Importar módulos de seguridad
-from core.security import generate_secure_password, validate_domain, validate_email
+# Importar módulos core unificados
+from core.security import (
+    generate_secure_password,
+    generate_app_password,
+    mask_secret,
+    validate_domain,
+    validate_email,
+)
 from core.logging_config import get_logger
+from core.state import save_state, load_state, load_env_file as core_load_env, save_env_file as core_save_env
+from core.preflight import (
+    cmd_exists,
+    check_docker_available,
+    check_swarm_active,
+    check_network_exists,
+    create_overlay_network,
+    get_cpu_cores,
+    run_preflight_checks,
+)
 
 # Logger
 logger = get_logger(__name__)
 
 
-def cmd_exists(cmd: str) -> bool:
-    """
-    Verifica si un comando existe en el PATH.
-    
-    Args:
-        cmd: Nombre del comando
-        
-    Returns:
-        True si el comando existe
-    """
-    result = subprocess.call(
-        f"which {cmd}",
-        shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    ) == 0
-    logger.debug(f"Comando '{cmd}' existe: {result}")
-    return result
-
-
-def run(cmd: List[str], check: bool = True, capture_output: bool = True) -> subprocess.CompletedProcess:
+def run(
+    cmd: List[str],
+    check: bool = True,
+    capture_output: bool = True
+) -> subprocess.CompletedProcess:
     """
     Ejecuta un comando de forma segura.
     
@@ -100,132 +103,6 @@ def run_docker_command(
     return run(full_cmd, check=check, capture_output=capture_output)
 
 
-def check_docker_available() -> Tuple[bool, Optional[str]]:
-    """
-    Verifica si Docker está disponible y en ejecución.
-    
-    Returns:
-        Tupla (disponible, versión o mensaje de error)
-    """
-    if not cmd_exists("docker"):
-        logger.warning("Docker no encontrado en PATH")
-        return False, "Docker no está instalado"
-    
-    try:
-        result = run(["docker", "version", "--format", "{{.Server.Version}}"], check=False)
-        if result.returncode == 0:
-            version = result.stdout.strip()
-            logger.info("Docker disponible", extra={"version": version})
-            return True, version
-        else:
-            error_msg = result.stderr.strip() if result.stderr else "Error desconocido"
-            logger.error("Docker no está en ejecución", extra={"error": error_msg})
-            return False, error_msg
-            
-    except Exception as e:
-        logger.error("Error verificando Docker", extra={"error": str(e)})
-        return False, str(e)
-
-
-def check_swarm_active() -> Tuple[bool, Optional[str]]:
-    """
-    Verifica si Docker Swarm está activo.
-    
-    Returns:
-        Tupla (activo, estado o mensaje)
-    """
-    try:
-        result = run(["docker", "info", "--format", "{{.Swarm.LocalNodeState}}"], check=False)
-        if result.returncode == 0:
-            state = result.stdout.strip()
-            is_active = state == "active"
-            
-            if is_active:
-                logger.info("Docker Swarm activo")
-            else:
-                logger.warning(f"Docker Swarm no activo", extra={"state": state})
-                
-            return is_active, state
-        else:
-            return False, "Error al verificar Swarm"
-            
-    except Exception as e:
-        logger.error("Error verificando Swarm", extra={"error": str(e)})
-        return False, str(e)
-
-
-def check_network_exists(network_name: str) -> bool:
-    """
-    Verifica si existe una red Docker.
-    
-    Args:
-        network_name: Nombre de la red
-        
-    Returns:
-        True si la red existe
-    """
-    try:
-        result = run(
-            ["docker", "network", "ls", "--format", "{{.Name}}"],
-            check=True,
-            capture_output=True
-        )
-        networks = result.stdout.strip().split('\n')
-        exists = network_name in networks
-        logger.debug(f"Red '{network_name}' existe: {exists}")
-        return exists
-        
-    except Exception as e:
-        logger.error("Error verificando red", extra={"network": network_name, "error": str(e)})
-        return False
-
-
-def create_overlay_network(network_name: str, attachable: bool = True) -> bool:
-    """
-    Crea una red overlay para Docker Swarm.
-    
-    Args:
-        network_name: Nombre de la red
-        attachable: Si True, permite attaching de servicios standalone
-        
-    Returns:
-        True si se creó exitosamente o ya existía
-    """
-    if check_network_exists(network_name):
-        logger.info(f"Red '{network_name}' ya existe")
-        return True
-    
-    logger.info(f"Creando red overlay '{network_name}'", extra={"attachable": attachable})
-    
-    cmd = ["docker", "network", "create", "--driver=overlay"]
-    if attachable:
-        cmd.append("--attachable")
-    cmd.append(network_name)
-    
-    try:
-        run(cmd, check=True)
-        logger.info(f"Red '{network_name}' creada exitosamente")
-        return True
-        
-    except Exception as e:
-        logger.error("Error creando red", extra={"network": network_name, "error": str(e)})
-        return False
-
-
-def generate_app_password(length: int = 32) -> str:
-    """
-    Genera una contraseña segura para aplicaciones.
-    Reemplaza contraseñas hardcodeadas como 'admin123'.
-    
-    Args:
-        length: Longitud de la contraseña
-        
-    Returns:
-        Contraseña segura
-    """
-    return generate_secure_password(length=length)
-
-
 def validate_app_domain(domain: str) -> Tuple[bool, Optional[str]]:
     """
     Valida el dominio de una aplicación.
@@ -237,7 +114,7 @@ def validate_app_domain(domain: str) -> Tuple[bool, Optional[str]]:
         Tupla (válido, mensaje de error o None)
     """
     if not domain or not domain.strip():
-        return False, "El dominio no puede estar vacío"
+        return False, "El dominio no puede estar vacuoooo"
     
     domain = domain.strip()
     
@@ -304,9 +181,9 @@ def ensure_credenciales_dir() -> Path:
     
     # Establecer permisos restrictivos
     try:
-        os.chmod(cred_dir, 0o700)  # Solo el propietario puede leer/escribir
+        os.chmod(cred_dir, 0o700)
     except Exception:
-        pass  # Ignorar errores de permisos en Windows
+        pass
     
     return cred_dir
 
@@ -321,31 +198,10 @@ def load_env_file(env_path: Path) -> dict:
     Returns:
         Diccionario con las variables de entorno
     """
-    from configparser import ConfigParser
+    if isinstance(env_path, str):
+        env_path = Path(env_path)
     
-    logger.debug(f"Cargando archivo .env: {env_path}")
-    
-    if not env_path.exists():
-        logger.warning(f"Archivo .env no encontrado: {env_path}")
-        return {}
-    
-    # Usar ConfigParser para parsing seguro
-    config = ConfigParser()
-    try:
-        config.read(env_path)
-    except Exception as e:
-        logger.error("Error parsing .env", extra={"file": str(env_path), "error": str(e)})
-        return {}
-    
-    result = {}
-    if config.has_section('DEFAULT'):
-        result = dict(config['DEFAULT'])
-    elif config.sections():
-        # Usar la primera sección
-        result = dict(config[config.sections()[0]])
-    
-    logger.debug(f"Cargadas {len(result)} variables de {env_path}")
-    return result
+    return core_load_env(str(env_path))
 
 
 def save_env_file(env_path: Path, variables: dict) -> bool:
@@ -359,31 +215,13 @@ def save_env_file(env_path: Path, variables: dict) -> bool:
     Returns:
         True si se guardó exitosamente
     """
-    from configparser import ConfigParser
+    if isinstance(env_path, str):
+        env_path = Path(env_path)
     
-    logger.info(f"Guardando variables en .env", extra={"file": str(env_path), "count": len(variables)})
-    
-    try:
-        config = ConfigParser()
-        config.read_dict({'DEFAULT': variables})
-        
-        with open(env_path, 'w', encoding='utf-8') as f:
-            config.write(f)
-        
-        # Establecer permisos restrictivos
-        try:
-            os.chmod(env_path, 0o600)  # Solo propietario puede leer/escribir
-        except Exception:
-            pass  # Ignorar en Windows
-        
-        logger.info(f"Archivo .env guardado exitosamente")
-        return True
-        
-    except Exception as e:
-        logger.error("Error guardando .env", extra={"file": str(env_path), "error": str(e)})
-        return False
+    return core_save_env(str(env_path), variables)
 
 
+# Re-exportar desde módulos core (compatibilidad)
 __all__ = [
     "cmd_exists",
     "run",
@@ -400,4 +238,7 @@ __all__ = [
     "ensure_credenciales_dir",
     "load_env_file",
     "save_env_file",
+    "run_preflight_checks",
+    "save_state",
+    "load_state",
 ]

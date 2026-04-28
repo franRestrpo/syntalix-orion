@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para openwebui"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "openwebui"
+      dominio: "{{ lookup('vars', 'OPENWEBUI__DOMAIN', default=lookup('vars', 'OPENWEBUI_DOMAIN', default=lookup('vars', 'OPENWEBUI__TRAEFIK_DASHBOARD_URL', default='openwebui.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'OPENWEBUI__ADMIN_EMAIL', default=lookup('vars', 'OPENWEBUI__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'OPENWEBUI__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'OPENWEBUI__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para openwebui"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/openwebui.env.j2"
+    dest: "{{ playbook_dir }}/deploy/openwebui.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para openwebui"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/openwebui.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/openwebui_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack openwebui"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c openwebui_stack.yml openwebui"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

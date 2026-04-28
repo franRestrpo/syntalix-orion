@@ -1,8 +1,0 @@
-- [ ] UI flow: Welcome -> ConfigWizard -> DeployMonitor works without errors
-- [ ] Real runner toggle: runtime switching mock/real via UI (R)
-- [ ] Dependency graph wiring (mock) and plan generation in UI
-- [ ] Centralized vars read in Phase 3 (group_vars/all/vars.yml)
-- [ ] Tests: unit tests for DependencyGraph, end-to-end smoke tests for UI
-- [ ] Security review: no secrets in logs; vault integration plan
-- [ ] CI: tests, lint, type checks
-- [ ] Documentation: migration notes, usage guide
