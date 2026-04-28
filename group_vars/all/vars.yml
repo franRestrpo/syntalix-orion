@@ -1,10 +1,15 @@
 # Centralized vars for Migration V2 (Phase 3: Ansible refactor)
-# These are placeholders to be replaced with secrets managed via Vault or a secure store.
-shared_db_password: "REDACTED"
+# Secretos autogenerados de forma aleatoria usando el lookup de Ansible.
+# Se guardan automáticamente en la carpeta 'credenciales' de forma local para no perderlos en siguientes ejecuciones.
+shared_db_password: "{{ lookup('password', playbook_dir | default('.') + '/credenciales/shared_db_password chars=ascii_letters,digits length=32') }}"
+shared_postgres_password: "{{ lookup('password', playbook_dir | default('.') + '/credenciales/shared_postgres_password chars=ascii_letters,digits length=32') }}"
+
+# Variables derivadas para estandarización de contenedores
 postgres_password: "{{ shared_postgres_password }}"
 POSTGRES_PASSWORD: "{{ shared_postgres_password }}"
 CHATWOOT_DB_PASSWORD: "{{ shared_db_password }}"
-shared_postgres_password: "REDACTED"
+
+# Otras variables de Phase 3
 central_ram_gb: 8
 traefik_enabled: true
 dependencies_default:
