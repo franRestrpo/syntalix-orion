@@ -99,7 +99,7 @@ class ConfigWizardScreen(Screen):
             yield Button("Monitoring", id="mod_monitoring")
             yield Button("Start Deployment", id="start_deploy")
             yield Button("Back", id="back")
-        yield Static("", id="summary", visible=True)
+        yield Static("", id="summary")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         btn = event.button.id
@@ -148,7 +148,7 @@ class DeployMonitorScreen(Screen):
             yield self._progress
             yield TextLog(highlight=True, markup=True, id="log")
             yield Button("Show Details", id="toggle_details")
-            self._details_panel = Static("", id="details_panel", visible=False)
+            self._details_panel = Static("", id="details_panel")
             yield self._details_panel
             yield Button("Retry", id="retry")
             yield Button("Close", id="close_monitor")
