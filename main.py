@@ -254,4 +254,6 @@ class SyntalixApp(App):
 
 
 if __name__ == "__main__":
-    SyntalixApp.run(title="SyntalixApp", log="textual.log")
+    app = SyntalixApp()
+    app.title = "SyntalixApp"
+    app.run()
