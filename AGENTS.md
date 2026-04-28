@@ -22,3 +22,6 @@
 - Sí: El grafo debe detectar ciclos de dependencias y reportarlos para evitar despliegues inválidos.
 - Sí: Incluir recomendaciones para pruebas de DependencyGraph (unit tests básicas que validen resolución de dependencias y generación de vars).
 - Sí: Documentar el flujo objetivo de la Fase 2: UI Textual que consume el grafo, genera RAM en tiempo real y produce vars.yml.
+- Sí: Añadir ejemplos prácticos de DependencyGraph para pruebas rápidas (escenarios como Traefik+Portainer, Dify con dependencias, Chatwoot con RabbitMQ, y casos de fallo por duplicación de secretos).
+- Sí: Proporcionar comandos de verificación rápida para pruebas (p. ej., ejecutar scripts de prueba o pytest) y entender salidas esperadas.
+- Sí: Incluir una pequeña sección de validación de seguridad para Contraseñas y secretos (evitar bcrypt en DB y centralizar secretos).
