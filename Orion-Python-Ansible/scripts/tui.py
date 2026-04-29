@@ -70,7 +70,16 @@ from core.logging_config import get_logger, setup_logging
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.work import work
+
+# Compatibilidad: textual.work (v0.x) vs textual.worker (v0.57+)
+try:
+    from textual.work import work
+except ImportError:
+    try:
+        from textual.worker import worker as work
+    except ImportError:
+        work = None
+
 from textual.widgets import (
     Header,
     Footer,
