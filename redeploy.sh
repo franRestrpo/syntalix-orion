@@ -1,8 +1,8 @@
 #!/bin/bash
-# Syntalix-Orion - Script de Redespliegue unificado con Ansible
+# Syntalix-Orion - Script de Redespliegue
 set -e
 
-# Configuración de Colores
+# Colores
 VERDE="\e[32m"
 AZUL="\e[34m"
 ROJO="\e[91m"
@@ -16,19 +16,19 @@ VENV_DIR="$(pwd)/.venv"
 PYTHON_CMD="$VENV_DIR/bin/python"
 
 if [ ! -f "$PYTHON_CMD" ]; then
-    log "Entorno virtual no encontrado. Ejecutando setup.sh primero..."
+    log "Entorno no encontrado. Ejecutando setup.sh..."
     sudo ./setup.sh
     exit 0
 fi
 
-log "Iniciando redespliegue interactivo con la Interfaz de Terminal (TUI)..."
+log "Iniciando Syntalix-Orion V2..."
 
-# Lanzar la TUI usando el entorno virtual con el runner en modo real
-export RUNNER_MODE=real
-$PYTHON_CMD main.py
+# Modo por defecto: local (Docker)
+export RUNNER_MODE=${RUNNER_MODE:-real}
+$PYTHON_CMD main.py local
 
 if [ $? -eq 0 ]; then
-    success "¡Redespliegue finalizado o TUI cerrada correctamente!"
+    success "Despliegue completado."
 else
-    error "Hubo un error durante la ejecución."
+    error "Error durante la ejecución."
 fi
