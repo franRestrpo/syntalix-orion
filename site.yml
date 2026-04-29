@@ -313,17 +313,17 @@
     #   when: "'glpi' in ansible_enabled_roles"
     #   tags: [management, glpi, helpdesk, itsm, asset]
 
-    - name: apps_management/odoo
-      when: "'odoo' in ansible_enabled_roles"
-      tags: [management, odoo, erp, crm, business]
+    # - name: apps_management/odoo
+    #   when: "'odoo' in ansible_enabled_roles"
+    #   tags: [management, odoo, erp, crm, business]
 
-    - name: apps_management/nocodb
-      when: "'nocodb' in ansible_enabled_roles"
-      tags: [management, nocodb, database, spreadsheet, nocode]
+    # - name: apps_management/nocodb
+    #   when: "'nocodb' in ansible_enabled_roles"
+    #   tags: [management, nocodb, database, spreadsheet, nocode]
 
-    - name: apps_management/vaultwarden
-      when: "'vaultwarden' in ansible_enabled_roles"
-      tags: [management, vaultwarden, password, vault, security]
+    # - name: apps_management/vaultwarden
+    #   when: "'vaultwarden' in ansible_enabled_roles"
+    #   tags: [management, vaultwarden, password, vault, security]
 
   # ---------------------------------------------------------------------------
   # POST-TASKS: Resumen y Verificación Final
