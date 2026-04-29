@@ -15,6 +15,7 @@ Permite instalar, configurar y desplegar automáticamente:
 - 🔄 **Docker Swarm** - Orquestación de clúster
 - 🔀 **Traefik** - Proxy reverso con routing dinámico + TLS
 - 📊 **Portainer** - Gestión visual del clúster
+- 🐬 **RabbitMQ** - Message Queue persistente (AMQP)
 - 📦 **Catálogo de Apps de Valor** - Stacks (Odoo, Flowise, Chatwoot, n8n, etc.) definidos y auto-configurados.
 
 ---
@@ -42,6 +43,7 @@ Proveer una base estandarizada, auditable, reproducible y escalable para:
 | 🔄 Orquestación | Docker Swarm | Cluster distribuido |
 | 🔀 Proxy Reverso | Traefik | Routing dinámico + TLS |
 | 📊 Gestión Visual | Portainer | Administración del clúster |
+| 🐬 Message Queue | RabbitMQ | Cola de mensajes AMQP persistente |
 | 💻 Terminal UI | Textual (Python) | Interfaz interactiva de planificación |
 | 🖥️ Lógica / Grafo | Python | Resolución de dependencias y catálogo |
 
