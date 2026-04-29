@@ -730,6 +730,9 @@ Espera mientras se procesa el despliegue...
             # Escribir archivo YAML
             vars_file = ANSIBLE_VARS_FILE
             
+            # DEBUG: Imprimir ruta absoluta de intento de escritura
+            print(f"[DEBUG] Intentando escribir YAML en: {vars_file.absolute()}")
+            
             # Aplanar vars para que sean accesibles en la raiz de Ansible
             final_vars = self.deployment_result.vars_generated.copy()
             final_vars["deployment"] = {
@@ -739,15 +742,20 @@ Espera mientras se procesa el despliegue...
                 "ram_total_mb": self.deployment_result.ram_total_mb,
             }
 
-            vars_file.write_text(
-                yaml.dump(
-                    final_vars,
-                    default_flow_style=False,
-                    sort_keys=False,
-                    allow_unicode=True
-                ),
-                encoding="utf-8"
-            )
+            try:
+                vars_file.write_text(
+                    yaml.dump(
+                        final_vars,
+                        default_flow_style=False,
+                        sort_keys=False,
+                        allow_unicode=True
+                    ),
+                    encoding="utf-8"
+                )
+                print(f"[DEBUG] Archivo escrito exitosamente en: {vars_file.absolute()}")
+            except Exception as e:
+                print(f"[ERROR CRÍTICO] No se pudo escribir en {vars_file.absolute()}: {e}")
+                raise e
 
             # Establecer permisos restrictivos (solo propietario puede leer/escribir)
             # En Windows esto puede no tener efecto, pero en Unix protege el archivo
