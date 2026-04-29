@@ -58,6 +58,11 @@ $PIP_CMD install bcrypt pydantic jinja2 > /dev/null
 
 success "Entorno Python configurado."
 
+# Instalar Colecciones de Ansible requeridas
+log "Instalando colecciones de Ansible Galaxy..."
+$VENV_DIR/bin/ansible-galaxy collection install -r requirements.yml > /dev/null
+success "Colecciones de Ansible instaladas."
+
 # 4. Validaciones Pre-vuelo
 log "Ejecutando validaciones pre-vuelo..."
 
@@ -90,6 +95,22 @@ echo "=============================================="
 # Por defecto modo local
 RUNNER_MODE=${RUNNER_MODE:-real}
 export RUNNER_MODE
+
+# Si se pasa el flag --deploy y ya existe ansible_vars.yml, despliega directo
+if [[ "$1" == "--deploy" || "$1" == "-d" ]]; then
+    if [ -f "ansible_vars.yml" ]; then
+        log "Modo desatendido: Ejecutando Ansible Playbook directamente..."
+        $VENV_DIR/bin/ansible-playbook -i inventory.ini site.yml -e @ansible_vars.yml
+        if [ $? -eq 0 ]; then
+            success "Despliegue finalizado correctamente."
+            exit 0
+        else
+            error "Error durante el despliegue con Ansible."
+        fi
+    else
+        error "No se encontró ansible_vars.yml. Ejecuta primero sin --deploy para generarlo en la TUI."
+    fi
+fi
 
 $VENV_DIR/bin/python main.py local
 
