@@ -914,10 +914,14 @@ Sugerencias:
 
         El streaming de logs se hace via call_from_thread().
         """
+        # Configurar ruta de ansible-playbook
+        import sys
+        ansible_path = Path(sys.executable).parent / "ansible-playbook"
+
         # Verificar que Ansible esta instalado
         try:
             result = subprocess.run(
-                ["ansible-playbook", "--version"],
+                [str(ansible_path), "--version"],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -949,7 +953,7 @@ Sugerencias:
 
         # Construir comando
         cmd = [
-            "ansible-playbook",
+            str(ansible_path),
             str(ANSIBLE_PLAYBOOK),
             "-i", str(ANSIBLE_INVENTORY),
             "-e", f"@{ANSIBLE_VARS_FILE}",
