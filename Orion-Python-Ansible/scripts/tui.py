@@ -959,6 +959,18 @@ Sugerencias:
             )
             return
 
+        # DEBUG: Verificar existencia y contenido antes de ejecutar
+        if not ANSIBLE_VARS_FILE.exists():
+            self._log_to_rich(f"[ERROR CRÍTICO] Archivo de variables no encontrado en: {ANSIBLE_VARS_FILE}")
+            return
+        
+        try:
+            content = ANSIBLE_VARS_FILE.read_text(encoding="utf-8")
+            self._log_to_rich(f"[DEBUG] Contenido de {ANSIBLE_VARS_FILE}:\n{content[:200]}...")
+        except Exception as e:
+            self._log_to_rich(f"[ERROR CRÍTICO] No se pudo leer {ANSIBLE_VARS_FILE}: {e}")
+            return
+
         # Construir comando
         cmd = [
             str(ansible_path),
