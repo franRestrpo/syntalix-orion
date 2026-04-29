@@ -309,9 +309,9 @@
     # 📋 MANAGEMENT - Gestión Empresarial
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: apps_management/glpi
-      when: "'glpi' in ansible_enabled_roles"
-      tags: [management, glpi, helpdesk, itsm, asset]
+    # - name: apps_management/glpi
+    #   when: "'glpi' in ansible_enabled_roles"
+    #   tags: [management, glpi, helpdesk, itsm, asset]
 
     - name: apps_management/odoo
       when: "'odoo' in ansible_enabled_roles"
