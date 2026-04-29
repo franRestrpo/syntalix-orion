@@ -727,21 +727,21 @@ Espera mientras se procesa el despliegue...
             return False, "No hay resultado de despliegue"
 
         try:
-            plan_data = {
-                "deployment": {
-                    "apps": self.deployment_result.plan,
-                    "selected_apps": self.deployment_result.selected_apps,
-                    "dependencies": self.deployment_result.dependencies,
-                    "ram_total_mb": self.deployment_result.ram_total_mb,
-                },
-                "vars": self.deployment_result.vars_generated,
-            }
-
             # Escribir archivo YAML
             vars_file = ANSIBLE_VARS_FILE
+            
+            # Aplanar vars para que sean accesibles en la raiz de Ansible
+            final_vars = self.deployment_result.vars_generated.copy()
+            final_vars["deployment"] = {
+                "apps": self.deployment_result.plan,
+                "selected_apps": self.deployment_result.selected_apps,
+                "dependencies": self.deployment_result.dependencies,
+                "ram_total_mb": self.deployment_result.ram_total_mb,
+            }
+
             vars_file.write_text(
                 yaml.dump(
-                    plan_data,
+                    final_vars,
                     default_flow_style=False,
                     sort_keys=False,
                     allow_unicode=True
