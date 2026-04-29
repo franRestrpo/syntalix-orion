@@ -128,19 +128,19 @@
     # 🔧 CORE - Infraestructura Base
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: core/traefik
+    - role: core/traefik
       when: "'traefik' in ansible_enabled_roles"
       tags: [core, traefik, proxy, ssl, tls]
 
-    - name: core/crowdsec
+    - role: core/crowdsec
       when: "'crowdsec' in ansible_enabled_roles"
       tags: [core, crowdsec, security, waf, honeypot]
 
-    - name: core/authentik
+    - role: core/authentik
       when: "'authentik' in ansible_enabled_roles"
       tags: [core, authentik, auth, sso, identity]
 
-    - name: core/portainer
+    - role: core/portainer
       when: "'portainer' in ansible_enabled_roles"
       tags: [core, portainer, management, ui, docker]
 
@@ -162,31 +162,31 @@
     # 💾 DATA - Bases de Datos y Almacenamiento
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: data/postgres_pgvector
+    - role: data/postgres_pgvector
       when: "'postgres_pgvector' in ansible_enabled_roles"
       tags: [data, postgres, database, pgvector, vector, ai]
 
-    - name: data/mariadb
+    - role: data/mariadb
       when: "'mariadb' in ansible_enabled_roles"
       tags: [data, mariadb, database, mysql, relational]
 
-    - name: data/mongodb
+    - role: data/mongodb
       when: "'mongodb' in ansible_enabled_roles"
       tags: [data, mongodb, database, nosql, document]
 
-    - name: data/redis
+    - role: data/redis
       when: "'redis' in ansible_enabled_roles"
       tags: [data, redis, cache, session, broker]
 
-    - name: data/rabbitmq
+    - role: data/rabbitmq
       when: "'rabbitmq' in ansible_enabled_roles"
       tags: [data, rabbitmq, queue, message, amqp]
 
-    - name: data/qdrant
+    - role: data/qdrant
       when: "'qdrant' in ansible_enabled_roles"
       tags: [data, qdrant, vector, search, similarity]
 
-    - name: data/minio
+    - role: data/minio
       when: "'minio' in ansible_enabled_roles"
       tags: [data, minio, s3, storage, object]
 
@@ -205,19 +205,19 @@
     # 📊 MONITORING - Observabilidad
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: monitoring/prometheus
+    - role: monitoring/prometheus
       when: "'prometheus' in ansible_enabled_roles"
       tags: [monitoring, prometheus, metrics, alerting]
 
-    - name: monitoring/grafana
+    - role: monitoring/grafana
       when: "'grafana' in ansible_enabled_roles"
       tags: [monitoring, grafana, dashboards, visualization]
 
-    - name: monitoring/loki
+    - role: monitoring/loki
       when: "'loki' in ansible_enabled_roles"
       tags: [monitoring, loki, logs, aggregation]
 
-    - name: monitoring/uptime_kuma
+    - role: monitoring/uptime_kuma
       when: "'uptime_kuma' in ansible_enabled_roles"
       tags: [monitoring, uptime_kuma, uptime, status, heartbeat]
 
@@ -235,15 +235,15 @@
     # 🤖 AI APPLICATIONS - Inteligencia Artificial
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: apps_ai/dify
+    - role: apps_ai/dify
       when: "'dify' in ansible_enabled_roles"
       tags: [ai, dify, llm, workflow, llmops]
 
-    - name: apps_ai/openwebui
+    - role: apps_ai/openwebui
       when: "'openwebui' in ansible_enabled_roles"
       tags: [ai, openwebui, interface, ollama, chat]
 
-    - name: apps_ai/flowise
+    - role: apps_ai/flowise
       when: "'flowise' in ansible_enabled_roles"
       tags: [ai, flowise, flow, automation, langchain]
 
@@ -260,11 +260,11 @@
     # ⚡ AUTOMATION - Automatización
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: apps_automation/n8n
+    - role: apps_automation/n8n
       when: "'n8n' in ansible_enabled_roles"
       tags: [automation, n8n, workflow, integration]
 
-    - name: apps_automation/activepieces
+    - role: apps_automation/activepieces
       when: "'activepieces' in ansible_enabled_roles"
       tags: [automation, activepieces, flow, integration]
 
@@ -282,15 +282,15 @@
     # 💬 COMMUNICATION - Comunicación
     # ═══════════════════════════════════════════════════════════════════════
 
-    - name: apps_comms/chatwoot
+    - role: apps_comms/chatwoot
       when: "'chatwoot' in ansible_enabled_roles"
       tags: [comms, chatwoot, chat, crm, support]
 
-    - name: apps_comms/evolution_api
+    - role: apps_comms/evolution_api
       when: "'evolution_api' in ansible_enabled_roles"
       tags: [comms, evolution_api, whatsapp, messaging, whatsapp_api]
 
-    - name: apps_comms/typebot
+    - role: apps_comms/typebot
       when: "'typebot' in ansible_enabled_roles"
       tags: [comms, typebot, chatbot, form, survey]
 
@@ -309,19 +309,19 @@
     # 📋 MANAGEMENT - Gestión Empresarial
     # ═══════════════════════════════════════════════════════════════════════
 
-    # - name: apps_management/glpi
+    # - role: apps_management/glpi
     #   when: "'glpi' in ansible_enabled_roles"
     #   tags: [management, glpi, helpdesk, itsm, asset]
 
-    # - name: apps_management/odoo
+    # - role: apps_management/odoo
     #   when: "'odoo' in ansible_enabled_roles"
     #   tags: [management, odoo, erp, crm, business]
 
-    # - name: apps_management/nocodb
+    # - role: apps_management/nocodb
     #   when: "'nocodb' in ansible_enabled_roles"
     #   tags: [management, nocodb, database, spreadsheet, nocode]
 
-    # - name: apps_management/vaultwarden
+    # - role: apps_management/vaultwarden
     #   when: "'vaultwarden' in ansible_enabled_roles"
     #   tags: [management, vaultwarden, password, vault, security]
 
