@@ -1,36 +1,37 @@
 ---
-# RabbitMQ service deployment with persistent data
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
 
-- name: Create network if needed
-  docker_network:
-    name: "{{ internal_network | default('SyntalixNet') }}"
-    driver: overlay
-    internal: false
+- name: "Configurar app_actual para rabbitmq"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "rabbitmq"
+      dominio: "{{ lookup('vars', 'RABBITMQ__DOMAIN', default=lookup('vars', 'RABBITMQ_DOMAIN', default=lookup('vars', 'RABBITMQ__TRAEFIK_DASHBOARD_URL', default='rabbitmq.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'RABBITMQ__ADMIN_EMAIL', default=lookup('vars', 'RABBITMQ__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'RABBITMQ__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'RABBITMQ__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
 
-- name: Ensure RabbitMQ data volume exists
-  docker_volume:
-    name: rabbitmq_data
-    driver: local
+- name: "Generar archivo .env para rabbitmq"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/rabbitmq.env.j2"
+    dest: "{{ playbook_dir }}/deploy/rabbitmq.env"
+  register: config_env
+  ignore_errors: true
 
-- name: Deploy RabbitMQ container
-  docker_container:
-    name: rabbitmq
-    image: rabbitmq:3-management
-    state: started
-    restart_policy: unless-stopped
-    networks:
-      - name: "{{ internal_network | default('SyntalixNet') }}"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    env:
-      RABBITMQ_DEFAULT_USER: "{{ rabbitmq_user | default('orion') }}"
-      RABBITMQ_DEFAULT_PASS: "{{ rabbitmq_password }}"
-      RABBITMQ_DEFAULT_VHOST: "{{ rabbitmq_vhost | default('/') }}"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    published_ports:
-      - "5672:5672"
-      - "15672:15672"
+- name: "Generar docker-compose para rabbitmq"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/rabbitmq.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/rabbitmq_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack rabbitmq"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c rabbitmq_stack.yml rabbitmq"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

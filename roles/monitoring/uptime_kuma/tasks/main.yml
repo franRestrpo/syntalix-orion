@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para uptime_kuma"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "uptime_kuma"
+      dominio: "{{ lookup('vars', 'UPTIME_KUMA__DOMAIN', default=lookup('vars', 'UPTIME_KUMA_DOMAIN', default=lookup('vars', 'UPTIME_KUMA__TRAEFIK_DASHBOARD_URL', default='uptime_kuma.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'UPTIME_KUMA__ADMIN_EMAIL', default=lookup('vars', 'UPTIME_KUMA__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'UPTIME_KUMA__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'UPTIME_KUMA__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para uptime_kuma"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/uptime_kuma.env.j2"
+    dest: "{{ playbook_dir }}/deploy/uptime_kuma.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para uptime_kuma"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/uptime_kuma.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/uptime_kuma_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack uptime_kuma"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c uptime_kuma_stack.yml uptime_kuma"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)

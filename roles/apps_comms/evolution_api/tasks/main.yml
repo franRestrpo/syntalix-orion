@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para evolution_api"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "evolution_api"
+      dominio: "{{ lookup('vars', 'EVOLUTION_API__DOMAIN', default=lookup('vars', 'EVOLUTION_API_DOMAIN', default=lookup('vars', 'EVOLUTION_API__TRAEFIK_DASHBOARD_URL', default='evolution_api.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'EVOLUTION_API__ADMIN_EMAIL', default=lookup('vars', 'EVOLUTION_API__TRAEFIK_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'EVOLUTION_API__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'EVOLUTION_API__DB_PASSWORD', default='securepass')) }}"
+      chatwoot_db_host: "postgres_pgvector"
+      chatwoot_redis_host: "redis"
+
+- name: "Generar archivo .env para evolution_api"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/evolution_api.env.j2"
+    dest: "{{ playbook_dir }}/deploy/evolution_api.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para evolution_api"
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/evolution_api.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/evolution_api_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack evolution_api"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c evolution_api_stack.yml evolution_api"
+    chdir: "{{ playbook_dir }}/deploy"
+  when: not config_stack.failed | default(false)
