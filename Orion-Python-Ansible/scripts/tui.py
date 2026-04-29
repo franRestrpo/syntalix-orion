@@ -510,7 +510,7 @@ usando los checkboxes del panel izquierdo.
                 with Vertical(id="action-container"):
                     yield Static("---")
                     yield Button(
-                        "[RUN] Generar vars.yml e Instalar",
+                        "[🚀] Instalar Aplicaciones en el Servidor",
                         id="deploy-button",
                         variant="primary"
                     )
