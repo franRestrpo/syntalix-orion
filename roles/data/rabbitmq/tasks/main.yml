@@ -1,0 +1,36 @@
+---
+# RabbitMQ service deployment with persistent data
+
+- name: Create network if needed
+  docker_network:
+    name: "{{ internal_network | default('SyntalixNet') }}"
+    driver: overlay
+    internal: false
+
+- name: Ensure RabbitMQ data volume exists
+  docker_volume:
+    name: rabbitmq_data
+    driver: local
+
+- name: Deploy RabbitMQ container
+  docker_container:
+    name: rabbitmq
+    image: rabbitmq:3-management
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ internal_network | default('SyntalixNet') }}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    env:
+      RABBITMQ_DEFAULT_USER: "{{ rabbitmq_user | default('orion') }}"
+      RABBITMQ_DEFAULT_PASS: "{{ rabbitmq_password }}"
+      RABBITMQ_DEFAULT_VHOST: "{{ rabbitmq_vhost | default('/') }}"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    published_ports:
+      - "5672:5672"
+      - "15672:15672"

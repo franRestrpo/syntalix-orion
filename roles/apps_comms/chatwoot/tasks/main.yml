@@ -1,0 +1,75 @@
+---
+# Chatwoot service deployment with persistent RabbitMQ
+
+- name: Create Chatwoot network
+  docker_network:
+    name: "{{ internal_network }}"
+    driver: overlay
+    internal: false
+  when: internal_network is defined
+
+- name: Ensure RabbitMQ data volume exists
+  docker_volume:
+    name: rabbitmq_data
+    driver: local
+
+- name: Deploy RabbitMQ container
+  docker_container:
+    name: rabbitmq
+    image: rabbitmq:3-management
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ internal_network }}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    env:
+      RABBITMQ_DEFAULT_USER: "{{ rabbitmq_user | default('orion') }}"
+      RABBITMQ_DEFAULT_PASS: "{{ rabbitmq_password }}"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+- name: Wait for RabbitMQ to be ready
+  wait_for:
+    host: "{{ lookup('ansible.builtin.env', 'RABBITMQ_HOST') | default('rabbitmq') }}"
+    port: 5672
+    timeout: 120
+    delay: 10
+  when: internal_network is defined
+
+- name: Deploy Chatwoot container
+  docker_container:
+    name: chatwoot
+    image: chatwoot/chatwoot:latest
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ internal_network }}"
+    env:
+      postgres_host: "{{ chatwoot_db_host }}"
+      postgres_port: 5432
+      postgres_database: "{{ chatwoot_db_name | default('chatwoot') }}"
+      postgres_username: "{{ chatwoot_db_user | default('chatwoot') }}"
+      postgres_password: "{{ chatwoot_db_password }}"
+      redis_host: "{{ chatwoot_redis_host | default('redis') }}"
+      redis_port: 6379
+      redis_password: "{{ chatwoot_redis_password }}"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: "{{ rabbitmq_user | default('orion') }}"
+      RABBITMQ_PASSWORD: "{{ rabbitmq_password }}"
+      SECRET_KEY_BASE: "{{ chatwoot_secret_key_base }}"
+      ENABLE_ACCOUNT_CREATION: "true"
+      MAILER_INBOUND_ADDRESS: "{{ mailer_inbound_address | default('') }}"
+    hostname: chatwoot
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatwoot.rule=Host(`{{ chatwoot_domain }}`)"
+      - "traefik.http.routers.chatwoot.entrypoints=websecure"
+      - "traefik.http.routers.chatwoot.tls=true"
+      - "traefik.http.routers.chatwoot.tls.certresolver=letsencryptresolver"
+      - "traefik.http.services.chatwoot.loadbalancer.server.port=3000"

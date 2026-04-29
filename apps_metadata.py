@@ -2,7 +2,7 @@ from typing import Dict, Any, List, Optional
 import secrets
 import bcrypt
 
-"""Catalogo de metadatos de aplicaciones (versión 2)."""
+"""Catálogo de metadatos de aplicaciones (versión 2)."""
 
 APP_METADATA: Dict[str, Dict[str, Any]] = {
     # Core Infrastructure Layer
@@ -135,6 +135,25 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             }
         }
     },
+    
+    # Message Queue (requerido por Chatwoot)
+    "rabbitmq": {
+        "id": "rabbitmq",
+        "name": "RabbitMQ",
+        "category": "Data",
+        "version": "3-management",
+        "ram_mb": 512,
+        "dependencies": [],
+        "volumes": {
+            "/var/lib/rabbitmq": "rabbitmq_data"
+        },
+        "environment": {
+            "RABBITMQ_DEFAULT_USER": "orion",
+            "RABBITMQ_DEFAULT_PASS": "auto_generate",
+            "RABBITMQ_DEFAULT_VHOST": "/"
+        }
+    },
+    
     "redis": {
         "id": "redis",
         "name": "Redis",
