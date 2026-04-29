@@ -83,15 +83,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 
-# Compatibilidad: textual.work (v0.x) vs textual.worker (v0.57+)
-# Si no está disponible, usamos asyncio.create_task como fallback
-try:
-    from textual.work import work
-except ImportError:
-    try:
-        from textual.worker import work
-    except ImportError:
-        work = None  # type: ignore
+import threading
 
 from textual.widgets import (
     Header,
@@ -906,11 +898,12 @@ Sugerencias:
         """
         Worker que ejecuta ansible-playbook de forma no bloqueante.
         
-        Usa el decorador @work para no bloquear la UI.
+        Ejecuta en hilo separado para no bloquear la UI.
         """
-        self._run_ansible_deploy()
+        import threading
+        thread = threading.Thread(target=self._run_ansible_deploy, daemon=True)
+        thread.start()
 
-    @work(thread=True, exit_on_error=False)
     def _run_ansible_deploy(self) -> None:
         """
         Metodo worker que ejecuta ansible-playbook.
