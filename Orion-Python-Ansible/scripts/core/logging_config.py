@@ -189,29 +189,6 @@ class OrionLogger:
 
     @classmethod
     def add_file_handler(
-            file_handler.setFormatter(JSONFormatter())
-        else:
-            file_handler.setFormatter(StructuredFormatter(use_colors=False))
-        
-        file_handler.setLevel(logging.DEBUG)  # Todo se graba en archivo
-        logger.addHandler(file_handler)
-        
-        # Handler de consola
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(
-            StructuredFormatter(use_colors=cls._config["use_colors"])
-        )
-        console_handler.setLevel(cls._config["log_level"])
-        logger.addHandler(console_handler)
-        
-        # Evitar propagación al logger raíz
-        logger.propagate = False
-        
-        cls._instances[name] = logger
-        return logger
-    
-    @classmethod
-    def add_file_handler(
         cls,
         logger: logging.Logger,
         filename: str,
