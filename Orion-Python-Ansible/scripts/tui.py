@@ -757,12 +757,12 @@ Espera mientras se procesa el despliegue...
                 print(f"[ERROR CRÍTICO] No se pudo escribir en {vars_file.absolute()}: {e}")
                 raise e
 
-            # Establecer permisos restrictivos (solo propietario puede leer/escribir)
-            # En Windows esto puede no tener efecto, pero en Unix protege el archivo
+            # Establecer permisos (lectura para todos, escritura solo propietario)
+            # 0o644 -> rw-r--r--
             try:
-                os.chmod(vars_file, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
+                os.chmod(vars_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
             except Exception:
-                pass  # Ignorar errores de chmod en Windows
+                pass  # Ignorar errores en Windows
 
             logger.info(
                 "Archivo YAML guardado de forma segura",
