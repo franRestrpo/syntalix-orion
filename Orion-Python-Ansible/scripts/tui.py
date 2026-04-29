@@ -67,18 +67,21 @@ from core.logging_config import get_logger, setup_logging
 # IMPORTS - TEXTUAL
 # =============================================================================
 
+import asyncio
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 
 # Compatibilidad: textual.work (v0.x) vs textual.worker (v0.57+)
-try:
-    from textual.work import work
-except ImportError:
-    try:
-        from textual.worker import worker as work
-    except ImportError:
-        work = None
+# Si no está disponible, usamos asyncio.create_task como fallback
+def _async_worker(func):
+    """Wrapper para ejecutar funciones asíncronamente."""
+    def wrapper(self, *args, **kwargs):
+        if work is not None:
+            return work(func)
+        # Fallback: ejecutar directamente (no bloqueante)
+        return asyncio.create_task(func(self, *args, **kwargs))
+    return wrapper
 
 from textual.widgets import (
     Header,
@@ -892,16 +895,15 @@ Sugerencias:
     def run_ansible_worker(self) -> None:
         """
         Worker que ejecuta ansible-playbook de forma no bloqueante.
-
-        Este metodo se ejecuta en un hilo separado gracias al decorador
-        @work(thread=True), evitando que la UI se congele.
-
-        Utiliza subprocess.Popen para capturar stdout/stderr en tiempo real
-        y enviarlos al widget RichLog via call_from_thread.
+        
+        Usa asyncio.create_task para no bloquear la UI.
         """
-        self._run_ansible_deploy()
+        if work is not None:
+            self._run_ansible_deploy()
+        else:
+            # Fallback: usar asyncio.create_task
+            asyncio.create_task(self._run_ansible_deploy())
 
-    @work(thread=True, exit_on_error=False)
     def _run_ansible_deploy(self) -> None:
         """
         Metodo worker que ejecuta ansible-playbook.
