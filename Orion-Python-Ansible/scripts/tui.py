@@ -85,14 +85,13 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 
 # Compatibilidad: textual.work (v0.x) vs textual.worker (v0.57+)
 # Si no está disponible, usamos asyncio.create_task como fallback
-def _async_worker(func):
-    """Wrapper para ejecutar funciones asíncronamente."""
-    def wrapper(self, *args, **kwargs):
-        if work is not None:
-            return work(func)
-        # Fallback: ejecutar directamente (no bloqueante)
-        return asyncio.create_task(func(self, *args, **kwargs))
-    return wrapper
+try:
+    from textual.work import work
+except ImportError:
+    try:
+        from textual.worker import work
+    except ImportError:
+        work = None  # type: ignore
 
 from textual.widgets import (
     Header,
@@ -907,14 +906,11 @@ Sugerencias:
         """
         Worker que ejecuta ansible-playbook de forma no bloqueante.
         
-        Usa asyncio.create_task para no bloquear la UI.
+        Usa el decorador @work para no bloquear la UI.
         """
-        if work is not None:
-            self._run_ansible_deploy()
-        else:
-            # Fallback: usar asyncio.create_task
-            asyncio.create_task(self._run_ansible_deploy())
+        self._run_ansible_deploy()
 
+    @work(thread=True, exit_on_error=False)
     def _run_ansible_deploy(self) -> None:
         """
         Metodo worker que ejecuta ansible-playbook.
