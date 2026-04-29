@@ -63,8 +63,16 @@ from core.models import load_app_catalog, AppMetadata
 from core.security import mask_secret
 from core.logging_config import get_logger, setup_logging
 
-# Inicializar logger para este módulo
-logger = get_logger(__name__)
+# Inicializar logger para este módulo (con fallback)
+try:
+    logger = get_logger(__name__)
+except Exception:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(handler)
 
 # =============================================================================
 # IMPORTS - TEXTUAL

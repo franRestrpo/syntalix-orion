@@ -165,27 +165,30 @@ class OrionLogger:
         Returns:
             Logger configurado
         """
-        if not cls._initialized:
-            cls.configure()
+        try:
+            if not cls._initialized:
+                try:
+                    cls.configure()
+                except Exception:
+                    # Fallback: configurar sin directorio de logs
+                    cls.configure(log_level="INFO", log_dir=None)
+            
+            if name in cls._instances:
+                return cls._instances[name]
+        except Exception:
+            pass
         
-        if name in cls._instances:
-            return cls._instances[name]
-        
+        # Fallback: logger básico
         logger = logging.getLogger(name)
-        logger.setLevel(cls._config["log_level"])
-        
-        # Limpiar handlers existentes
-        logger.handlers.clear()
-        
-        # Handler de archivo con rotación
-        file_handler = logging.handlers.RotatingFileHandler(
-            cls._config["log_dir"] / "orion.log",
-            maxBytes=cls._config["max_size"],
-            backupCount=cls._config["backup_count"],
-            encoding='utf-8',
-        )
-        
-        if cls._config["json_format"]:
+        logger.setLevel(logging.INFO)
+        if not logger.handlers:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+            logger.addHandler(handler)
+        return logger
+
+    @classmethod
+    def add_file_handler(
             file_handler.setFormatter(JSONFormatter())
         else:
             file_handler.setFormatter(StructuredFormatter(use_colors=False))
