@@ -149,8 +149,12 @@ class OrionLogger:
             "use_colors": use_colors,
         }
         
-        # Crear directorio de logs
-        cls._config["log_dir"].mkdir(parents=True, exist_ok=True)
+        # Crear directorio de logs si existe
+        if cls._config["log_dir"]:
+            try:
+                cls._config["log_dir"].mkdir(parents=True, exist_ok=True)
+            except Exception:
+                pass
         
         cls._initialized = True
     
@@ -170,8 +174,8 @@ class OrionLogger:
                 try:
                     cls.configure()
                 except Exception:
-                    # Fallback: configurar sin directorio de logs
-                    cls.configure(log_level="INFO", log_dir=None)
+                    # Fallback: usar logger básico
+                    pass
             
             if name in cls._instances:
                 return cls._instances[name]
