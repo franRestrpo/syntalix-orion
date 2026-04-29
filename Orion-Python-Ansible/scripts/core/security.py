@@ -269,3 +269,33 @@ def mask_secret(value: str, visible_chars: int = 4) -> str:
         return "****"
     
     return "*" * (len(value) - visible_chars) + value[-visible_chars:]
+
+
+def generate_app_password(length: int = 32) -> str:
+    """
+    Genera una contraseña segura para aplicaciones.
+    Alias recomendado para uso en toda la aplicación.
+    
+    Args:
+        length: Longitud de la contraseña
+        
+    Returns:
+        Contraseña segura
+    """
+    return generate_secure_password(length=length)
+
+
+def generate_secret(length: int = 32) -> str:
+    """
+    Genera una cadena aleatoria segura para secretos.
+    Alias compatibilidad para código legacy.
+    
+    Args:
+        length: Longitud del secreto
+        
+    Returns:
+        Cadena aleatoria segura
+    """
+    import string
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for i in range(length))
