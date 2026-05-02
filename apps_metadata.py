@@ -82,7 +82,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 256,
         "dependencies": ["traefik"],
-        "variables": {}
+        "variables": {
+            "PORTAINER_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Portainer Dashboard",
+                "required": True,
+                "auto_generate": False
+            }
+        }
     },
 
     # Data Backends (obligatorios)
@@ -261,6 +268,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 1536,
         "dependencies": ["postgres_pgvector", "redis", "qdrant", "traefik"],
         "variables": {
+            "DIFY_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Dify AI platform",
+                "required": True,
+                "auto_generate": False
+            },
             "DIFY_INIT_PASSWORD": {
                 "type": "secret",
                 "description": "Dify init admin password",
@@ -275,7 +288,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": ["traefik"],
-        "variables": {}
+        "variables": {
+            "OPENWEBUI_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for OpenWebUI",
+                "required": True,
+                "auto_generate": False
+            }
+        }
     },
     "flowise": {
         "id": "flowise",
@@ -284,7 +304,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": ["postgres_pgvector", "redis", "traefik"],
-        "variables": {}
+        "variables": {
+            "FLOWISE_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Flowise AI",
+                "required": True,
+                "auto_generate": False
+            }
+        }
     },
     "n8n": {
         "id": "n8n",
@@ -294,6 +321,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 512,
         "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {
+            "N8N_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for n8n Automation",
+                "required": True,
+                "auto_generate": False
+            },
             "N8N_BASIC_AUTH": {
                 "type": "secret",
                 "description": "n8n basic auth password",
@@ -321,6 +354,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 1024,
         "dependencies": ["postgres_pgvector", "redis", "rabbitmq", "traefik"],
         "variables": {
+            "CHATWOOT_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Chatwoot platform",
+                "required": True,
+                "auto_generate": False
+            },
             "SECRET_KEY_BASE": {
                 "type": "secret",
                 "description": "Chatwoot secret key base",
@@ -343,6 +382,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 512,
         "dependencies": ["mongodb", "traefik"],
         "variables": {
+            "EVOLUTION_API_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Evolution API",
+                "required": True,
+                "auto_generate": False
+            },
             "EV_API_KEY": {
                 "type": "secret",
                 "description": "Evolution API key",
@@ -360,6 +405,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 1024,
         "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {
+            "ODOO_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Odoo ERP",
+                "required": True,
+                "auto_generate": False
+            },
             "ADMIN_PASSWORD": {
                 "type": "secret",
                 "description": "Admin password for Odoo",

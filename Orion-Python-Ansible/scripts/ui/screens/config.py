@@ -82,30 +82,40 @@ class ConfigScreen(Screen):
             ]
             summary.update("\n".join(lines))
             
-            # Identificar variables manuales requeridas
+            # Identificar variables manuales requeridas por aplicación
             self.required_vars.clear()
+            app_vars_map = {}
             for app_id in plan.plan:
                 app_meta = self.raw_metadata.get(app_id, {})
+                app_name = app_meta.get("name", app_id)
                 variables = app_meta.get("variables", {})
+                
+                app_specific_vars = []
                 for var_name, var_info in variables.items():
                     is_auto = var_info.get("auto_generate", False)
                     is_required = var_info.get("required", False)
                     if is_required and not is_auto:
                         desc = var_info.get("description", var_name)
                         v_type = var_info.get("type", "string")
+                        app_specific_vars.append((var_name, desc, v_type))
                         self.required_vars.append((var_name, desc, v_type))
+                
+                if app_specific_vars:
+                    app_vars_map[app_name] = app_specific_vars
             
             forms_container = self.query_one("#forms-container", Vertical)
             forms_container.remove_children()
             self.user_inputs.clear()
             
-            for var_name, desc, v_type in self.required_vars:
-                # Pre-llenar si ya estaba en el store
-                default_val = self.app.state_store.user_variables.get(var_name, "")
-                is_pwd = v_type == "secret"
-                form_input = DynamicFormInput(var_name=var_name, description=desc, default_value=default_val, is_password=is_pwd)
-                forms_container.mount(form_input)
-                self.user_inputs[var_name] = default_val
+            for app_name, vars_list in app_vars_map.items():
+                forms_container.mount(Static(f"\n[📦] **{app_name}**", markup=True))
+                for var_name, desc, v_type in vars_list:
+                    # Pre-llenar si ya estaba en el store
+                    default_val = self.app.state_store.user_variables.get(var_name, "")
+                    is_pwd = v_type == "secret"
+                    form_input = DynamicFormInput(var_name=var_name, description=desc, default_value=default_val, is_password=is_pwd)
+                    forms_container.mount(form_input)
+                    self.user_inputs[var_name] = default_val
                     
         except Exception as e:
             self.notify(f"Error calculando plan: {e}", severity="error")
