@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from textual.app import ComposeResult
 from textual.screen import Screen
@@ -9,6 +9,7 @@ from textual.widgets import Header, Footer, Static, Button
 from textual.message import Message
 
 from core.dependency_graph import DependencyGraph
+from core.security import validate_domain, validate_email
 from ui.widgets.forms import DynamicFormInput
 from ui.managers.state_store import DeploymentPlan
 
@@ -33,10 +34,11 @@ class ConfigScreen(Screen):
         from apps_metadata import APP_METADATA
         from core.models import load_app_catalog
         self.catalog = load_app_catalog(APP_METADATA)
+        self.raw_metadata = APP_METADATA
         
         catalog_dict = {app_id: app.model_dump() for app_id, app in self.catalog.items()}
         self.dependency_graph = DependencyGraph(catalog=catalog_dict)
-        self.required_vars = []
+        self.required_vars: List[Tuple[str, str, str]] = [] # list of (var_name, description, type)
         self.user_inputs: Dict[str, str] = {}
 
     def compose(self) -> ComposeResult:
@@ -45,7 +47,8 @@ class ConfigScreen(Screen):
             yield Static("## [GATEKEEPER] Configuración del Despliegue", markup=True)
             yield Static(id="plan-summary", markup=True)
             
-            yield Static("### Variables de Entorno", id="vars-title", markup=True)
+            yield Static("### Variables Requeridas", id="vars-title", markup=True)
+            yield Static("", id="validation-error", classes="ram-warning")
             yield Vertical(id="forms-container")
             
             with Vertical(id="action-container", classes="mt-2"):
@@ -55,6 +58,7 @@ class ConfigScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.query_one("#validation-error", Static).update("")
         self._calculate_plan()
 
     def _calculate_plan(self) -> None:
@@ -78,23 +82,30 @@ class ConfigScreen(Screen):
             ]
             summary.update("\n".join(lines))
             
-            # TODO: Extraer variables que necesitan input manual del usuario
-            # Por ahora, usamos vars_generated para que el usuario pueda sobrescribir
-            # si lo desea.
+            # Identificar variables manuales requeridas
+            self.required_vars.clear()
+            for app_id in plan.plan:
+                app_meta = self.raw_metadata.get(app_id, {})
+                variables = app_meta.get("variables", {})
+                for var_name, var_info in variables.items():
+                    is_auto = var_info.get("auto_generate", False)
+                    is_required = var_info.get("required", False)
+                    if is_required and not is_auto:
+                        desc = var_info.get("description", var_name)
+                        v_type = var_info.get("type", "string")
+                        self.required_vars.append((var_name, desc, v_type))
+            
             forms_container = self.query_one("#forms-container", Vertical)
             forms_container.remove_children()
+            self.user_inputs.clear()
             
-            # En Orion V2, las variables se generan o están en la metadata.
-            # Vamos a mostrar solo algunas o permitir configurarlas si tienen un patrón.
-            for key, value in plan.vars_generated.items():
-                if "PASSWORD" in key or "SECRET" in key:
-                    continue # No pedir inputs para secretos auto-generados por seguridad
-                
-                # Ejemplo: pedir variables comunes de dominio o correo
-                if "DOMAIN" in key or "EMAIL" in key:
-                    form_input = DynamicFormInput(var_name=key, default_value=str(value))
-                    forms_container.mount(form_input)
-                    self.user_inputs[key] = str(value)
+            for var_name, desc, v_type in self.required_vars:
+                # Pre-llenar si ya estaba en el store
+                default_val = self.app.state_store.user_variables.get(var_name, "")
+                is_pwd = v_type == "secret"
+                form_input = DynamicFormInput(var_name=var_name, description=desc, default_value=default_val, is_password=is_pwd)
+                forms_container.mount(form_input)
+                self.user_inputs[var_name] = default_val
                     
         except Exception as e:
             self.notify(f"Error calculando plan: {e}", severity="error")
@@ -108,7 +119,31 @@ class ConfigScreen(Screen):
         elif event.button.id == "back-button":
             self.action_back()
 
+    def _validate_inputs(self) -> Tuple[bool, str]:
+        """Aplica Fail-Fast validando las entradas obligatorias."""
+        for var_name, desc, v_type in self.required_vars:
+            val = self.user_inputs.get(var_name, "").strip()
+            if not val:
+                return False, f"El campo '{desc}' ({var_name}) es obligatorio."
+            
+            if v_type == "domain":
+                if not validate_domain(val):
+                    return False, f"El valor '{val}' para '{desc}' no es un dominio válido."
+            elif v_type == "email":
+                if not validate_email(val):
+                    return False, f"El valor '{val}' para '{desc}' no es un correo válido."
+        return True, ""
+
     def action_deploy(self) -> None:
+        is_valid, error_msg = self._validate_inputs()
+        error_widget = self.query_one("#validation-error", Static)
+        
+        if not is_valid:
+            error_widget.update(f"**[ERROR]** {error_msg}")
+            self.notify(error_msg, severity="error")
+            return
+            
+        error_widget.update("")
         # Guardar en el store
         self.app.state_store.user_variables.update(self.user_inputs)
         # Actualizar las vars generadas con las del usuario
@@ -119,3 +154,4 @@ class ConfigScreen(Screen):
 
     def action_back(self) -> None:
         self.post_message(self.ConfigBack())
+

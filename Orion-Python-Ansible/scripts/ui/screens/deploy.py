@@ -1,4 +1,5 @@
 import sys
+import os
 import asyncio
 from pathlib import Path
 
@@ -8,6 +9,10 @@ from textual.containers import Vertical
 from textual.widgets import Header, Footer, Static, Button, RichLog
 
 from engine.ansible_runner_real import RealAnsibleRunner
+from core.state import save_env_file
+from core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 class DeployScreen(Screen):
     """Pantalla final que ejecuta y muestra el despliegue con Ansible."""
@@ -49,6 +54,19 @@ class DeployScreen(Screen):
         # Preparar variables
         vars_to_inject = plan.vars_generated.copy()
         
+        # Inyección Criptográfica y Persistencia Segura (Zero Trust)
+        env_file_path = str(Path.cwd() / ".env")
+        if save_env_file(env_file_path, vars_to_inject):
+            try:
+                os.chmod(env_file_path, 0o600)
+                logger.info("Validación exitosa. Archivo .env guardado de forma segura con permisos 600.")
+                log_widget.write("[SECURE] Archivo .env guardado de forma segura.")
+            except Exception as e:
+                logger.warning(f"No se pudieron establecer los permisos 600: {e}")
+        else:
+            logger.error("Fallo al guardar el archivo .env")
+            log_widget.write("[ERROR] Fallo al persistir el archivo .env de forma segura.")
+
         def on_event(event: dict) -> None:
             # Safely write to UI thread
             msg = event.get("message", str(event))
@@ -79,3 +97,4 @@ class DeployScreen(Screen):
 
     def action_quit(self) -> None:
         self.app.exit()
+
