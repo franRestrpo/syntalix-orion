@@ -165,11 +165,43 @@ class OrionLogger:
                 pass
         
         cls._initialized = True
+        
+        # Configurar el logger raíz (root logger) para actuar como concentrador central
+        root_logger = logging.getLogger()
+        root_logger.setLevel(cls._config["log_level"])
+        
+        # Limpiar handlers previos si los hay
+        root_logger.handlers = []
+        
+        # 1. Handler de Consola
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(StructuredFormatter(use_colors=cls._config["use_colors"]))
+        root_logger.addHandler(console_handler)
+        
+        # 2. Handler de Archivo (Concentrador de Logs)
+        if cls._config["log_dir"]:
+            log_file_path = cls._config["log_dir"] / "orion.log"
+            try:
+                file_handler = logging.handlers.RotatingFileHandler(
+                    filename=log_file_path,
+                    maxBytes=cls._config["max_size"],
+                    backupCount=cls._config["backup_count"],
+                    encoding='utf-8'
+                )
+                
+                if cls._config["json_format"]:
+                    file_handler.setFormatter(JSONFormatter())
+                else:
+                    file_handler.setFormatter(StructuredFormatter(use_colors=False))
+                    
+                root_logger.addHandler(file_handler)
+            except Exception as e:
+                print(f"WARNING: No se pudo configurar el archivo de log central ({log_file_path}): {e}", file=sys.stderr)
     
     @classmethod
     def get_logger(cls, name: str) -> logging.Logger:
         """
-        Obtiene un logger configurado.
+        Obtiene un logger configurado. Utiliza el logger raíz como concentrador.
         
         Args:
             name: Nombre del logger (generalmente __name__)
@@ -177,31 +209,15 @@ class OrionLogger:
         Returns:
             Logger configurado
         """
-        try:
-            if not cls._initialized:
-                try:
-                    cls.configure()
-                except Exception as e:
-                    # Fallback: usar logger básico pero al menos registrar el error
-                    import sys
-                    print(f"WARNING: Error configurando logger: {e}", file=sys.stderr)
-                    
-        except Exception:
-            pass
-            
-            if name in cls._instances:
-                return cls._instances[name]
-        except Exception:
-            pass
-        
-        # Fallback: logger básico
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.INFO)
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
-            logger.addHandler(handler)
-        return logger
+        if not cls._initialized:
+            try:
+                cls.configure()
+            except Exception as e:
+                import sys
+                print(f"WARNING: Error configurando logger central: {e}", file=sys.stderr)
+                
+        # Al retornar un logger con este nombre, heredará los handlers del root logger
+        return logging.getLogger(name)
 
     @classmethod
     def add_file_handler(
