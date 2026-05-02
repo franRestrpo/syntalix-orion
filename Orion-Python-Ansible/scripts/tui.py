@@ -984,24 +984,38 @@ Sugerencias:
                     # Limpiar ANSI y enviar al RichLog via call_from_thread
                     clean_line = self._clean_ansi(line.rstrip())
                     self._log_to_rich(clean_line)
+                    
+                    # Registrar también en el concentrador de logs general (archivo)
+                    # Usar log_level apropiado según el contenido de la línea
+                    lower_line = clean_line.lower()
+                    if "fatal" in lower_line or "error" in lower_line or "failed:" in lower_line:
+                        logger.error(f"[ANSIBLE] {clean_line}")
+                    elif "warning" in lower_line:
+                        logger.warning(f"[ANSIBLE] {clean_line}")
+                    else:
+                        logger.info(f"[ANSIBLE] {clean_line}")
 
             # Obtener codigo de salida
             returncode = process.wait()
 
             if returncode == 0:
                 self._log_to_rich("\n[OK] Ansible playbook completado exitosamente")
+                logger.info("Ansible playbook completado exitosamente")
                 self._on_deployment_complete(True, "Playbook completado exitosamente")
             else:
                 self._log_to_rich(f"\n[ERROR] Ansible playbook fallido (codigo: {returncode})")
+                logger.error(f"Ansible playbook fallido con codigo {returncode}")
                 self._on_deployment_complete(False, f"Playbook fallido con codigo {returncode}")
 
         except FileNotFoundError:
+            logger.error("ansible-playbook no encontrado en PATH")
             self._on_deployment_complete(False, "ansible-playbook no encontrado en PATH")
         except PermissionError:
+            logger.error("Permiso denegado para ejecutar ansible-playbook")
             self._on_deployment_complete(False, "Permiso denegado para ejecutar ansible-playbook")
         except Exception as e:
             error_msg = f"Error ejecutando Ansible: {str(e)}"
-            logger.error(error_msg)
+            logger.error(error_msg, exc_info=True)
             self._on_deployment_complete(False, error_msg)
 
     @staticmethod

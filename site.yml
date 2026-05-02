@@ -88,6 +88,7 @@
       community.docker.docker_network:
         name: "{{ docker_network_name }}"
         driver: "{{ docker_network_driver }}"
+        scope: swarm
         attachable: "{{ docker_network_attachable }}"
         driver_options:
           encrypted: "true"
