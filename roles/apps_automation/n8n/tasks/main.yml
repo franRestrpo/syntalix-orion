@@ -9,12 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "n8n"
-      dominio: "{{ lookup('vars', 'N8N__DOMAIN', default=lookup('vars', 'N8N_DOMAIN', default=lookup('vars', 'N8N__TRAEFIK_DASHBOARD_URL', default='n8n.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'N8N__ADMIN_EMAIL', default=lookup('vars', 'N8N__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'N8N__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'N8N__DB_PASSWORD', default='securepass')) }}"
-      chatwoot_db_host: "postgres_pgvector"
-      chatwoot_redis_host: "redis"
+      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') | regex_replace('traefik\\.', 'n8n.') }}"
+      acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
+      password_db: "{{ vars.get('POSTGRES_PGVECTOR__POSTGRES_PASSWORD', 'securepass') }}"
+      basic_auth: "{{ vars.get('N8N__N8N_BASIC_AUTH', 'admin:securepass') }}"
 
 - name: "Generar archivo .env para n8n"
   ansible.builtin.template:
