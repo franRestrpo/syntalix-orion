@@ -18,20 +18,20 @@
 
 - name: "Generar archivo .env para evolution_api"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/evolution_api.env.j2"
+    src: "evolution.env.j2"
     dest: "{{ playbook_dir }}/deploy/evolution_api.env"
   register: config_env
-  ignore_errors: true
 
 - name: "Generar docker-compose para evolution_api"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/evolution_api.yml.j2"
+    src: "evolution.yml.j2"
     dest: "{{ playbook_dir }}/deploy/evolution_api_stack.yml"
   register: config_stack
-  ignore_errors: true
 
-- name: "Desplegar Stack evolution_api"
+- name: "🚀 Desplegar Stack evolution_api en Docker Swarm"
   ansible.builtin.command:
     cmd: "docker stack deploy -c evolution_api_stack.yml evolution_api"
     chdir: "{{ playbook_dir }}/deploy"
   when: not config_stack.failed | default(false)
+  register: stack_deploy
+  changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"

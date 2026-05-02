@@ -18,20 +18,20 @@
 
 - name: "Generar archivo .env para chatwoot"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/chatwoot.env.j2"
+    src: "chatwoot.env.j2"
     dest: "{{ playbook_dir }}/deploy/chatwoot.env"
   register: config_env
-  ignore_errors: true
 
 - name: "Generar docker-compose para chatwoot"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/chatwoot.yml.j2"
+    src: "chatwoot.yml.j2"
     dest: "{{ playbook_dir }}/deploy/chatwoot_stack.yml"
   register: config_stack
-  ignore_errors: true
 
-- name: "Desplegar Stack chatwoot"
+- name: "🚀 Desplegar Stack chatwoot en Docker Swarm"
   ansible.builtin.command:
     cmd: "docker stack deploy -c chatwoot_stack.yml chatwoot"
     chdir: "{{ playbook_dir }}/deploy"
   when: not config_stack.failed | default(false)
+  register: stack_deploy
+  changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"
