@@ -59,7 +59,7 @@ class RealAnsibleRunner:
         try:
             import ansible_runner  # type: ignore
         except Exception:
-            self._emit({"type": "log", "level": "warning", "message": "ansible-runner not available. Falling back to mock.")})
+            self._emit({"type": "log", "level": "warning", "message": "ansible-runner not available. Falling back to mock."})
             # Fallback behavior: simulate a quick success
             await asyncio.sleep(0.5)
             self._emit({"type": "log", "level": "info", "message": "Deployment completed (mock fallback)"})
