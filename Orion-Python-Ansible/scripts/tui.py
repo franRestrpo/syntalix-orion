@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 """
-Syntalix-Orion V2 - Terminal User Interface (TUI)
+Interfaz de Usuario de Terminal (TUI) de Syntalix-Orion V2.
 
-Interfaz gráfica de terminal interactiva para la gestión de despliegue
-de aplicaciones en Docker Swarm mediante Ansible.
+Este módulo implementa una consola interactiva rica, desarrollada con el framework 
+Textual, que permite a los administradores de sistemas gestionar el ciclo de 
+vida de despliegue de aplicaciones de forma visual y segura.
 
-Arquitectura:
-- Backend: DependencyGraph + Pydantic models (ya implementado)
-- Frontend: Textual TUI (este archivo)
-
-Uso:
-    cd scripts
-    python tui.py
-
-Dependencias:
-    pip install textual pyyaml
-
-Autor: Syntalix-Orion Team
-Versión: 2.0.1
+La interfaz se encarga de:
+    - Presentar el catálogo validado de aplicaciones.
+    - Gestionar la selección dinámica de componentes.
+    - Visualizar en tiempo real el plan de despliegue y dependencias.
+    - Ejecutar y monitorear playbooks de Ansible en segundo plano.
+    - Proporcionar retroalimentación visual sobre el consumo de recursos (RAM).
 """
 
 import sys
@@ -317,22 +311,11 @@ class DeploymentResult:
 
 class OrionTUI(App):
     """
-    Aplicación TUI para Syntalix-Orion V2.
-
-    Proporciona una interfaz visual interactiva para:
-    - Seleccionar aplicaciones a desplegar
-    - Visualizar grafo de dependencias en tiempo real
-    - Iniciar el despliegue con seguridad
-
-    Herencia: textual.app.App
-
-    Atributos de clase:
-        BINDINGS: Bindings de teclado globales
-        CSS: Estilos integrados de la aplicación
-
-    Ejemplo:
-        >>> app = OrionTUI()
-        >>> app.run()
+    Aplicación principal de la interfaz de usuario de Syntalix-Orion.
+    
+    Orquesta la interacción entre el usuario, el grafo de dependencias y 
+    el motor de ejecución de Ansible. Utiliza un modelo de programación 
+    basado en eventos para mantener la UI reactiva.
     """
 
     # Bindings de teclado
@@ -561,12 +544,11 @@ usando los checkboxes del panel izquierdo.
 
     def _update_deployment_result(self) -> None:
         """
-        Recalcula el grafo de dependencias y actualiza el panel de estado.
-
-        Este metodo:
-        1. Llama a dependency_graph.plan_with_vars_multi()
-        2. Genera el resultado en formato Markdown
-        3. Actualiza el widget de estado
+        Recalcula el estado del despliegue basándose en la selección actual.
+        
+        Invoca al motor de resolución de dependencias, valida los límites de 
+        hardware y actualiza dinámicamente el panel de información Markdown 
+        del monitor de despliegue.
         """
         if not self.selected_apps:
             status_text = self._get_initial_status_message()
@@ -914,13 +896,11 @@ Sugerencias:
 
     def _run_ansible_deploy(self) -> None:
         """
-        Metodo worker que ejecuta ansible-playbook.
-
-        Decorador @work(thread=True):
-        - Ejecuta en hilo separado (no bloquea UI)
-        - exit_on_error=False: No cierra la app si hay error
-
-        El streaming de logs se hace via call_from_thread().
+        Ejecuta el proceso de despliegue de Ansible en un hilo dedicado.
+        
+        Realiza la invocación de ansible-playbook capturando su salida estándar 
+        en tiempo real para transmitirla al widget de logs de la interfaz, 
+        permitiendo un monitoreo continuo del progreso sin bloquear la UI.
         """
         # Configurar ruta de ansible-playbook
         import sys

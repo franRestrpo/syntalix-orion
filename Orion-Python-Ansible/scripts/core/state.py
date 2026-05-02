@@ -1,12 +1,14 @@
 """
-Módulo unificado de gestión de estado para Syntalix-Orion.
+Módulo de Gestión de Estado y Persistencia para Syntalix-Orion.
 
-Proporciona:
-- Persistencia de estado en JSON
-- Carga/guardado de configuración
-- Manejo de archivos .env (formato estándar KEY=VALUE)
+Este módulo centraliza la lógica para persistir y recuperar la configuración de la 
+aplicación y el estado del despliegue. Maneja tanto formatos estructurados (JSON) 
+como archivos de entorno estándar (.env) utilizados por Ansible y Docker Compose.
 
-Este módulo unifica las funciones dispersas en main.py y config.py.
+Funcionalidades:
+    - Guardado y carga del estado global de la sesión.
+    - Serialización de variables de entorno a archivos .env.
+    - Gestión de permisos de archivos para proteger información sensible.
 """
 
 import json
@@ -82,16 +84,17 @@ def load_env_file(env_path: str) -> Dict[str, str]:
 
 def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
     """
-    Guarda variables en un archivo .env de forma segura.
+    Persiste un conjunto de variables en un archivo de formato .env.
     
-    Usa formato estándar .env (KEY=VALUE por línea, sin secciones).
-    
+    Escribe el archivo siguiendo el estándar KEY=VALUE. En sistemas tipo Unix, 
+    aplica automáticamente permisos restrictivos (600) para proteger secretos.
+
     Args:
-        env_path: Ruta al archivo .env
-        variables: Diccionario de variables a guardar
+        env_path (str): Ruta completa donde se creará el archivo .env.
+        variables (Dict[str, str]): Diccionario de pares clave-valor a escribir.
         
     Returns:
-        True si se guardó exitosamente
+        bool: True si la operación de escritura y ajuste de permisos fue exitosa.
     """
     try:
         with open(env_path, 'w', encoding='utf-8') as f:

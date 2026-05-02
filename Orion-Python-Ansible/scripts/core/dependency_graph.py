@@ -1,16 +1,11 @@
 """
-Grafo de dependencias para planificación de despliegues.
+Módulo del Grafo de Dependencias para el Orquestador Syntalix-Orion.
 
-Gestiona:
-- Resolución de dependencias transitivas
-- Detección de ciclos
-- Cálculo de recursos (RAM)
-- Generación de variables seguras
-
-Integrado con:
-- core.models: Validación con Pydantic
-- core.security: Generación de secretos
-- core.logging_config: Logging estructurado
+Este módulo se encarga de gestionar la complejidad de las relaciones entre aplicaciones:
+- Resolver el orden de ejecución basado en las dependencias transitivas.
+- Detectar ciclos de dependencias que podrían causar fallos infinitos.
+- Calcular el consumo total de memoria RAM proyectado para un despliegue.
+- Generar dinámicamente variables de entorno y secretos criptográficos.
 """
 
 import os
@@ -24,14 +19,19 @@ from core.security import generate_secure_password
 # Logger
 logger = get_logger(__name__)
 
-# Attempt to load APP_METADATA from the root catalog
+# Intento de cargar APP_METADATA desde el catálogo raíz
 APP_METADATA: Dict[str, Dict[str, Any]] = {}
 _METADATA_LOADED = False
 
 def _load_app_metadata() -> Dict[str, Dict[str, Any]]:
     """
-    Carga APP_METADATA desde el catálogo de aplicaciones.
-    Implementa fallback inteligente para diferentes ubicaciones.
+    Carga los metadatos de las aplicaciones desde apps_metadata.py.
+    
+    Implementa un mecanismo de búsqueda inteligente en múltiples directorios para 
+    localizar el archivo de metadatos independientemente de desde dónde se ejecute el script.
+
+    Returns:
+        Dict[str, Dict[str, Any]]: Diccionario con el catálogo completo de aplicaciones.
     """
     global APP_METADATA, _METADATA_LOADED
     
@@ -79,28 +79,19 @@ def _load_app_metadata() -> Dict[str, Dict[str, Any]]:
 
 class DependencyGraph:
     """
-    Grafo de dependencias para planificación de despliegues.
+    Clase para la construcción y análisis del grafo de dependencias.
     
-    Lee APP_METADATA (app_id -> metadata) y resuelve dependencias transitivas.
-    Detecta ciclos y genera variables seguras.
-    
-    Uso:
-        dg = DependencyGraph()
-        plan = dg.resolve_dependencies("chatwoot")
-        print(f"Plan de despliegue: {plan}")
-        
-        # Con variables generadas
-        result = dg.plan_with_vars("chatwoot")
-        print(f"RAM total: {result['ram_mb_total']} MB")
-        print(f"Variables: {result['vars']}")
+    Proporciona los algoritmos necesarios para transformar una selección de 
+    aplicaciones en un plan de despliegue ordenado, seguro y validado.
     """
 
     def __init__(self, catalog: Optional[Dict[str, Dict[str, Any]]] = None) -> None:
         """
-        Inicializa el grafo de dependencias.
+        Inicializa una nueva instancia del grafo de dependencias.
         
         Args:
-            catalog: Catálogo de aplicaciones. Si es None, carga desde APP_METADATA.
+            catalog (Optional[Dict[str, Dict[str, Any]]]): Catálogo de aplicaciones. 
+                Si es None, se cargará automáticamente utilizando la función _load_app_metadata.
         """
         if catalog is not None:
             self.catalog: Dict[str, Dict[str, Any]] = catalog
@@ -123,17 +114,21 @@ class DependencyGraph:
 
     def resolve_dependencies(self, app_id: str) -> List[str]:
         """
-        Resuelve las dependencias transitivas para una app.
+        Resuelve recursivamente todas las dependencias transitivas de una aplicación.
         
+        Utiliza un algoritmo de búsqueda en profundidad (DFS) para determinar el 
+        orden topológico correcto de instalación.
+
         Args:
-            app_id: ID de la aplicación
+            app_id (str): Identificador único de la aplicación raíz para el plan.
             
         Returns:
-            Lista ordenada donde las dependencias vienen antes que los dependientes.
+            List[str]: Lista ordenada de IDs de aplicaciones donde cada aplicación 
+                aparece después de todas sus dependencias.
             
         Raises:
-            KeyError: Si app_id o alguna dependencia no existe en el catálogo.
-            ValueError: Si se detecta un ciclo en las dependencias.
+            KeyError: Si el app_id o alguna de sus dependencias no existe en el catálogo.
+            ValueError: Si se detecta un ciclo de dependencias (A -> B -> A).
         """
         if app_id not in self.catalog:
             logger.error("App desconocida", extra={"app_id": app_id})

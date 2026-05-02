@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 """
-Syntalix-Orion Bootstrap Selector
+Selector de Arranque (Bootstrap) de Syntalix-Orion.
 
-Este archivo es el punto de entrada principal. Pregunta al usuario si desea:
-- Instalación Local (Docker): Despliega apps en Docker local
-- Instalación Remota (Proxmox): Conecta a un servidor Proxmox VE
+Este archivo constituye el punto de entrada unificado para todo el ecosistema 
+Syntalix-Orion V2. Su función principal es actuar como orquestador de inicio, 
+permitiendo al usuario seleccionar entre los dos modos principales de operación:
 
-Uso:
-    python main.py
+    1. Modo Local (Docker): Diseñado para el despliegue rápido de la pila de 
+       aplicaciones en un servidor Docker ya existente o en la máquina local.
+       Es el modo recomendado para soberanía digital personal.
 
-El modo LOCAL es el recomendado para la mayoría de usuarios.
-El modo REMOTO requiere configuración de API Proxmox.
+    2. Modo Remoto (Proxmox): Orientado a entornos de infraestructura como 
+       código (IaC) avanzados, permitiendo la gestión de VMs y contenedores 
+       en nodos Proxmox VE.
+
+El script maneja la inyección de rutas de sistema para los módulos internos y 
+proporciona una interfaz de línea de comandos amigable.
 """
 
 import sys
 import os
 from pathlib import Path
 
-# Agregar scripts al path para imports
+# Configuración dinámica del PATH para asegurar la importación de módulos internos
 SCRIPT_DIR = Path(__file__).parent / "Orion-Python-Ansible" / "scripts"
 if SCRIPT_DIR.exists():
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -43,10 +48,14 @@ def print_banner():
 
 def ask_installation_mode() -> str:
     """
-    Pregunta al usuario el modo de instalación.
+    Presenta una interfaz interactiva para la selección del modo de instalación.
     
+    Captura la entrada del usuario y valida que la opción seleccionada sea 
+    legal ('local' o 'remote'). Implementa manejo de interrupciones de teclado 
+    para una salida limpia.
+
     Returns:
-        'local' o 'remote'
+        str: 'local' para despliegue Docker, 'remote' para despliegue Proxmox.
     """
     print("Selecciona el modo de instalación:")
     print()
@@ -72,7 +81,13 @@ def ask_installation_mode() -> str:
 
 
 def run_local_mode():
-    """Ejecuta la TUI local (Textual UI)."""
+    """
+    Inicializa y lanza la Terminal User Interface (TUI) para el modo local.
+    
+    Este método realiza la carga diferida de los módulos de Textual UI y 
+    configura el sistema de logging antes de ceder el control al motor 
+    de la interfaz OrionTUI.
+    """
     print()
     print("[INFO] Iniciando TUI LOCAL...")
     print()
@@ -137,7 +152,13 @@ def run_remote_mode():
 
 
 def main():
-    """Punto de entrada principal."""
+    """
+    Función principal que orquesta el flujo de arranque del sistema.
+    
+    Procesa los argumentos de la línea de comandos (CLI) para permitir el 
+    inicio desatendido o muestra el menú de selección si no se proporcionan 
+    parámetros.
+    """
     print_banner()
     
     # Detectar si se pasa argumento de modo

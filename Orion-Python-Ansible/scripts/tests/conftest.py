@@ -1,5 +1,16 @@
 """
-Configuración de pytest para Syntalix-Orion.
+Configuración de Fixtures y Plugins para Pytest en Syntalix-Orion.
+
+Este módulo define la infraestructura compartida necesaria para la ejecución 
+de pruebas unitarias e integración. Proporciona metadatos de ejemplo, 
+entornos temporales y mecanismos de limpieza automática.
+
+Fixtures incluidas:
+    - sample_metadata: Catálogo de aplicaciones de prueba con dependencias.
+    - temp_dir: Directorio temporal para pruebas de archivos.
+    - mock_env_file: Generador de archivos .env para validación de carga.
+    - reset_logging: Limpieza automática del sistema de logs entre tests.
+    - security_config: Instancia aislada de la configuración de seguridad.
 """
 
 import sys

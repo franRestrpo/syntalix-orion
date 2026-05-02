@@ -1,7 +1,15 @@
-"""Lightweight AnsibleRunner bridge for the Textual UI.
+"""
+Puente de Simulación de Ansible (Mock Runner) para Syntalix-Orion.
 
-- In Phase 2 this is a mock, emitting structured events to drive the UI.
-- In Phase 3+ it should be replaced with a real integration to ansible-runner.
+Este módulo proporciona una implementación simulada del corredor de Ansible 
+diseñada para facilitar el desarrollo de la interfaz de usuario y las pruebas 
+de integración sin necesidad de ejecutar comandos reales de infraestructura.
+
+Funcionalidades:
+    - Generación de eventos de log y progreso simulados.
+    - Emulación de latencia de red y tiempos de procesamiento mediante asyncio.
+    - Simulación aleatoria de fallos para probar la robustez de la UI.
+    - Factoría dinámica para alternar entre el corredor real y el simulado.
 """
 
 import asyncio
@@ -9,15 +17,40 @@ import random
 import os
 from typing import Any, Callable, Dict, Optional
 
+# Definición de tipo para los callbacks de eventos
 EventCallback = Callable[[Dict[str, Any]], None]
 
 
 class AnsibleRunner:
+    """
+    Simulador de ejecución de Ansible orientado a eventos.
+    
+    Emite una secuencia de eventos estructurados que imitan el comportamiento 
+    de un despliegue real, permitiendo validar la lógica de visualización 
+    del Monitor de Despliegue.
+    """
+
     def __init__(self, on_event: Optional[EventCallback] = None, debug: bool = False) -> None:
+        """
+        Inicializa una instancia del corredor simulado.
+
+        Args:
+            on_event (Optional[EventCallback]): Función de retorno para procesar 
+                cada evento simulado.
+            debug (bool): Si es True, genera eventos de depuración adicionales.
+        """
         self._on_event = on_event or (lambda e: None)
         self._debug = bool(debug)
 
     async def run(self, config: Dict[str, Any], modules: list[str], debug: bool | None = None) -> None:
+        """
+        Inicia una secuencia de despliegue simulada de forma asíncrona.
+
+        Args:
+            config (Dict[str, Any]): Configuración de variables (simulada).
+            modules (list[str]): Lista de módulos a 'instalar' (simulada).
+            debug (bool): Sobrescribe la configuración de depuración.
+        """
         if debug is not None:
             self._debug = bool(debug)
 
@@ -59,9 +92,19 @@ class AnsibleRunner:
 
 
 def get_runner(on_event: Optional[EventCallback] = None, debug: bool = False):
-    """Factory to obtain a runner based on RUNNER_MODE (mock or real).
+    """
+    Factoría para obtener el corredor de Ansible adecuado según el entorno.
+    
+    Lee la variable de entorno 'RUNNER_MODE'. Si es 'real', intenta 
+    instanciar el RealAnsibleRunner; de lo contrario, o si falla la carga, 
+    retorna el simulador (AnsibleRunner).
 
-    Falls back to the mock AnsibleRunner if Real runner is not available.
+    Args:
+        on_event (Optional[EventCallback]): Función de retorno para eventos.
+        debug (bool): Si es True, habilita modo depuración en el corredor.
+
+    Returns:
+        Union[RealAnsibleRunner, AnsibleRunner]: Instancia del corredor seleccionado.
     """
     mode = os.environ.get("RUNNER_MODE", "mock").lower()
     if mode == "real":

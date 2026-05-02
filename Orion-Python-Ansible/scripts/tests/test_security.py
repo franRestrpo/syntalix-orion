@@ -1,5 +1,16 @@
 """
-Tests para el módulo de seguridad.
+Pruebas Unitarias para el Módulo de Seguridad.
+
+Este módulo contiene la suite de pruebas encargada de verificar la integridad 
+y eficacia de las funciones criptográficas, validadores y sanitizadores 
+de entrada definidos en 'core.security'.
+
+Casos de prueba:
+    - Generación de contraseñas: Entropía, longitud y unicidad.
+    - Criptografía: Verificación de hashes bcrypt.
+    - Seguridad de red: Validación de dominios y correos electrónicos.
+    - Protección de inyección: Auditoría de sanitización de inputs.
+    - Privacidad: Verificación de enmascaramiento de secretos.
 """
 
 import pytest

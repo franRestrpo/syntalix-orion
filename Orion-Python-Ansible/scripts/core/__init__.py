@@ -1,103 +1,32 @@
 """
-Core Package - Syntalix-Orion v2.0.1
+Paquete Central (Core) de Syntalix-Orion V2.
 
-================================================================================
-ESTADO ACTUAL: FASE 2 COMPLETADA - TRANSICIÓN A FASE 3
-================================================================================
+Este paquete constituye el núcleo lógico de la plataforma, implementando la 
+arquitectura de tres capas (Metadatos, TUI y Orquestación). Consolida todos 
+los módulos fundamentales necesarios para la gestión segura y eficiente de 
+la infraestructura.
 
-Este paquete contiene los módulos centrales de la plataforma Syntalix-Orion,
-implementando la arquitectura V2 de 3 capas (Metadata, TUI, Orchestration).
+Estado del Paquete:
+    - Versión: 2.0.1
+    - Fase: Finalización de Fase 2 (Transición a Orquestación V2).
+    - Integridad: Validaciones automáticas de catálogo y seguridad criptográfica activas.
 
-ÚLTIMAS ACTUALIZACIONES (2026-05-01):
-----------------------------------------
-✅ CORRECCIÓN CRÍTICA: Eliminado 'transform: bcrypt' de 5 bases de datos en apps_metadata.py
-   - mariadb, mongodb, redis, qdrant, minio ahora usan texto plano seguro
-   - Se mantuvo bcrypt solo para UI logins (Traefik, n8n, Odoo)
-✅ Mejora: Validación automática del catálogo al importar apps_metadata.py
-✅ Refactor: state.py ahora usa formato .env estándar (eliminado ConfigParser)
-✅ Corrección: Debug prints en tui.py reemplazados por logger
-✅ Codificación: Añadido UTF-8 en templating.py
+Módulos Incluidos:
+    - security: Gestión de secretos, hashing bcrypt y validación de seguridad.
+    - models: Esquemas de datos Pydantic para validación de metadatos.
+    - dependency_graph: Motor de resolución topológica de dependencias y recursos.
+    - logging_config: Infraestructura de registro de eventos (Consola/JSON).
+    - state: Persistencia de estado y gestión de archivos de entorno (.env).
+    - preflight: Suite de auditoría de requisitos del sistema y hardware.
+    - templating: Motor de renderizado dinámico de configuraciones (Jinja2).
+    - registry: Sistema de descubrimiento de servicios basado en manifiestos.
 
-MÓDULOS DISPONIBLES:
--------------------
-
-1. SECURITY (security.py)
-   - Generación de contraseñas: generate_secure_password(), generate_app_password()
-   - Hashing bcrypt: hash_password_bcrypt(), verify_password_bcrypt()
-   - Validación: validate_domain(), validate_email(), sanitize_input()
-   - Enmascaramiento: mask_secret() para logs seguros
-   - SSL: SecurityConfig, SSLContext para configuración SSL/TLS
-   - Estado: ✅ Operativo - CRÍTICO: bcrypt solo para UI
-
-2. MODELS (models.py)
-   - AppMetadata: Validación Pydantic de metadatos de aplicaciones
-   - AppVariable: Definición de variables de entorno
-   - DeploymentPlan: Plan de despliegue generado
-   - Validadores: IDs, categorías, tipos, RAM
-   - Estado: ✅ Operativo - Validación automática implementada
-
-3. DEPENDENCY GRAPH (dependency_graph.py)
-   - Resolución de dependencias transitivas
-   - Detección de ciclos (DFS algorithm)
-   - Cálculo de RAM total
-   - Generación de variables seguras
-   - Métodos: resolve_dependencies(), plan_with_vars_multi()
-   - Estado: ✅ Operativo
-
-4. LOGGING CONFIG (logging_config.py)
-   - Logging dual (archivo + consola)
-   - Formatos: JSONFormatter, StructuredFormatter (con colores)
-   - Rotación de logs: 10MB, 5 backups
-   - LogContext: Context manager para extra data
-   - Estado: ✅ Operativo - Mejorado manejo de errores
-
-5. STATE MANAGEMENT (state.py)
-   - Persistencia JSON: save_state(), load_state()
-   - Archivos .env: save_env_file(), load_env_file()
-   - Formato estándar KEY=VALUE (sin secciones)
-   - Permisos restrictivos (600) en archivos .env
-   - Estado: ✅ Operativo - REFACTORIZADO (sin ConfigParser)
-
-6. PREFLIGHT CHECKS (preflight.py)
-   - Verificación de Docker y Swarm
-   - Validación de recursos (RAM, CPU, disco)
-   - Creación de redes overlay
-   - Multiplataforma: Linux/Windows/macOS
-   - Estado: ✅ Operativo
-
-7. TEMPLATING (templating.py)
-   - Renderizado Jinja2: render_template()
-   - Generación de etiquetas Traefik: inject_traefik_labels()
-   - Estado: ✅ Operativo - UTF-8 añadido
-
-8. REGISTRY (registry.py)
-   - Registro de servicios via manifest.json
-   - Estado: ⚠️ Implementación básica
-
-FLUJO DE DATOS TÍPICO:
-----------------------
-1. apps_metadata.py → Carga catálogo (validado por models.py)
-2. TUI (tui.py) → Usuario selecciona apps
-3. DependencyGraph → Resuelve dependencias, calcula RAM, genera vars
-4. generate_vars.yml → Escribe variables seguras
-5. site.yml (Ansible) → Lee ansible_vars.yml, despliega roles
-
-VARIABLES DE ENTORNO RELEVANTES:
---------------------------------
-- RUNNER_MODE=mock|real (para testing de TUI)
-- LOG_LEVEL=DEBUG|INFO|WARNING|ERROR
-
-COMPATIBILIDAD:
---------------
-- Python: 3.10+ (recomendado 3.13)
-- Dependencias: textual, pyyaml, pydantic, bcrypt, jinja2, ansible-runner (opcional)
-- Sistema: Linux (producción), Windows/macOS (desarrollo)
-
-TESTING:
----------
-- pytest tests/ - Pruebas unitarias
-- python -m unittest discover -v - Pruebas legacy
-- Fixtures en tests/conftest.py (ej. sample_metadata)
+Flujo de Ejecución:
+    1. Carga y validación del catálogo desde apps_metadata.py.
+    2. Interacción del usuario vía TUI para la selección de componentes.
+    3. Resolución del grafo de dependencias y cálculo de recursos.
+    4. Generación segura de variables de entorno y archivos de orquestación.
+    5. Ejecución delegada a Ansible para el despliegue final.
 """
 
 from core.security import (

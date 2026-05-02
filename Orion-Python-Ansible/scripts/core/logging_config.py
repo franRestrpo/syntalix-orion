@@ -1,11 +1,15 @@
 """
-Configuración de logging estructurado para Syntalix-Orion.
+Módulo de Configuración de Logging Estructurado para Syntalix-Orion.
 
-Proporciona:
-- Logging dual (archivo + consola)
-- Rotación de logs
-- Niveles configurables
-- Formato JSON opcional
+Este módulo implementa una infraestructura de registro de eventos robusta y 
+altamente configurable, diseñada para facilitar la depuración y auditoría 
+del sistema.
+
+Características principales:
+    - Salida dual: Registro simultáneo en consola y archivos locales.
+    - Rotación de archivos: Gestión automática de espacio en disco (10MB por archivo).
+    - Formateo Inteligente: Soporte para colores en terminal y formato JSON estructurado.
+    - Contexto Dinámico: Capacidad de inyectar metadatos adicionales en tiempo de ejecución.
 """
 
 import os
@@ -26,7 +30,12 @@ BACKUP_COUNT = 5
 
 
 class JSONFormatter(logging.Formatter):
-    """Formateador de logs en formato JSON."""
+    """
+    Formateador para la generación de logs en formato JSON estructurado.
+    
+    Ideal para su uso en entornos de producción donde los logs son consumidos 
+    por sistemas externos como ELK Stack, Loki o CloudWatch.
+    """
     
     def format(self, record: logging.LogRecord) -> str:
         log_data = {
@@ -107,12 +116,11 @@ class StructuredFormatter(logging.Formatter):
 
 class OrionLogger:
     """
-    Logger configurado para Syntalix-Orion.
+    Motor de gestión de registros (Logger) para Syntalix-Orion.
     
-    Uso:
-        from core.logging_config import get_logger
-        logger = get_logger(__name__)
-        logger.info("Mensaje", extra={"key": "value"})
+    Esta clase implementa el patrón factoría para proporcionar instancias de 
+    logging pre-configuradas con handlers de archivo, consola y formateadores 
+    según la configuración global definida.
     """
     
     _instances: Dict[str, logging.Logger] = {}
@@ -251,12 +259,15 @@ def setup_logging(
     log_dir: Optional[Path] = None,
 ) -> None:
     """
-    Función helper para configurar logging rápidamente.
+    Función de utilidad para la inicialización rápida del sistema de logging.
     
-    Uso:
-        from core.logging_config import setup_logging
-        setup_logging("DEBUG")
-        logger = get_logger(__name__)
+    Debe llamarse al inicio de la ejecución del programa para garantizar que 
+    todos los componentes utilicen la configuración de registro correcta.
+
+    Args:
+        log_level (str): Nivel de detalle deseado (DEBUG, INFO, WARNING, ERROR).
+        log_dir (Optional[Path]): Carpeta donde se almacenarán los archivos físicos 
+            de log. Si no se especifica, usa el directorio por defecto del proyecto.
     """
     OrionLogger.configure(
         log_level=log_level,

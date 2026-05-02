@@ -1,10 +1,16 @@
 """
-Modelos Pydantic para validación de metadatos de aplicaciones.
+Modelos de Datos y Esquemas de Validación para Syntalix-Orion.
 
-Proporciona validación de esquemas para:
-- AppMetadata: Metadatos completos de una aplicación
-- AppVariable: Definición de variable de entorno
-- DependencyGraph: Grafo de dependencias con validación
+Este módulo utiliza la librería Pydantic para definir y validar las estructuras 
+de datos fundamentales del sistema. Garantiza que la "Fuente de Verdad" 
+(apps_metadata.py) y los planes de despliegue generados cumplan con las 
+restricciones técnicas necesarias.
+
+Componentes principales:
+    - AppMetadata: Definición técnica completa de una aplicación.
+    - AppVariable: Esquema para la gestión de variables de entorno y secretos.
+    - DeploymentPlan: Estructura de salida del motor de dependencias.
+    - Validadores: Lógica personalizada para IDs, memoria RAM y jerarquías.
 """
 
 from typing import Dict, List, Optional, Any
@@ -82,7 +88,13 @@ class AppVariable(BaseModel):
 
 
 class AppMetadata(BaseModel):
-    """Metadatos completos de una aplicación."""
+    """
+    Representación técnica y validada de los metadatos de una aplicación.
+    
+    Este modelo define todos los atributos necesarios para que una aplicación 
+    sea procesada por el orquestador, incluyendo su identidad, recursos y 
+    relaciones de dependencia.
+    """
     id: str = Field(..., description="ID único de la aplicación")
     name: str = Field(..., description="Nombre legible de la aplicación")
     category: str = Field(..., description="Categoría de la aplicación")
@@ -201,16 +213,19 @@ def validate_app_metadata(data: Dict[str, Any]) -> AppMetadata:
 
 def load_app_catalog(data: Dict[str, Dict[str, Any]]) -> Dict[str, AppMetadata]:
     """
-    Carga y valida un catálogo completo de aplicaciones.
+    Carga, normaliza y valida un catálogo completo de aplicaciones.
     
+    Itera sobre el diccionario de metadatos crudos, aplica las reglas de 
+    validación de Pydantic y retorna una estructura de datos segura.
+
     Args:
-        data: Diccionario con ID -> datos de aplicación
+        data (Dict[str, Dict[str, Any]]): Diccionario crudo de metadatos.
         
     Returns:
-        Diccionario con ID -> AppMetadata validado
+        Dict[str, AppMetadata]: Diccionario de objetos AppMetadata validados.
         
     Raises:
-        ValidationError: Si algún metadato es inválido
+        ValueError: Si se detectan errores de esquema en uno o más componentes.
     """
     validated = {}
     errors = []

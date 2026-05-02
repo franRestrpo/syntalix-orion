@@ -1,8 +1,23 @@
+"""
+Módulo de Metadatos de Aplicaciones (Fuente de Verdad).
+
+Este archivo contiene la definición centralizada de todas las aplicaciones disponibles 
+en el ecosistema Syntalix-Orion V2. Es la única fuente de verdad para el catálogo 
+de aplicaciones, sus dependencias, requerimientos de RAM y variables de configuración.
+
+Estructura del Catálogo:
+    - Core: Infraestructura base (Traefik, CrowdSec, Authentik).
+    - Data: Bases de datos y brokers (Postgres, MariaDB, Redis, RabbitMQ).
+    - AI: Aplicaciones de inteligencia artificial (Dify, Flowise, OpenWebUI).
+    - Automation: Automatización de flujos (n8n, ActivePieces).
+    - Communication: Plataformas de comunicación (Chatwoot, Evolution API).
+    - Management: Gestión empresarial (Odoo).
+    - Monitoring: Observabilidad (Prometheus, Grafana, Loki).
+"""
+
 from typing import Dict, Any, List, Optional
 import secrets
 import bcrypt
-
-"""Catálogo de metadatos de aplicaciones (versión 2)."""
 
 APP_METADATA: Dict[str, Dict[str, Any]] = {
     # Core Infrastructure Layer
@@ -359,9 +374,26 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
 APP_METADATA_ALIAS = APP_METADATA
 
 def get_metadata(app_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Obtiene los metadatos de una aplicación específica por su identificador.
+
+    Args:
+        app_id (str): Identificador único de la aplicación (ej: 'traefik').
+
+    Returns:
+        Optional[Dict[str, Any]]: Diccionario con los metadatos de la aplicación 
+            o None si el identificador no se encuentra en el catálogo.
+    """
     return APP_METADATA.get(app_id)
 
 def all_app_ids() -> List[str]:
+    """
+    Retorna una lista ordenada de todos los identificadores de aplicaciones 
+    disponibles en el catálogo.
+
+    Returns:
+        List[str]: Lista alfabética de IDs de aplicaciones.
+    """
     return sorted(APP_METADATA.keys())
 
 __all__ = ["APP_METADATA", "APP_METADATA_ALIAS", "get_metadata", "all_app_ids"]

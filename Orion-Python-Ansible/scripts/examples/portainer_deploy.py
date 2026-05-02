@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+"""
+Ejemplo de Despliegue Automatizado vía API de Portainer.
+
+Este script sirve como referencia técnica para interactuar con la API de 
+Portainer para la gestión de Stacks en Docker Swarm. Permite automatizar 
+la creación y actualización de servicios de forma programática.
+
+Requisitos:
+    - URL de la instancia de Portainer.
+    - Clave de API (API Key) con permisos suficientes.
+    - ID del Endpoint (entorno) de Docker.
+"""
 import requests
 import json
 import os
