@@ -333,6 +333,38 @@ def run_preflight_checks(
     return True, None
 
 
+# Utilidades de impresión con colores (migrado desde validate_swarm.py)
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+
+
+def print_success(msg: str) -> None:
+    """Imprime mensaje de éxito."""
+    print(f"{GREEN}[SUCCESS]{RESET} {msg}")
+
+
+def print_info(msg: str) -> None:
+    """Imprime mensaje informativo."""
+    print(f"{YELLOW}[INFO]{RESET} {msg}")
+
+
+def print_error(msg: str) -> None:
+    """Imprime mensaje de error."""
+    print(f"{RED}[ERROR]{RESET} {msg}")
+
+
+def ensure_runtime_dirs() -> None:
+    """
+    Crea directorios necesarios para runtime (logs, credenciales).
+    Elimina la necesidad de archivos .gitkeep.
+    """
+    dirs_to_create = ['logs', 'credenciales']
+    for d in dirs_to_create:
+        os.makedirs(d, exist_ok=True)
+
+
 __all__ = [
     "get_platform",
     "is_linux",
@@ -353,4 +385,8 @@ __all__ = [
     "MIN_RAM_GB",
     "MIN_CPU_CORES",
     "MIN_DISK_GB",
+    "print_success",
+    "print_info",
+    "print_error",
+    "ensure_runtime_dirs",
 ]

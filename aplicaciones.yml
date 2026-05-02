@@ -1,5 +1,0 @@
-# Catálogo de Aplicaciones (Legacy)
-# Las aplicaciones ahora se gestionan de forma modular en el directorio 'aplicaciones.d/'
-# Puedes añadir archivos .yml allí para categorizar tus despliegues.
-
-aplicaciones_syntalix: []
