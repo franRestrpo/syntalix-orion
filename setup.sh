@@ -7,10 +7,13 @@ ROJO="\e[91m"
 AMARILLO="\e[93m"
 RESET="\e[0m"
 
-log() { echo -e "${AZUL}[SETUP]${RESET} $1"; }
-success() { echo -e "${VERDE}[OK]${RESET} $1"; }
-warn() { echo -e "${AMARILLO}[WARN]${RESET} $1"; }
-error() { echo -e "${ROJO}[ERROR]${RESET} $1"; exit 1; }
+log() { echo -e "${AZUL}[SETUP]${RESET} $1" | tee -a setup.log; }
+success() { echo -e "${VERDE}[OK]${RESET} $1" | tee -a setup.log; }
+warn() { echo -e "${AMARILLO}[WARN]${RESET} $1" | tee -a setup.log; }
+error() { echo -e "${ROJO}[ERROR]${RESET} $1" | tee -a setup.log; exit 1; }
+
+# Inicializar log
+echo "=== Inicio de Instalación Syntalix-Orion $(date) ===" > setup.log
 
 # 1. Validación de Root
 if [ "$EUID" -ne 0 ]; then
@@ -22,12 +25,27 @@ log "Iniciando preparación del entorno Syntalix-Orion V2..."
 # 2. Instalación de dependencias del SISTEMA
 SYS_DEPS="python3 python3-venv python3-pip git sshpass curl"
 
-log "Actualizando repositorios..."
-apt-get update -qq > /dev/null
+export DEBIAN_FRONTEND=noninteractive
 
-log "Instalando dependencias base..."
-apt-get install -y $SYS_DEPS > /dev/null 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS)"
-success "Dependencias del sistema instaladas."
+log "Actualizando repositorios..."
+apt-get update -qq >> setup.log 2>&1
+
+log "Instalando dependencias base (Python, Git, etc.)..."
+apt-get install -y $SYS_DEPS >> setup.log 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS). Revisa el archivo setup.log para ver el error exacto."
+
+# Instalación limpia y oficial de Docker
+if ! command -v docker &> /dev/null; then
+    log "Docker no encontrado. Instalando motor Docker oficial..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh >> setup.log 2>&1 || error "Fallo al instalar Docker. Revisa setup.log."
+    rm -f get-docker.sh
+else
+    log "Docker ya está instalado."
+fi
+
+log "Iniciando y habilitando servicio Docker..."
+systemctl enable --now docker >> setup.log 2>&1 || warn "No se pudo habilitar Docker (¿Estás en un entorno sin systemd?)"
+success "Dependencias del sistema y Docker instalados correctamente."
 
 # 3. Creación del Entorno Virtual
 VENV_DIR="$(pwd)/.venv"

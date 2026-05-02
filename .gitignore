@@ -67,6 +67,7 @@ secrets.yml
 *.key
 deploy/
 credenciales/
+ansible_vars.yml
 .venv/
 node_modules/
 # General

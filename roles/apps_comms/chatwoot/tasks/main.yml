@@ -9,12 +9,11 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "chatwoot"
-      dominio: "{{ lookup('vars', 'CHATWOOT__DOMAIN', default=lookup('vars', 'CHATWOOT_DOMAIN', default=lookup('vars', 'CHATWOOT__TRAEFIK_DASHBOARD_URL', default='chatwoot.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'CHATWOOT__ADMIN_EMAIL', default=lookup('vars', 'CHATWOOT__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'CHATWOOT__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'CHATWOOT__DB_PASSWORD', default='securepass')) }}"
-      chatwoot_db_host: "postgres_pgvector"
-      chatwoot_redis_host: "redis"
+      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') | regex_replace('traefik\\.', 'chatwoot.') }}"
+      acme_email: "{{ vars.get('CHATWOOT__ACME_EMAIL', vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost')) }}"
+      password_db: "{{ vars.get('POSTGRES_PGVECTOR__POSTGRES_PASSWORD', 'securepass') }}"
+      secret_key_base: "{{ vars.get('CHATWOOT__SECRET_KEY_BASE', 'securekey') }}"
+      redis_pass: "{{ vars.get('REDIS__REDIS_PASSWORD', 'securepass') }}"
 
 - name: "Generar archivo .env para chatwoot"
   ansible.builtin.template:

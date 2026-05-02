@@ -9,12 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "traefik"
-      dominio: "{{ lookup('vars', 'TRAEFIK__DOMAIN', default=lookup('vars', 'TRAEFIK_DOMAIN', default=lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='traefik.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'TRAEFIK__ADMIN_EMAIL', default=lookup('vars', 'TRAEFIK__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'TRAEFIK__DB_PASSWORD', default='securepass')) }}"
-      chatwoot_db_host: "postgres_pgvector"
-      chatwoot_redis_host: "redis"
+      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') }}"
+      usuario_admin: "{{ vars.get('TRAEFIK__TRAEFIK_USER', 'admin') }}"
+      acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
+      password_db: "{{ vars.get('TRAEFIK__TRAEFIK_PASSWORD', 'securepass') }}"
 
 - name: "🌐 Asegurar que existen los volúmenes externos necesarios"
   ansible.builtin.shell:

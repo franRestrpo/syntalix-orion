@@ -9,12 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "evolution_api"
-      dominio: "{{ lookup('vars', 'EVOLUTION_API__DOMAIN', default=lookup('vars', 'EVOLUTION_API_DOMAIN', default=lookup('vars', 'EVOLUTION_API__TRAEFIK_DASHBOARD_URL', default='evolution_api.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'EVOLUTION_API__ADMIN_EMAIL', default=lookup('vars', 'EVOLUTION_API__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'EVOLUTION_API__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'EVOLUTION_API__DB_PASSWORD', default='securepass')) }}"
-      chatwoot_db_host: "postgres_pgvector"
-      chatwoot_redis_host: "redis"
+      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') | regex_replace('traefik\\.', 'evolution.') }}"
+      acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
+      api_key: "{{ vars.get('EVOLUTION_API__EV_API_KEY', 'securekey') }}"
+      mongo_pass: "{{ vars.get('MONGODB__MONGODB_ROOT_PASSWORD', 'securepass') }}"
 
 - name: "Generar archivo .env para evolution_api"
   ansible.builtin.template:

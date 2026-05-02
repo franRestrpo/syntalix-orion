@@ -9,12 +9,8 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "portainer"
-      dominio: "{{ lookup('vars', 'PORTAINER__DOMAIN', default=lookup('vars', 'PORTAINER_DOMAIN', default=lookup('vars', 'PORTAINER__TRAEFIK_DASHBOARD_URL', default='portainer.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'PORTAINER__ADMIN_EMAIL', default=lookup('vars', 'PORTAINER__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'PORTAINER__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'PORTAINER__DB_PASSWORD', default='securepass')) }}"
-      chatwoot_db_host: "postgres_pgvector"
-      chatwoot_redis_host: "redis"
+      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') | regex_replace('traefik\\.', 'portainer.') }}"
+      acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
 
 - name: "Generar archivo .env para portainer"
   ansible.builtin.template:
