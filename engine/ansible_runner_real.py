@@ -13,104 +13,104 @@ Características:
 """
 
 import asyncio
-import json
 import os
+import subprocess
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
+import re
 
-# Definición de tipo para los callbacks de eventos de Ansible
 EventCallback = Callable[[Dict[str, Any]], None]
 
-
 class RealAnsibleRunner:
-    """
-    Controlador de ejecución de Ansible orientado a eventos.
-    
-    Se encarga de preparar el entorno, inyectar las variables extra (extravars) 
-    y gestionar la comunicación de progreso hacia la interfaz de usuario u 
-    otros consumidores de eventos.
-    """
-
     def __init__(self, on_event: Optional[EventCallback] = None, debug: bool = False) -> None:
-        """
-        Inicializa una instancia del corredor real de Ansible.
-
-        Args:
-            on_event (Optional[EventCallback]): Función de retorno para procesar 
-                cada evento generado durante la ejecución.
-            debug (bool): Si es True, habilita una salida más detallada.
-        """
         self._on_event = on_event or (lambda e: None)
         self._debug = bool(debug)
 
-    async def run(self, config: Dict[str, Any], modules: list[str], debug: bool | None = None) -> None:
-        """
-        Inicia la ejecución asíncrona de un playbook de Ansible.
+    def _clean_ansi(self, text: str) -> str:
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        return ansi_escape.sub('', text)
 
-        Args:
-            config (Dict[str, Any]): Diccionario de variables (extravars) a inyectar.
-            modules (list[str]): Lista de roles o módulos a habilitar.
-            debug (bool): Sobrescribe la configuración de depuración para esta ejecución.
-        """
+    async def run(self, config: Dict[str, Any], modules: list[str], debug: bool | None = None) -> None:
         if debug is not None:
             self._debug = bool(debug)
 
-        # Attempt to run using ansible-runner; otherwise emit a fallback
-        try:
-            import ansible_runner  # type: ignore
-        except Exception:
-            self._emit({"type": "log", "level": "warning", "message": "ansible-runner not available. Falling back to mock."})
-            # Fallback behavior: simulate a quick success
-            await asyncio.sleep(0.5)
-            self._emit({"type": "log", "level": "info", "message": "Deployment completed (mock fallback)"})
-            self._emit({"type": "done", "success": True})
+        private_data_dir = str(Path.cwd())
+        pb = "site.yml"
+        if not Path(pb).exists():
+            pb = "playbook.yml"
+        
+        if not Path(pb).exists():
+            self._emit({"type": "log", "level": "warning", "message": "No playbook found (site.yml / playbook.yml)."})
+            self._emit({"type": "done", "success": False})
             return
 
-        # If ansible-runner exists, perform a best-effort run. This is a minimal shim.
+        inventory = "inventory.ini"
+        if not Path(inventory).exists():
+            inventory = "hosts" # fallback
+            
+        # Generar un archivo temporal seguro para inyectar las variables a Ansible
+        import json
+        import tempfile
+        
+        vars_file = Path(private_data_dir) / ".ansible_vars.json"
         try:
-            # The exact invocation depends on repository layout; this is a best-effort
-            private_data_dir = str(Path.cwd())
-            # You should adjust the playbook path according to your repo structure
-            pb = "playbook.yml"
-            if not Path(pb).exists():
-                pb = "playbooks/deploy.yml"
-            if not Path(pb).exists():
-                pb = "playbooks/site.yml"
-            if not Path(pb).exists():
-                pb = None
+            with open(vars_file, "w") as f:
+                json.dump(config, f)
+            os.chmod(vars_file, 0o600)
+        except Exception as e:
+            self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear .ansible_vars.json: {e}"})
+        
+        cmd = [
+            "ansible-playbook",
+            str(pb),
+            "-i", str(inventory)
+        ]
+        
+        if vars_file.exists():
+            cmd.extend(["-e", f"@{vars_file}"])
+        
+        self._emit({"type": "log", "level": "info", "message": f"Ejecutando: {' '.join(cmd)}"})
+        
+        try:
+            # Call subprocess inside a separate thread to not block the asyncio event loop
+            def run_subprocess():
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    cwd=private_data_dir
+                )
+                
+                while True:
+                    line = process.stdout.readline()
+                    if not line and process.poll() is not None:
+                        break
+                    if line:
+                        clean_line = self._clean_ansi(line.rstrip())
+                        self._emit({"type": "log", "level": "info", "message": clean_line})
+                
+                return process.wait()
 
-            if pb is None:
-                self._emit({"type": "log", "level": "warning", "message": "No playbook found for real runner. Using fallback."})
-                self._emit({"type": "done", "success": True})
-                return
-
-            import ansible_runner  # type: ignore
-            # We request JSON lines if supported; fallback to object events otherwise
-            self._emit({"type": "log", "level": "info", "message": f"Starting real Ansible run: {pb}"})
-            r = ansible_runner.run(private_data_dir=private_data_dir, playbook=pb, extravars=config, quiet=True)
-
-            # Basic event consumption if available
-            if hasattr(r, "events"):
+            returncode = await asyncio.to_thread(run_subprocess)
+            success = (returncode == 0)
+            self._emit({"type": "done", "success": success})
+            
+        except FileNotFoundError:
+            self._emit({"type": "log", "level": "error", "message": "ansible-playbook no encontrado en PATH."})
+            self._emit({"type": "done", "success": False})
+        except Exception as e:
+            self._emit({"type": "log", "level": "error", "message": f"Error ejecutando Ansible: {e}", "stderr": str(e)})
+            self._emit({"type": "done", "success": False})
+        finally:
+            if vars_file.exists():
                 try:
-                    for ev in r.events:
-                        self._emit({"type": "log", "level": "info", "message": str(ev)})
+                    vars_file.unlink()
                 except Exception:
                     pass
 
-            rc = getattr(r, "rc", 0)
-            success = (rc == 0)
-            self._emit({"type": "done", "success": success})
-        except Exception as e:
-            self._emit({"type": "log", "level": "error", "message": f"Real runner error: {e}", "stderr": str(e)})
-            self._emit({"type": "done", "success": False})
-
     def _emit(self, event: Dict[str, Any]) -> None:
-        """
-        Emite un evento de forma segura hacia el callback configurado.
-
-        Args:
-            event (Dict[str, Any]): Diccionario con la información del evento.
-        """
         try:
             self._on_event(event)
         except Exception:
