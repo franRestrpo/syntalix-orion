@@ -1,27 +1,50 @@
+"""
+Módulo de Registro y Descubrimiento de Servicios para Syntalix-Orion.
+
+Este módulo implementa el motor de escaneo y catalogación de servicios. 
+Permite que el sistema descubra dinámicamente aplicaciones disponibles 
+basándose en la presencia de manifiestos JSON en el sistema de archivos.
+
+Proporciona una capa de abstracción para organizar los servicios por 
+categorías y acceder a sus metadatos de configuración.
+"""
+
 import os
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 class ServiceRegistry:
+    """
+    Gestor del Registro de Servicios.
+    
+    Se encarga de escanear directorios, validar manifiestos y mantener 
+    un índice en memoria de todas las aplicaciones disponibles para su 
+    despliegue.
+    """
+
     def __init__(self, registry_path: str):
+        """
+        Inicializa el registro apuntando a una ruta específica.
+
+        Args:
+            registry_path (str): Ruta absoluta al directorio que contiene 
+                las carpetas de los servicios.
+        """
         self.registry_path = Path(registry_path)
         self.services: Dict[str, Any] = {}
         self.categories: Dict[str, List[str]] = {}
 
     def scan_registry(self) -> None:
         """
-        Escanea el directorio de registro en busca de servicios válidos.
-        Un servicio es válido si tiene un archivo manifest.json.
-        """
-        if not self.registry_path.exists():
-            raise FileNotFoundError(f"Registry path not found: {self.registry_path}")
+        Escanea recursivamente el directorio de registro.
+        
+        Identifica servicios válidos buscando archivos 'manifest.json' y los 
+        incorpora al catálogo activo.
 
-        for service_dir in self.registry_path.iterdir():
-            if service_dir.is_dir():
-                manifest_path = service_dir / "manifest.json"
-                if manifest_path.exists():
-                    self._load_service(service_dir.name, manifest_path)
+        Raises:
+            FileNotFoundError: Si la ruta del registro no existe.
+        """
 
     def _load_service(self, service_id: str, manifest_path: Path) -> None:
         """

@@ -1,5 +1,15 @@
 """
-Tests para los modelos Pydantic de validación.
+Pruebas Unitarias de Modelos de Validación (Pydantic).
+
+Este módulo verifica que los esquemas de datos del proyecto operen estrictamente 
+bajo las reglas de negocio establecidas, asegurando que cualquier desviación 
+en la 'Fuente de Verdad' falle temprano antes del despliegue.
+
+Validaciones auditadas:
+    - Conformidad estricta de 'AppMetadata' y 'AppVariable'.
+    - Restricciones semánticas: Nombres sin espacios, rangos de RAM lógicos, etc.
+    - Tipos de variables y transformaciones criptográficas (bcrypt/base64).
+    - Plan de despliegue y detección de dependencias.
 """
 
 import pytest

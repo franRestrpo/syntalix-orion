@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-Cleanup Script for Syntalix-Orion Installer
--------------------------------------------------
-Removes runtime state and artifacts produced by the Syntalix-Orion TUI installer.
-This is a safety-first, irreversible operation: use with care.
+Script de Limpieza para el Instalador Syntalix-Orion.
 
-Features:
-- Dry-run mode to list what would be deleted
-- Interactive confirmation (unless --yes is passed)
-- Robust error handling and logging to stdout
-- Targets: state.json files, textual logs, venvs, and common build/test caches
+Este módulo proporciona una herramienta de saneamiento para eliminar artefactos, 
+archivos de estado y entornos virtuales temporales generados durante el 
+proceso de instalación o desarrollo.
+
+Es una operación irreversible diseñada para restablecer el entorno de trabajo 
+a un estado limpio.
+
+Funcionalidades:
+    - Modo 'Dry-run' para previsualizar los archivos que se eliminarán.
+    - Eliminación recursiva de caches de Python (__pycache__).
+    - Limpieza de entornos virtuales (.venv, venv).
+    - Remoción de archivos de estado (state.json) y logs de Textual.
+    - Auditoría y reporte final de archivos procesados.
 """
 
 from __future__ import annotations

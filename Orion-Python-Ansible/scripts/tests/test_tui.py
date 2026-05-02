@@ -1,8 +1,14 @@
 """
-Tests para la Terminal User Interface (TUI).
+Pruebas Estructurales para la Interfaz de Terminal (Textual UI).
 
-Nota: Los tests de TUI son limitados porque Textual requiere un terminal real.
-Estos tests verifican la lógica de negocio sin renderizar la UI.
+Este módulo valida la lógica de negocio subyacente de la TUI, específicamente 
+la orquestación de planes multi-app. Debido a las limitaciones de las pruebas 
+de UI en entornos headless, estos tests se centran en verificar que la UI 
+genera y maneja correctamente los datos del `DependencyGraph`.
+
+Auditoría enfocada en:
+    - Generación correcta de `plan_with_vars_multi`.
+    - Diferenciación entre aplicaciones explícitamente seleccionadas vs. dependencias inyectadas.
 """
 
 import pytest

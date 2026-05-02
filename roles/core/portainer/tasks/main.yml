@@ -18,20 +18,20 @@
 
 - name: "Generar archivo .env para portainer"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/portainer.env.j2"
+    src: "portainer.env.j2"
     dest: "{{ playbook_dir }}/deploy/portainer.env"
   register: config_env
-  ignore_errors: true
 
 - name: "Generar docker-compose para portainer"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/portainer.yml.j2"
+    src: "portainer.yml.j2"
     dest: "{{ playbook_dir }}/deploy/portainer_stack.yml"
   register: config_stack
-  ignore_errors: true
 
-- name: "Desplegar Stack portainer"
+- name: "🚀 Desplegar Stack portainer en Docker Swarm"
   ansible.builtin.command:
     cmd: "docker stack deploy -c portainer_stack.yml portainer"
     chdir: "{{ playbook_dir }}/deploy"
   when: not config_stack.failed | default(false)
+  register: stack_deploy
+  changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"

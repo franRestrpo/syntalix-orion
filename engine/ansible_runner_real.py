@@ -1,8 +1,15 @@
-"""Real AnsibleRunner implementation using ansible-runner.
+"""
+Motor de Ejecución Real de Ansible para Syntalix-Orion.
 
-This is a pragmatic skeleton that attempts to run playbooks via the
-`ansible_runner` Python package. It falls back gracefully if the package or
-playbooks are not available in the environment.
+Este módulo implementa el corredor (runner) oficial que utiliza la librería 
+'ansible-runner' de Python para ejecutar playbooks de forma programática.
+
+Características:
+    - Ejecución asíncrona de playbooks maestros (site.yml, deploy.yml).
+    - Gestión de directorios de datos privados para Ansible.
+    - Captura y retransmisión de eventos del ciclo de vida de Ansible.
+    - Mecanismo de fallback seguro en caso de que las dependencias de Ansible 
+      no estén presentes en el entorno.
 """
 
 import asyncio
@@ -11,15 +18,40 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
+# Definición de tipo para los callbacks de eventos de Ansible
 EventCallback = Callable[[Dict[str, Any]], None]
 
 
 class RealAnsibleRunner:
+    """
+    Controlador de ejecución de Ansible orientado a eventos.
+    
+    Se encarga de preparar el entorno, inyectar las variables extra (extravars) 
+    y gestionar la comunicación de progreso hacia la interfaz de usuario u 
+    otros consumidores de eventos.
+    """
+
     def __init__(self, on_event: Optional[EventCallback] = None, debug: bool = False) -> None:
+        """
+        Inicializa una instancia del corredor real de Ansible.
+
+        Args:
+            on_event (Optional[EventCallback]): Función de retorno para procesar 
+                cada evento generado durante la ejecución.
+            debug (bool): Si es True, habilita una salida más detallada.
+        """
         self._on_event = on_event or (lambda e: None)
         self._debug = bool(debug)
 
     async def run(self, config: Dict[str, Any], modules: list[str], debug: bool | None = None) -> None:
+        """
+        Inicia la ejecución asíncrona de un playbook de Ansible.
+
+        Args:
+            config (Dict[str, Any]): Diccionario de variables (extravars) a inyectar.
+            modules (list[str]): Lista de roles o módulos a habilitar.
+            debug (bool): Sobrescribe la configuración de depuración para esta ejecución.
+        """
         if debug is not None:
             self._debug = bool(debug)
 
@@ -73,6 +105,12 @@ class RealAnsibleRunner:
             self._emit({"type": "done", "success": False})
 
     def _emit(self, event: Dict[str, Any]) -> None:
+        """
+        Emite un evento de forma segura hacia el callback configurado.
+
+        Args:
+            event (Dict[str, Any]): Diccionario con la información del evento.
+        """
         try:
             self._on_event(event)
         except Exception:

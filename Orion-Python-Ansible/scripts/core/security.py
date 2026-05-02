@@ -1,11 +1,17 @@
 """
-Módulo de seguridad centralizado para Syntalix-Orion.
+Módulo de Seguridad y Criptografía para Syntalix-Orion.
 
-Proporciona:
-- Contexto SSL configurable
-- Generación de contraseñas seguras
-- Validación de entradas
-- Cifrado de secretos
+Este módulo centraliza todas las operaciones relacionadas con la seguridad del sistema, 
+proporcionando una capa de abstracción para la gestión de secretos, validación de 
+entradas y configuraciones SSL.
+
+Funcionalidades principales:
+    - Gestión de contextos SSL y certificados CA.
+    - Generación de contraseñas seguras con entropía criptográfica.
+    - Hasheo y verificación de credenciales con bcrypt.
+    - Validación de dominios y correos electrónicos (regex).
+    - Sanitización de entradas para prevenir ataques de inyección.
+    - Enmascaramiento de secretos para logging seguro.
 """
 
 import os
@@ -37,7 +43,12 @@ class SSLContext:
 
 
 class SecurityConfig:
-    """Gestor de configuración de seguridad."""
+    """
+    Gestor de configuración de seguridad (Singleton).
+    
+    Centraliza la configuración de certificados CA y la lógica de verificación SSL 
+    para todas las conexiones salientes del sistema.
+    """
     
     DEFAULT_PASSWORD_LENGTH = 32
     MIN_PASSWORD_LENGTH = 16
@@ -127,14 +138,15 @@ def generate_secure_password(
     use_bcrypt: bool = False
 ) -> str:
     """
-    Genera una contraseña segura criptográficamente.
+    Genera una contraseña segura utilizando entropía del sistema operativo.
     
     Args:
-        length: Longitud de la contraseña
-        use_bcrypt: Si True, retorna el hash bcrypt en lugar del password plano
-        
+        length (int): Longitud deseada para la contraseña (mínimo 16).
+        use_bcrypt (bool): Si es True, retorna directamente el hash bcrypt 
+            de la contraseña generada en lugar del texto plano.
+            
     Returns:
-        Contraseña segura o hash bcrypt
+        str: Contraseña generada en formato URL-safe o hash bcrypt resultante.
     """
     if length < SecurityConfig.MIN_PASSWORD_LENGTH:
         length = SecurityConfig.MIN_PASSWORD_LENGTH
@@ -231,14 +243,17 @@ def validate_email(email: str) -> bool:
 
 def sanitize_input(value: str, max_length: int = 255) -> str:
     """
-    Sanitiza entrada de usuario para prevenir injection.
+    Limpia y normaliza entradas de texto para prevenir ataques de inyección.
     
+    Elimina caracteres de control de shell y limita la longitud del texto 
+    para evitar desbordamientos o procesamientos maliciosos.
+
     Args:
-        value: Valor a sanitizar
-        max_length: Longitud máxima permitida
+        value (str): Cadena de texto a sanitizar.
+        max_length (int): Longitud máxima permitida para la cadena resultante.
         
     Returns:
-        Valor sanitizado
+        str: Cadena sanitizada y truncada.
     """
     if not value:
         return ""

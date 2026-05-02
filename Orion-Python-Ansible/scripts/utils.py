@@ -1,15 +1,20 @@
 """
-Utilidades generales para Syntalix-Orion.
+Utilidades Generales y Fachada de Sistema para Syntalix-Orion.
 
-Este módulo re-exporta funciones desde los módulos core unificados:
-- core.security: Generación de passwords, validación
-- core.state: Manejo de estado
-- core.preflight: Verificaciones del sistema
-- core.logging_config: Logging
+Este módulo actúa como una capa de conveniencia que centraliza y re-exporta las 
+funcionalidades más utilizadas de los módulos 'core' unificados. Proporciona 
+una interfaz simplificada para operaciones comunes de sistema, red y archivos.
 
-Funciones específicas de utils que no están en core:
-- run(): Ejecución genérica de comandos
-- run_docker_command(): Wrapper específico para Docker
+Funcionalidades re-exportadas:
+    - Seguridad: Generación de credenciales y validación de formatos.
+    - Estado: Persistencia y recuperación de configuración.
+    - Preflight: Auditoría de requisitos previos del sistema.
+    - Logging: Acceso al sistema de registro de eventos.
+
+Funcionalidades adicionales:
+    - Ejecución controlada de subprocesos y comandos Docker.
+    - Gestión de la estructura de directorios del proyecto (deploy, credenciales).
+    - Normalización y validación específica de dominios y correos para apps.
 """
 
 import subprocess
@@ -47,15 +52,22 @@ def run(
     capture_output: bool = True
 ) -> subprocess.CompletedProcess:
     """
-    Ejecuta un comando de forma segura.
+    Ejecuta un comando del sistema de forma segura y controlada.
     
+    Proporciona una capa sobre subprocess.run que integra automáticamente 
+    el sistema de logging del proyecto para facilitar la trazabilidad de 
+    los comandos ejecutados.
+
     Args:
-        cmd: Comando como lista de argumentos
-        check: Si True, lanza excepción en caso de error
-        capture_output: Si True, captura stdout/stderr
+        cmd (List[str]): Lista de argumentos que componen el comando.
+        check (bool): Si es True, lanza una excepción si el comando falla.
+        capture_output (bool): Si es True, captura la salida estándar y de error.
         
     Returns:
-        CompletedProcess con el resultado
+        subprocess.CompletedProcess: Objeto con el resultado de la ejecución.
+        
+    Raises:
+        subprocess.CalledProcessError: Si el comando falla y check es True.
     """
     logger.debug(f"Ejecutando comando: {' '.join(cmd)}")
     

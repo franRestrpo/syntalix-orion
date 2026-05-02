@@ -1,13 +1,17 @@
 """
-Módulo unificado de preflight checks para Syntalix-Orion.
+Módulo de Verificaciones Previas (Preflight Checks) para Syntalix-Orion.
 
-Proporciona:
-- Verificación de comandos disponibles
-- Verificación de Docker y Swarm
-- Validación de recursos del sistema (RAM, CPU, disco)
-- Verificación de red Docker
+Este módulo centraliza la lógica de validación del entorno de ejecución. 
+Su objetivo es garantizar que el sistema cumple con todos los requisitos 
+mínimos de hardware y software antes de proceder con el despliegue de aplicaciones.
 
-Este módulo consolida la lógica de checks.py, resources.py y el antiguo preflight.py.
+Funcionalidades principales:
+    - Identificación de plataforma y sistema operativo.
+    - Verificación de binarios requeridos (docker, git, ansible).
+    - Validación de estado de Docker y Docker Swarm.
+    - Gestión dinámica de redes overlay.
+    - Auditoría de recursos de hardware (RAM, CPU, Disco).
+    - Creación de estructura de directorios de ejecución.
 """
 
 import os
@@ -87,10 +91,12 @@ def require(cmd: str) -> None:
 
 def check_docker_available() -> Tuple[bool, Optional[str]]:
     """
-    Verifica si Docker está disponible y en ejecución.
+    Verifica si el motor de Docker está instalado y en ejecución.
     
     Returns:
-        Tupla (disponible, versión o mensaje de error)
+        Tuple[bool, Optional[str]]: Una tupla conteniendo:
+            - bool: True si Docker es accesible y responde.
+            - str: La versión de Docker si es exitoso, o el mensaje de error si falla.
     """
     if not cmd_exists("docker"):
         return False, "Docker no está instalado"
@@ -294,16 +300,16 @@ def run_preflight_checks(
     validate_sys: bool = True
 ) -> Tuple[bool, Optional[str]]:
     """
-    Ejecuta todas las verificaciones preflight.
+    Ejecuta una suite completa de verificaciones pre-despliegue.
     
     Args:
-        require_swarm: Verificar que Swarm esté activo
-        create_network: Crear red si no existe
-        network_name: Nombre de la red interna
-        validate_sys: Validar recursos del sistema
+        require_swarm (bool): Si es True, falla si Swarm no está activo.
+        create_network (bool): Si es True, intenta crear la red si no existe.
+        network_name (str): Nombre de la red Docker interna a verificar/crear.
+        validate_sys (bool): Si es True, audita la RAM, CPU y espacio en disco.
         
     Returns:
-        Tupla (éxito, mensaje de error o None)
+        Tuple[bool, Optional[str]]: (Éxito, Mensaje explicativo en caso de fallo).
     """
     # Verificar Docker
     docker_ok, docker_msg = check_docker_available()
@@ -333,6 +339,38 @@ def run_preflight_checks(
     return True, None
 
 
+# Utilidades de impresión con colores (migrado desde validate_swarm.py)
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+
+
+def print_success(msg: str) -> None:
+    """Imprime mensaje de éxito."""
+    print(f"{GREEN}[SUCCESS]{RESET} {msg}")
+
+
+def print_info(msg: str) -> None:
+    """Imprime mensaje informativo."""
+    print(f"{YELLOW}[INFO]{RESET} {msg}")
+
+
+def print_error(msg: str) -> None:
+    """Imprime mensaje de error."""
+    print(f"{RED}[ERROR]{RESET} {msg}")
+
+
+def ensure_runtime_dirs() -> None:
+    """
+    Crea directorios necesarios para runtime (logs, credenciales).
+    Elimina la necesidad de archivos .gitkeep.
+    """
+    dirs_to_create = ['logs', 'credenciales']
+    for d in dirs_to_create:
+        os.makedirs(d, exist_ok=True)
+
+
 __all__ = [
     "get_platform",
     "is_linux",
@@ -353,4 +391,8 @@ __all__ = [
     "MIN_RAM_GB",
     "MIN_CPU_CORES",
     "MIN_DISK_GB",
+    "print_success",
+    "print_info",
+    "print_error",
+    "ensure_runtime_dirs",
 ]

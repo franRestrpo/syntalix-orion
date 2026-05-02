@@ -1,7 +1,0 @@
-# Directorio de roles Management para Syntalix-Orion V2
-
-Este directorio contiene los roles de Ansible para gestión empresarial:
-- glpi: Helpdesk IT
-- odoo: ERP completo
-- nocodb: Base de datos spreadsheet
-- vaultwarden: Gestor de contraseñas

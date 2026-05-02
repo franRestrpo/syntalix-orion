@@ -1,16 +1,32 @@
 """
-Core modules para Syntalix-Orion.
+Paquete Central (Core) de Syntalix-Orion V2.
 
-Este paquete contiene los módulos centrales de la plataforma:
-- security: Configuración SSL y generación de secretos
-- models: Modelos Pydantic para validación de metadatos
-- logging_config: Logging estructurado
-- dependency_graph: Grafo de dependencias para despliegues
-- config: Gestión de configuración
-- templating: Renderizado de plantillas
-- registry: Registro de servicios
-- state: Gestión de estado (JSON, .env)
-- preflight: Validaciones del sistema
+Este paquete constituye el núcleo lógico de la plataforma, implementando la 
+arquitectura de tres capas (Metadatos, TUI y Orquestación). Consolida todos 
+los módulos fundamentales necesarios para la gestión segura y eficiente de 
+la infraestructura.
+
+Estado del Paquete:
+    - Versión: 2.0.1
+    - Fase: Finalización de Fase 2 (Transición a Orquestación V2).
+    - Integridad: Validaciones automáticas de catálogo y seguridad criptográfica activas.
+
+Módulos Incluidos:
+    - security: Gestión de secretos, hashing bcrypt y validación de seguridad.
+    - models: Esquemas de datos Pydantic para validación de metadatos.
+    - dependency_graph: Motor de resolución topológica de dependencias y recursos.
+    - logging_config: Infraestructura de registro de eventos (Consola/JSON).
+    - state: Persistencia de estado y gestión de archivos de entorno (.env).
+    - preflight: Suite de auditoría de requisitos del sistema y hardware.
+    - templating: Motor de renderizado dinámico de configuraciones (Jinja2).
+    - registry: Sistema de descubrimiento de servicios basado en manifiestos.
+
+Flujo de Ejecución:
+    1. Carga y validación del catálogo desde apps_metadata.py.
+    2. Interacción del usuario vía TUI para la selección de componentes.
+    3. Resolución del grafo de dependencias y cálculo de recursos.
+    4. Generación segura de variables de entorno y archivos de orquestación.
+    5. Ejecución delegada a Ansible para el despliegue final.
 """
 
 from core.security import (
@@ -81,6 +97,7 @@ from core.preflight import (
 )
 
 __version__ = "2.0.1"
+__status__ = "Phase 2 Complete - Transitioning to Phase 3"
 
 __all__ = [
     # Security
