@@ -109,8 +109,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "MYSQL_ROOT_PASSWORD": {
                 "type": "secret",
                 "description": "MySQL root password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "auto_generate": True
             },
             "MYSQL_DATABASE": {
                 "type": "string",
@@ -130,8 +129,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "MONGODB_ROOT_PASSWORD": {
                 "type": "secret",
                 "description": "MongoDB root password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "auto_generate": True
             }
         }
     },
@@ -166,7 +164,6 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "type": "secret",
                 "description": "Redis password",
                 "auto_generate": True,
-                "transform": "bcrypt",
                 "length": 32
             }
         }
@@ -182,8 +179,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "QDRANT_PASSWORD": {
                 "type": "secret",
                 "description": "Qdrant access password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "auto_generate": True
             }
         }
     },
@@ -198,8 +194,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "MINIO_SECRET_KEY": {
                 "type": "secret",
                 "description": "MinIO secret key",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "auto_generate": True
             }
         }
     },
@@ -370,3 +365,19 @@ def all_app_ids() -> List[str]:
     return sorted(APP_METADATA.keys())
 
 __all__ = ["APP_METADATA", "APP_METADATA_ALIAS", "get_metadata", "all_app_ids"]
+
+# =============================================================================
+# AUTO-VALIDACIÓN DEL CATÁLOGO
+# =============================================================================
+# Valida automáticamente el catálogo al importar este módulo.
+# Esto garantiza que el esquema sea correcto y falla temprano si hay errores.
+
+if __name__ != "builtins":
+    try:
+        from core.models import load_app_catalog
+        _validated_catalog = load_app_catalog(APP_METADATA)
+    except ImportError:
+        # Si no se puede importar (ej. desde la raíz sin path), omitir validación
+        pass
+    except Exception as e:
+        raise ValueError(f"Error de validación en apps_metadata.py: {e}")

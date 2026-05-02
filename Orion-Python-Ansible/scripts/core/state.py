@@ -4,7 +4,7 @@ Módulo unificado de gestión de estado para Syntalix-Orion.
 Proporciona:
 - Persistencia de estado en JSON
 - Carga/guardado de configuración
-- Manejo de archivos .env
+- Manejo de archivos .env (formato estándar KEY=VALUE)
 
 Este módulo unifica las funciones dispersas en main.py y config.py.
 """
@@ -13,7 +13,6 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
-from configparser import ConfigParser
 
 
 STATE_FILE = "state.json"
@@ -85,6 +84,8 @@ def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
     """
     Guarda variables en un archivo .env de forma segura.
     
+    Usa formato estándar .env (KEY=VALUE por línea, sin secciones).
+    
     Args:
         env_path: Ruta al archivo .env
         variables: Diccionario de variables a guardar
@@ -93,11 +94,9 @@ def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
         True si se guardó exitosamente
     """
     try:
-        config = ConfigParser()
-        config.read_dict({'DEFAULT': variables})
-        
         with open(env_path, 'w', encoding='utf-8') as f:
-            config.write(f)
+            for key, value in variables.items():
+                f.write(f"{key}={value}\n")
         
         # Establecer permisos restrictivos (solo propietario puede leer/escribir)
         try:

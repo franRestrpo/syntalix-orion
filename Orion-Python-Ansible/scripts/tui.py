@@ -731,7 +731,7 @@ Espera mientras se procesa el despliegue...
             vars_file = ANSIBLE_VARS_FILE
             
             # DEBUG: Imprimir ruta absoluta de intento de escritura
-            print(f"[DEBUG] Intentando escribir YAML en: {vars_file.absolute()}")
+            logger.debug(f"Intentando escribir YAML en: {vars_file.absolute()}")
             
             # Aplanar vars para que sean accesibles en la raiz de Ansible
             final_vars = self.deployment_result.vars_generated.copy()
@@ -752,9 +752,9 @@ Espera mientras se procesa el despliegue...
                     ),
                     encoding="utf-8"
                 )
-                print(f"[DEBUG] Archivo escrito exitosamente en: {vars_file.absolute()}")
+                logger.debug(f"Archivo escrito exitosamente en: {vars_file.absolute()}")
             except Exception as e:
-                print(f"[ERROR CRÍTICO] No se pudo escribir en {vars_file.absolute()}: {e}")
+                logger.error(f"ERROR CRÍTICO: No se pudo escribir en {vars_file.absolute()}: {e}")
                 raise e
 
             # Establecer permisos (lectura para todos, escritura solo propietario)

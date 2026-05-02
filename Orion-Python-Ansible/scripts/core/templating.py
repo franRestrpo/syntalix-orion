@@ -16,16 +16,9 @@ class TemplateManager:
             output_path: Ruta donde guardar el archivo generado
         """
         try:
-            # Configurar el loader para el directorio de la plantilla específica
-            template_dir = os.path.dirname(template_path)
-            template_file = os.path.basename(template_path)
-            
-            env = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
-            template = env.get_template(template_file)
-            
             rendered_content = template.render(**context)
             
-            with open(output_path, 'w') as f:
+            with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(rendered_content)
                 
             print(f"Template rendered successfully to {output_path}")

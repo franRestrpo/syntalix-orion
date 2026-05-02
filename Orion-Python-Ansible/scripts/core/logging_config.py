@@ -173,9 +173,13 @@ class OrionLogger:
             if not cls._initialized:
                 try:
                     cls.configure()
-                except Exception:
-                    # Fallback: usar logger básico
-                    pass
+                except Exception as e:
+                    # Fallback: usar logger básico pero al menos registrar el error
+                    import sys
+                    print(f"WARNING: Error configurando logger: {e}", file=sys.stderr)
+                    
+        except Exception:
+            pass
             
             if name in cls._instances:
                 return cls._instances[name]
