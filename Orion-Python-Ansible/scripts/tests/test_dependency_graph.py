@@ -1,5 +1,14 @@
 """
-Tests para el módulo de DependencyGraph.
+Pruebas Unitarias para el Grafo de Dependencias.
+
+Este módulo implementa casos de prueba estructurados utilizando pytest para 
+verificar la correcta resolución del árbol de dependencias de las aplicaciones.
+
+Funcionalidades auditadas:
+    - Inicialización de grafos con catálogos en memoria y locales.
+    - Resolución DFS (Depth-First Search) y detección de referencias circulares.
+    - Autogeneración de variables seguras para el plan consolidado.
+    - Cálculo preciso del límite de memoria RAM.
 """
 
 import pytest
