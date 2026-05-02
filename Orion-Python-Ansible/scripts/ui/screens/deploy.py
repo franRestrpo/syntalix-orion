@@ -78,12 +78,23 @@ class DeployScreen(Screen):
             else:
                 self.call_from_thread(log_widget.write, msg)
 
-        runner = RealAnsibleRunner(on_event=on_event, debug=True)
-        
-        # Ejecutar asíncronamente
-        asyncio.create_task(
-            runner.run(config=vars_to_inject, modules=plan.plan)
-        )
+        from textual import work
+
+        @work(thread=True)
+        def run_ansible_thread() -> None:
+            runner = RealAnsibleRunner(on_event=on_event, debug=True)
+            # Como runner.run es una corrutina (async), y estamos en un hilo, creamos un nuevo loop:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(runner.run(config=vars_to_inject, modules=plan.plan))
+            except Exception as e:
+                on_event({"type": "log", "message": f"Error fatal en el thread: {e}"})
+                on_event({"type": "done", "success": False})
+            finally:
+                loop.close()
+
+        run_ansible_thread()
 
     def _enable_quit(self) -> None:
         quit_btn = self.query_one("#quit-button", Button)

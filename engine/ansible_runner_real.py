@@ -34,19 +34,23 @@ class RealAnsibleRunner:
         if debug is not None:
             self._debug = bool(debug)
 
-        private_data_dir = str(Path.cwd())
-        pb = "site.yml"
-        if not Path(pb).exists():
-            pb = "playbook.yml"
+        # Encontrar la raíz del proyecto para asegurar que encuentre site.yml
+        engine_dir = Path(__file__).parent.absolute()
+        project_root = engine_dir.parent
+        private_data_dir = str(project_root)
+
+        pb = project_root / "site.yml"
+        if not pb.exists():
+            pb = project_root / "playbook.yml"
         
-        if not Path(pb).exists():
+        if not pb.exists():
             self._emit({"type": "log", "level": "warning", "message": "No playbook found (site.yml / playbook.yml)."})
             self._emit({"type": "done", "success": False})
             return
 
-        inventory = "inventory.ini"
-        if not Path(inventory).exists():
-            inventory = "hosts" # fallback
+        inventory = project_root / "inventory.ini"
+        if not inventory.exists():
+            inventory = project_root / "hosts" # fallback
             
         # Generar un archivo temporal seguro para inyectar las variables a Ansible
         import json
