@@ -364,11 +364,14 @@ def print_error(msg: str) -> None:
 def ensure_runtime_dirs() -> None:
     """
     Crea directorios necesarios para runtime (logs, credenciales).
-    Elimina la necesidad de archivos .gitkeep.
+    Elimina la necesidad de archivos .gitkeep. Siempre los crea 
+    en la raíz del proyecto.
     """
-    dirs_to_create = ['logs', 'credenciales']
+    project_root = Path(__file__).resolve().parent.parent.parent.parent
+    dirs_to_create = [project_root / 'logs', project_root / 'credenciales', project_root / 'deploy']
+    
     for d in dirs_to_create:
-        os.makedirs(d, exist_ok=True)
+        d.mkdir(parents=True, exist_ok=True)
 
 
 __all__ = [

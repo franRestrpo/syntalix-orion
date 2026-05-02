@@ -22,8 +22,9 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 
-# Constantes de directorios
-LOG_DIR = Path(__file__).parent.parent.parent / "logs"
+# Constantes de directorios (Resolviendo la raíz del proyecto)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+LOG_DIR = PROJECT_ROOT / "logs"
 LOG_FILE = LOG_DIR / "orion.log"
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10 MB
 BACKUP_COUNT = 5
