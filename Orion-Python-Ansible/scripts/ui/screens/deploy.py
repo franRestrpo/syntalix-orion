@@ -14,6 +14,8 @@ from core.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+from textual import work
+
 class DeployScreen(Screen):
     """Pantalla final que ejecuta y muestra el despliegue con Ansible."""
     
@@ -67,6 +69,12 @@ class DeployScreen(Screen):
             logger.error("Fallo al guardar el archivo .env")
             log_widget.write("[ERROR] Fallo al persistir el archivo .env de forma segura.")
 
+        self.run_ansible_thread(vars_to_inject, plan.plan)
+
+    @work(thread=True)
+    def run_ansible_thread(self, vars_to_inject: dict, modules: list) -> None:
+        log_widget = self.query_one("#ansible-log", RichLog)
+        
         def on_event(event: dict) -> None:
             # Safely write to UI thread
             msg = event.get("message", str(event))
@@ -78,23 +86,17 @@ class DeployScreen(Screen):
             else:
                 self.call_from_thread(log_widget.write, msg)
 
-        from textual import work
-
-        @work(thread=True)
-        def run_ansible_thread() -> None:
-            runner = RealAnsibleRunner(on_event=on_event, debug=True)
-            # Como runner.run es una corrutina (async), y estamos en un hilo, creamos un nuevo loop:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(runner.run(config=vars_to_inject, modules=plan.plan))
-            except Exception as e:
-                on_event({"type": "log", "message": f"Error fatal en el thread: {e}"})
-                on_event({"type": "done", "success": False})
-            finally:
-                loop.close()
-
-        run_ansible_thread()
+        runner = RealAnsibleRunner(on_event=on_event, debug=True)
+        # Como runner.run es una corrutina (async), y estamos en un hilo, creamos un nuevo loop:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(runner.run(config=vars_to_inject, modules=modules))
+        except Exception as e:
+            on_event({"type": "log", "message": f"Error fatal en el thread: {e}"})
+            on_event({"type": "done", "success": False})
+        finally:
+            loop.close()
 
     def _enable_quit(self) -> None:
         quit_btn = self.query_one("#quit-button", Button)
