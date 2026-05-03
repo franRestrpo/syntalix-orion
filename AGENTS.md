@@ -10,9 +10,15 @@ This repository is transitioning to a **V2 3-layer architecture**: Metadata (Pyt
 ## Crucial App Constraints & Secrets (DO NOT MISS)
 - **Database passwords MUST be deduplicated:** `POSTGRES_PASSWORD` should only exist in the `postgres_pgvector` entry. Do not repeat or redefine DB passwords in dependent apps (Chatwoot, Odoo, Dify, etc.). Apps must consume the centrally generated global DB password.
 - **Secret Generation:** Use `secrets.token_urlsafe()` for all generated credentials.
-- **Bcrypt:** ONLY use `bcrypt` for application secrets (like UI login credentials). NEVER use bcrypt for database passwords (DB passwords must be kept in safe plaintext or Vault).
+- **CRITICAL RULE FOR PASSWORDS (ENCRYPTED VS PLAINTEXT):** 
+  - Applicative UI credentials and web-facing access keys MUST be encrypted (e.g., using `bcrypt`).
+  - **Database passwords (Postgres, Redis, MongoDB, etc.) MUST ALWAYS be random secure plaintext.** NEVER encrypt or hash database passwords. Applications (like n8n, Authentik) need the raw plaintext password to pass it over the network protocol for DB authentication. Hashing a DB password will immediately crash the dependent services (connection failed / NOAUTH).
 - **RAM Limits:** The engine MUST sum the total RAM required (selected app + dependencies) and emit a critical warning if the plan exceeds the server threshold (e.g., 8 GB).
 - **Networking:** Do NOT expose HTTP app ports directly to the host. All web apps must remain behind **Traefik** using dynamic Docker labels for TLS and security policies.
+
+## Known Environment Constraints
+- **WAF / Cloudflare Restrictions:** The deployment environment is protected by an external WAF (like Cloudflare). When debugging `526 Invalid SSL Certificate` or `404 Not Found` errors on domains, ALWAYS consider the WAF configuration (e.g., SSL/TLS modes like "Full (strict)" blocking Traefik's ACME challenge) and Traefik's provider settings (`providers.swarm.network` vs `providers.docker.network`).
+- **Outbound Traffic Blocks:** Services like CrowdSec or Authentik may log `[Errno 111] Connection refused` or timeout errors when attempting to reach external APIs or SMTP servers. This is likely caused by the WAF or network firewall blocking outbound traffic, NOT necessarily a misconfiguration in the Docker setup. Do not spend excessive time debugging internal Docker networking if the failure is on an external outbound connection.
 
 ## Hardcoded Application Dependencies
 - **Flowise** and **ActivePieces**: Must depend on `Postgres_pgvector` and `Redis`. They cannot run without persistent storage.

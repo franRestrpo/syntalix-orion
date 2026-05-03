@@ -23,15 +23,30 @@ class DeployScreen(Screen):
         ("ctrl+q", "quit", "Salir"),
     ]
 
+    CSS = """
+    #deploy-layout {
+        height: 100%;
+    }
+    #ansible-log {
+        height: 1fr;
+        border: solid $primary;
+        margin: 1 0;
+    }
+    #button-container {
+        height: auto;
+        align: center middle;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="p-2"):
+        with Vertical(classes="p-2", id="deploy-layout"):
             yield Static("## [🚀] Despliegue de Infraestructura", id="deploy-title", markup=True)
             yield Static("", id="deploy-status", markup=True)
             
-            yield RichLog(id="ansible-log", highlight=True, auto_scroll=True, classes="mt-2 h-full")
+            yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
             
-            with Vertical(classes="mt-2 align-center"):
+            with Vertical(id="button-container"):
                 yield Button("Salir", id="quit-button", variant="error", disabled=True)
                 
         yield Footer()

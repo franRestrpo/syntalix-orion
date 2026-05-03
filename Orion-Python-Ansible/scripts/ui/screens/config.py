@@ -10,6 +10,7 @@ from textual.message import Message
 
 from core.dependency_graph import DependencyGraph
 from core.security import validate_domain, validate_email
+from core.state import load_env_file
 from ui.widgets.forms import DynamicFormInput
 from ui.managers.state_store import DeploymentPlan
 
@@ -63,8 +64,13 @@ class ConfigScreen(Screen):
 
     def _calculate_plan(self) -> None:
         selected = list(self.app.state_store.selected_apps)
+        
+        # Load existing .env variables to ensure idempotency across runs
+        env_file_path = str(Path.cwd() / ".env")
+        existing_vars = load_env_file(env_file_path)
+        
         try:
-            result = self.dependency_graph.plan_with_vars_multi(selected)
+            result = self.dependency_graph.plan_with_vars_multi(selected, existing_vars=existing_vars)
             plan = DeploymentPlan(
                 plan=result.get("plan", []),
                 ram_total_mb=result.get("ram_mb_total", 0),

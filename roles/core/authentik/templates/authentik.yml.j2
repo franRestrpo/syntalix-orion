@@ -6,23 +6,26 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=SyntalixNet"
+        - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost') }}`)"
+        - "traefik.http.routers.authentik.entrypoints=websecure"
+        - "traefik.http.routers.authentik.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.authentik.loadbalancer.server.port=9000"
     environment:
       - AUTHENTIK_POSTGRESQL__HOST=postgres-db
       - AUTHENTIK_POSTGRESQL__USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__NAME={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_DB', default='appdb') }}
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret') }}
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
-      - AUTHENTIK_SECRET_KEY={{ lookup('vars', 'AUTHENTIK__SECRET_KEY', default='mysecret') }}
+      - AUTHENTIK_SECRET_KEY={{ lookup('vars', 'AUTHENTIK__AUTHENTIK_SECRET_KEY', default='mysecret') }}
     volumes:
       - authentik_media:/media
       - authentik_custom_templates:/templates
     networks:
       - SyntalixNet
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost') }}`)"
-      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
 
   authentik-worker:
     image: ghcr.io/goauthentik/server:latest
@@ -33,11 +36,11 @@ services:
     environment:
       - AUTHENTIK_POSTGRESQL__HOST=postgres-db
       - AUTHENTIK_POSTGRESQL__USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__NAME={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_DB', default='appdb') }}
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret') }}
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
-      - AUTHENTIK_SECRET_KEY={{ lookup('vars', 'AUTHENTIK__SECRET_KEY', default='mysecret') }}
+      - AUTHENTIK_SECRET_KEY={{ lookup('vars', 'AUTHENTIK__AUTHENTIK_SECRET_KEY', default='mysecret') }}
     volumes:
       - authentik_media:/media
       - authentik_certs:/certs
