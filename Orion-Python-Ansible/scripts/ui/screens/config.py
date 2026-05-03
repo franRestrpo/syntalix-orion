@@ -103,8 +103,9 @@ class ConfigScreen(Screen):
                     if is_required and not is_auto:
                         desc = var_info.get("description", var_name)
                         v_type = var_info.get("type", "string")
-                        app_specific_vars.append((var_name, desc, v_type))
-                        self.required_vars.append((var_name, desc, v_type))
+                        full_key = f"{app_id}__{var_name}".upper()
+                        app_specific_vars.append((full_key, desc, v_type))
+                        self.required_vars.append((full_key, desc, v_type))
                 
                 if app_specific_vars:
                     app_vars_map[app_name] = app_specific_vars
@@ -115,13 +116,13 @@ class ConfigScreen(Screen):
             
             for app_name, vars_list in app_vars_map.items():
                 forms_container.mount(Static(f"\n[📦] **{app_name}**", markup=True))
-                for var_name, desc, v_type in vars_list:
-                    # Pre-llenar si ya estaba en el store
-                    default_val = self.app.state_store.user_variables.get(var_name, "")
+                for full_key, desc, v_type in vars_list:
+                    # Pre-llenar si ya estaba en el store o en las vars generadas (.env)
+                    default_val = self.app.state_store.user_variables.get(full_key, plan.vars_generated.get(full_key, ""))
                     is_pwd = v_type == "secret"
-                    form_input = DynamicFormInput(var_name=var_name, description=desc, default_value=default_val, is_password=is_pwd)
+                    form_input = DynamicFormInput(var_name=full_key, description=desc, default_value=default_val, is_password=is_pwd)
                     forms_container.mount(form_input)
-                    self.user_inputs[var_name] = default_val
+                    self.user_inputs[full_key] = default_val
                     
         except Exception as e:
             self.notify(f"Error calculando plan: {e}", severity="error")

@@ -9,7 +9,7 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "chatwoot"
-      dominio: "{{ lookup('vars', 'CHATWOOT__DOMAIN', default=lookup('vars', 'CHATWOOT_DOMAIN', default=lookup('vars', 'CHATWOOT__TRAEFIK_DASHBOARD_URL', default='chatwoot.localhost'))) }}"
+      dominio: "{{ lookup('vars', 'CHATWOOT__CHATWOOT_DOMAIN', default=lookup('vars', 'CHATWOOT_DOMAIN', default='chatwoot.localhost')) }}"
       acme_email: "{{ vars.get('CHATWOOT__ACME_EMAIL', vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost')) }}"
       password_db: "{{ vars.get('POSTGRES_PGVECTOR__POSTGRES_PASSWORD', 'securepass') }}"
       secret_key_base: "{{ vars.get('CHATWOOT__SECRET_KEY_BASE', 'securekey') }}"
