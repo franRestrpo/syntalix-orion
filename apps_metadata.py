@@ -96,7 +96,8 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "AUTHENTIK_SECRET_KEY": {
                 "type": "secret",
                 "description": "Authentik Secret Key",
-                "auto_generate": True
+                "auto_generate": True,
+                "length": 50
             }
         }
     },
@@ -349,7 +350,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "name": "n8n",
         "category": "Automation",
         "version": "latest",
-        "ram_mb": 512,
+        "ram_mb": 1024,
         "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {
             "N8N_DOMAIN": {

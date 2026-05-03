@@ -21,6 +21,7 @@ services:
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
       - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret', true) }}
+      - CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
     volumes:
       - authentik_media:/media
       - authentik_custom_templates:/templates
@@ -41,6 +42,7 @@ services:
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
       - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret', true) }}
+      - CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
     volumes:
       - authentik_media:/media
       - authentik_certs:/certs
