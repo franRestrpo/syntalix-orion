@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "authentik"
-      dominio: "{{ lookup('vars', 'AUTHENTIK__AUTHENTIK_DOMAIN', default='auth.localhost') }}"
-      usuario_admin: "{{ lookup('vars', 'AUTHENTIK__ADMIN_EMAIL', default=lookup('vars', 'AUTHENTIK__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'AUTHENTIK__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'AUTHENTIK__DB_PASSWORD', default='securepass')) }}"
+      dominio: "{{ AUTHENTIK__AUTHENTIK_DOMAIN | default('auth.localhost') }}"
+      usuario_admin: "{{ lookup('vars', 'AUTHENTIK__ADMIN_EMAIL', default=AUTHENTIK__TRAEFIK_USER | default('admin')) }}"
+      acme_email: "{{ AUTHENTIK__ACME_EMAIL | default('admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=AUTHENTIK__DB_PASSWORD | default('securepass')) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

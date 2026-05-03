@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "minio"
-      dominio: "{{ lookup('vars', 'MINIO__DOMAIN', default=lookup('vars', 'MINIO_DOMAIN', default=lookup('vars', 'MINIO__TRAEFIK_DASHBOARD_URL', default='minio.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'MINIO__ADMIN_EMAIL', default=lookup('vars', 'MINIO__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'MINIO__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'MINIO__DB_PASSWORD', default='securepass')) }}"
+      dominio: "{{ lookup('vars', 'MINIO__DOMAIN', default=lookup('vars', 'MINIO_DOMAIN', default=MINIO__TRAEFIK_DASHBOARD_URL | default('minio.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'MINIO__ADMIN_EMAIL', default=MINIO__TRAEFIK_USER | default('admin')) }}"
+      acme_email: "{{ MINIO__ACME_EMAIL | default('admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=MINIO__DB_PASSWORD | default('securepass')) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

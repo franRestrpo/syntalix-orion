@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "loki"
-      dominio: "{{ lookup('vars', 'LOKI__DOMAIN', default=lookup('vars', 'LOKI_DOMAIN', default=lookup('vars', 'LOKI__TRAEFIK_DASHBOARD_URL', default='loki.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'LOKI__ADMIN_EMAIL', default=lookup('vars', 'LOKI__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'LOKI__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'LOKI__DB_PASSWORD', default='securepass')) }}"
+      dominio: "{{ lookup('vars', 'LOKI__DOMAIN', default=lookup('vars', 'LOKI_DOMAIN', default=LOKI__TRAEFIK_DASHBOARD_URL | default('loki.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'LOKI__ADMIN_EMAIL', default=LOKI__TRAEFIK_USER | default('admin')) }}"
+      acme_email: "{{ LOKI__ACME_EMAIL | default('admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=LOKI__DB_PASSWORD | default('securepass')) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

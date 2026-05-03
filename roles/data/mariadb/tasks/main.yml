@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "mariadb"
-      dominio: "{{ lookup('vars', 'MARIADB__DOMAIN', default=lookup('vars', 'MARIADB_DOMAIN', default=lookup('vars', 'MARIADB__TRAEFIK_DASHBOARD_URL', default='mariadb.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'MARIADB__ADMIN_EMAIL', default=lookup('vars', 'MARIADB__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'MARIADB__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'MARIADB__DB_PASSWORD', default='securepass')) }}"
+      dominio: "{{ lookup('vars', 'MARIADB__DOMAIN', default=lookup('vars', 'MARIADB_DOMAIN', default=MARIADB__TRAEFIK_DASHBOARD_URL | default('mariadb.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'MARIADB__ADMIN_EMAIL', default=MARIADB__TRAEFIK_USER | default('admin')) }}"
+      acme_email: "{{ MARIADB__ACME_EMAIL | default('admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=MARIADB__DB_PASSWORD | default('securepass')) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

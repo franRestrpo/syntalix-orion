@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "grafana"
-      dominio: "{{ lookup('vars', 'GRAFANA__DOMAIN', default=lookup('vars', 'GRAFANA_DOMAIN', default=lookup('vars', 'GRAFANA__TRAEFIK_DASHBOARD_URL', default='grafana.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'GRAFANA__ADMIN_EMAIL', default=lookup('vars', 'GRAFANA__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'GRAFANA__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'GRAFANA__DB_PASSWORD', default='securepass')) }}"
+      dominio: "{{ lookup('vars', 'GRAFANA__DOMAIN', default=lookup('vars', 'GRAFANA_DOMAIN', default=GRAFANA__TRAEFIK_DASHBOARD_URL | default('grafana.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'GRAFANA__ADMIN_EMAIL', default=GRAFANA__TRAEFIK_USER | default('admin')) }}"
+      acme_email: "{{ GRAFANA__ACME_EMAIL | default('admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=GRAFANA__DB_PASSWORD | default('securepass')) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

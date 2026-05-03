@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "dify"
-      dominio: "{{ lookup('vars', 'DIFY__DOMAIN', default=lookup('vars', 'DIFY_DOMAIN', default=lookup('vars', 'DIFY__TRAEFIK_DASHBOARD_URL', default='dify.localhost'))) }}"
-      usuario_admin: "{{ lookup('vars', 'DIFY__ADMIN_EMAIL', default=lookup('vars', 'DIFY__TRAEFIK_USER', default='admin')) }}"
-      acme_email: "{{ lookup('vars', 'DIFY__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=lookup('vars', 'DIFY__DB_PASSWORD', default='securepass')) }}"
+      dominio: "{{ lookup('vars', 'DIFY__DOMAIN', default=lookup('vars', 'DIFY_DOMAIN', default=DIFY__TRAEFIK_DASHBOARD_URL | default('dify.localhost'))) }}"
+      usuario_admin: "{{ lookup('vars', 'DIFY__ADMIN_EMAIL', default=DIFY__TRAEFIK_USER | default('admin')) }}"
+      acme_email: "{{ DIFY__ACME_EMAIL | default('admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=DIFY__DB_PASSWORD | default('securepass')) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

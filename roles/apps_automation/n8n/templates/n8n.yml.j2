@@ -6,9 +6,9 @@ services:
     image: n8nio/n8n:latest
     command: start
     environment:
-      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
+      - N8N_ENCRYPTION_KEY={{ N8N__N8N_ENCRYPTION_KEY | default('CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') | replace('$', '$$') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ N8N__N8N_BASIC_AUTH | default('admin') | replace('$', '$$') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -18,11 +18,11 @@ services:
       - DB_POSTGRESDB_DATABASE=appdb
       - DB_POSTGRESDB_HOST=postgres-db
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
+      - DB_POSTGRESDB_USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin') }}
+      - DB_POSTGRESDB_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secretpass') }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_BULL_REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
+      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret') }}
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
@@ -48,9 +48,9 @@ services:
     image: n8nio/n8n:latest
     command: webhook
     environment:
-      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
+      - N8N_ENCRYPTION_KEY={{ N8N__N8N_ENCRYPTION_KEY | default('CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') | replace('$', '$$') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ N8N__N8N_BASIC_AUTH | default('admin') | replace('$', '$$') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -60,11 +60,11 @@ services:
       - DB_POSTGRESDB_DATABASE=appdb
       - DB_POSTGRESDB_HOST=postgres-db
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
+      - DB_POSTGRESDB_USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin') }}
+      - DB_POSTGRESDB_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secretpass') }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_BULL_REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
+      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret') }}
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
@@ -90,9 +90,9 @@ services:
     image: n8nio/n8n:latest
     command: worker --concurrency=10
     environment:
-      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
+      - N8N_ENCRYPTION_KEY={{ N8N__N8N_ENCRYPTION_KEY | default('CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') | replace('$', '$$') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ N8N__N8N_BASIC_AUTH | default('admin') | replace('$', '$$') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -102,11 +102,11 @@ services:
       - DB_POSTGRESDB_DATABASE=appdb
       - DB_POSTGRESDB_HOST=postgres-db
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
+      - DB_POSTGRESDB_USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin') }}
+      - DB_POSTGRESDB_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secretpass') }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_BULL_REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
+      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret') }}
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
