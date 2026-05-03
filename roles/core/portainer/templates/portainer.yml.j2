@@ -34,6 +34,14 @@ services:
         - "traefik.http.routers.portainer.service=portainer"
         - "traefik.http.routers.portainer.entrypoints=websecure"
         - "traefik.http.routers.portainer.priority=1"
+        # Middlewares de seguridad (CORS y HTTPS forwarding)
+        - "traefik.http.routers.portainer.middlewares=portainer-headers"
+        - "traefik.http.middlewares.portainer-headers.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
+        - "traefik.http.middlewares.portainer-headers.headers.accesscontrolalloworiginlist=https://{{ app_actual.dominio }}"
+        - "traefik.http.middlewares.portainer-headers.headers.accesscontrolallowcredentials=true"
+        - "traefik.http.middlewares.portainer-headers.headers.accesscontrolallowheaders=Authorization, Content-Type, Accept, Origin, User-Agent, Cache-Control, X-Requested-With"
+        - "traefik.http.middlewares.portainer-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.portainer-headers.headers.customresponseheaders.Permissions-Policy=camera=(), microphone=(), geolocation=(), payment=()"
 
 volumes:
   portainer_data:
