@@ -9,7 +9,7 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "chatwoot"
-      dominio: "{{ lookup('vars', 'CHATWOOT__CHATWOOT_DOMAIN', default=CHATWOOT_DOMAIN | default('chatwoot.localhost')) }}"
+      dominio: "{{ lookup('vars', 'CHATWOOT__CHATWOOT_DOMAIN', default=CHATWOOT_DOMAIN | default('chatwoot.localhost', true)) }}"
       acme_email: "{{ vars.get('CHATWOOT__ACME_EMAIL', vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost')) }}"
       password_db: "{{ vars.get('POSTGRES_PGVECTOR__POSTGRES_PASSWORD', 'securepass') }}"
       secret_key_base: "{{ vars.get('CHATWOOT__SECRET_KEY_BASE', 'securekey') }}"
@@ -29,8 +29,7 @@
 
 - name: "🚀 Desplegar Stack chatwoot en Docker Swarm"
   ansible.builtin.command:
-    cmd: "docker stack deploy -c chatwoot_stack.yml chatwoot"
-    chdir: "{{ playbook_dir }}/deploy"
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/chatwoot_stack.yml chatwoot"
   when: not config_stack.failed | default(false)
   register: stack_deploy
   changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"

@@ -6,9 +6,9 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - POSTGRES_USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin') }}
-      - POSTGRES_PASSWORD={{ app_actual.password_db | default(POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret')) }}
-      - POSTGRES_DB={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb') }}
+      - POSTGRES_USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin', true) }}
+      - POSTGRES_PASSWORD={{ app_actual.password_db | default(POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret', true)) }}
+      - POSTGRES_DB={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb', true) }}
     networks:
       SyntalixNet:
         aliases:

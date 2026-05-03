@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "n8n"
-      dominio: "{{ N8N__N8N_DOMAIN | default('n8n.localhost') }}"
-      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost') }}"
-      password_db: "{{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('securepass') }}"
-      basic_auth: "{{ N8N__N8N_BASIC_AUTH | default('admin:securepass') }}"
+      dominio: "{{ N8N__N8N_DOMAIN | default('n8n.localhost', true) }}"
+      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
+      password_db: "{{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('securepass', true) }}"
+      basic_auth: "{{ N8N__N8N_BASIC_AUTH | default('admin:securepass', true) }}"
 
 - name: "Generar archivo .env para n8n"
   ansible.builtin.template:
@@ -28,8 +28,7 @@
 
 - name: "🚀 Desplegar Stack n8n en Docker Swarm"
   ansible.builtin.command:
-    cmd: "docker stack deploy -c n8n_stack.yml n8n"
-    chdir: "{{ playbook_dir }}/deploy"
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/n8n_stack.yml n8n"
   when: not config_stack.failed | default(false)
   register: stack_deploy
   changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"

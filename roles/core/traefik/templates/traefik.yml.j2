@@ -2,7 +2,7 @@ version: "3.7"
 services:
 
   traefik:
-    image: traefik:latest
+    image: traefik:v2.11
     environment:
       - DOCKER_API_VERSION=1.44
     command:
@@ -11,7 +11,7 @@ services:
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network={{ app_actual.internal_network | default('SyntalixNet') }}"
+      - "--providers.docker.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -21,7 +21,7 @@ services:
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencryptresolver.acme.email={{ app_actual.acme_email | default('admin@syntalix.net') }}"
+      - "--certificatesresolvers.letsencryptresolver.acme.email={{ app_actual.acme_email | default('admin@syntalix.net', true) }}"
       - "--log.level=DEBUG"
       - "--log.format=common"
       - "--log.filePath=/var/log/traefik/traefik.log"
@@ -33,7 +33,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
 
     ports:
       - target: 80
@@ -49,7 +49,7 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet') }}"
+        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
         - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
         - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
         - "traefik.http.routers.http-catchall.rule=Host(`{host:.+}`)"
@@ -62,8 +62,8 @@ services:
         - "traefik.http.routers.traefik.service=api@internal"
         - "traefik.http.routers.traefik.entrypoints=websecure"
         - "traefik.http.routers.traefik.middlewares=authtraefik"
-        # Basic Auth Middleware (User: {{ app_actual.usuario_admin | default('admin') }})
-        - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin') }}:{{ app_actual.password_db | default('password_seguro') | replace('$', '$$') }}"
+        # Basic Auth Middleware (User: {{ app_actual.usuario_admin | default('admin', true) }})
+        - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin', true) }}:{{ app_actual.password_db | default('password_seguro', true) | replace('$', '$$') }}"
 
 volumes:
   vol_shared:
@@ -74,7 +74,7 @@ volumes:
     name: volume_swarm_certificates
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
     external: true
     attachable: true
-    name: {{ app_actual.internal_network | default('SyntalixNet') }}
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}

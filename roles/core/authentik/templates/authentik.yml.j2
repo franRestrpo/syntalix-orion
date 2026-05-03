@@ -9,18 +9,18 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=SyntalixNet"
-        - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost') }}`)"
+        - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost', true) }}`)"
         - "traefik.http.routers.authentik.entrypoints=websecure"
         - "traefik.http.routers.authentik.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.authentik.loadbalancer.server.port=9000"
     environment:
       - AUTHENTIK_POSTGRESQL__HOST=postgres-db
-      - AUTHENTIK_POSTGRESQL__USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin') }}
-      - AUTHENTIK_POSTGRESQL__NAME={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb') }}
-      - AUTHENTIK_POSTGRESQL__PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret') }}
+      - AUTHENTIK_POSTGRESQL__USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin', true) }}
+      - AUTHENTIK_POSTGRESQL__NAME={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb', true) }}
+      - AUTHENTIK_POSTGRESQL__PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret', true) }}
       - AUTHENTIK_REDIS__HOST=redis-cache
-      - AUTHENTIK_REDIS__PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret') }}
-      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret') }}
+      - AUTHENTIK_REDIS__PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
+      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret', true) }}
     volumes:
       - authentik_media:/media
       - authentik_custom_templates:/templates
@@ -35,12 +35,12 @@ services:
         condition: on-failure
     environment:
       - AUTHENTIK_POSTGRESQL__HOST=postgres-db
-      - AUTHENTIK_POSTGRESQL__USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin') }}
-      - AUTHENTIK_POSTGRESQL__NAME={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb') }}
-      - AUTHENTIK_POSTGRESQL__PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret') }}
+      - AUTHENTIK_POSTGRESQL__USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin', true) }}
+      - AUTHENTIK_POSTGRESQL__NAME={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb', true) }}
+      - AUTHENTIK_POSTGRESQL__PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret', true) }}
       - AUTHENTIK_REDIS__HOST=redis-cache
-      - AUTHENTIK_REDIS__PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret') }}
-      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret') }}
+      - AUTHENTIK_REDIS__PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
+      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret', true) }}
     volumes:
       - authentik_media:/media
       - authentik_certs:/certs

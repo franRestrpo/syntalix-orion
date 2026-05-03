@@ -9,8 +9,8 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "portainer"
-      dominio: "{{ PORTAINER__PORTAINER_DOMAIN | default('portainer.localhost') }}"
-      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost') }}"
+      dominio: "{{ PORTAINER__PORTAINER_DOMAIN | default('portainer.localhost', true) }}"
+      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
 
 - name: "Generar archivo .env para portainer"
   ansible.builtin.template:
@@ -26,8 +26,7 @@
 
 - name: "🚀 Desplegar Stack portainer en Docker Swarm"
   ansible.builtin.command:
-    cmd: "docker stack deploy -c portainer_stack.yml portainer"
-    chdir: "{{ playbook_dir }}/deploy"
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/portainer_stack.yml portainer"
   when: not config_stack.failed | default(false)
   register: stack_deploy
   changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"

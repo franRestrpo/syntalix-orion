@@ -9,7 +9,7 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "evolution_api"
-      dominio: "{{ lookup('vars', 'EVOLUTION_API__EVOLUTION_API_DOMAIN', default=EVOLUTION_API_DOMAIN | default('evolution.localhost')) }}"
+      dominio: "{{ lookup('vars', 'EVOLUTION_API__EVOLUTION_API_DOMAIN', default=EVOLUTION_API_DOMAIN | default('evolution.localhost', true)) }}"
       acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
       api_key: "{{ vars.get('EVOLUTION_API__EV_API_KEY', 'securekey') }}"
       mongo_pass: "{{ vars.get('MONGODB__MONGODB_ROOT_PASSWORD', 'securepass') }}"
@@ -28,8 +28,7 @@
 
 - name: "🚀 Desplegar Stack evolution_api en Docker Swarm"
   ansible.builtin.command:
-    cmd: "docker stack deploy -c evolution_api_stack.yml evolution_api"
-    chdir: "{{ playbook_dir }}/deploy"
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/evolution_api_stack.yml evolution_api"
   when: not config_stack.failed | default(false)
   register: stack_deploy
   changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"

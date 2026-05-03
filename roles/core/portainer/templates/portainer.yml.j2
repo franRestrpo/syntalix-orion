@@ -7,7 +7,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
     deploy:
       mode: global
       placement:
@@ -19,7 +19,7 @@ services:
     volumes:
       - portainer_data:/data
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
     deploy:
       mode: replicated
       replicas: 1
@@ -27,7 +27,7 @@ services:
         constraints: [node.role == manager]
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet') }}"
+        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
         - "traefik.http.routers.portainer.rule=Host(`{{ app_actual.dominio }}`)"
         - "traefik.http.services.portainer.loadbalancer.server.port=9000"
         - "traefik.http.routers.portainer.tls.certresolver=letsencryptresolver"
@@ -41,7 +41,7 @@ volumes:
     name: portainer_data
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
     external: true
     attachable: true
-    name: {{ app_actual.internal_network | default('SyntalixNet') }}
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}

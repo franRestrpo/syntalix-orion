@@ -1,6 +1,6 @@
 - name: Esperar a que PostgreSQL esté disponible
   wait_for:
-    host: "{{ chatwoot_db_host | default('127.0.0.1') }}"
+    host: "{{ chatwoot_db_host | default('127.0.0.1', true) }}"
     port: 5432
     state: started
     timeout: 300

@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "traefik"
-      dominio: "{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('traefik.localhost') }}"
-      usuario_admin: "{{ TRAEFIK__TRAEFIK_USER | default('admin') }}"
-      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost') }}"
-      password_db: "{{ TRAEFIK__TRAEFIK_PASSWORD | default('securepass') }}"
+      dominio: "{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('traefik.localhost', true) }}"
+      usuario_admin: "{{ TRAEFIK__TRAEFIK_USER | default('admin', true) }}"
+      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
+      password_db: "{{ TRAEFIK__TRAEFIK_PASSWORD | default('securepass', true) }}"
 
 - name: "🌐 Asegurar que existen los volúmenes externos necesarios"
   ansible.builtin.shell:
