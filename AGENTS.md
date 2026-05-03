@@ -16,6 +16,10 @@ This repository is transitioning to a **V2 3-layer architecture**: Metadata (Pyt
 - **RAM Limits:** The engine MUST sum the total RAM required (selected app + dependencies) and emit a critical warning if the plan exceeds the server threshold (e.g., 8 GB).
 - **Networking:** Do NOT expose HTTP app ports directly to the host. All web apps must remain behind **Traefik** using dynamic Docker labels for TLS and security policies.
 
+## Known Environment Constraints
+- **WAF / Cloudflare Restrictions:** The deployment environment is protected by an external WAF (like Cloudflare). When debugging `526 Invalid SSL Certificate` or `404 Not Found` errors on domains, ALWAYS consider the WAF configuration (e.g., SSL/TLS modes like "Full (strict)" blocking Traefik's ACME challenge) and Traefik's provider settings (`providers.swarm.network` vs `providers.docker.network`).
+- **Outbound Traffic Blocks:** Services like CrowdSec or Authentik may log `[Errno 111] Connection refused` or timeout errors when attempting to reach external APIs or SMTP servers. This is likely caused by the WAF or network firewall blocking outbound traffic, NOT necessarily a misconfiguration in the Docker setup. Do not spend excessive time debugging internal Docker networking if the failure is on an external outbound connection.
+
 ## Hardcoded Application Dependencies
 - **Flowise** and **ActivePieces**: Must depend on `Postgres_pgvector` and `Redis`. They cannot run without persistent storage.
 - **Evolution API**: Must include `MongoDB` as a mandatory dependency.
