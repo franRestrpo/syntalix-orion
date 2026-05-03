@@ -14,10 +14,21 @@ Características:
 
 import asyncio
 import os
+import sys
 import subprocess
+import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 import re
+
+# Configurar logger local para el archivo de salida
+runner_logger = logging.getLogger("ansible_runner")
+runner_logger.setLevel(logging.DEBUG)
+log_file = Path(__file__).parent.parent / "logs" / "ansible_runner.log"
+log_file.parent.mkdir(exist_ok=True)
+fh = logging.FileHandler(log_file)
+fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+runner_logger.addHandler(fh)
 
 EventCallback = Callable[[Dict[str, Any]], None]
 
@@ -64,8 +75,17 @@ class RealAnsibleRunner:
         except Exception as e:
             self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear .ansible_vars.json: {e}"})
         
+        # Resolver la ruta correcta de ansible-playbook desde el entorno virtual activo
+        python_bin_dir = Path(sys.executable).parent
+        ansible_bin = str(python_bin_dir / "ansible-playbook")
+        
+        # Fallback a PATH global si no se encuentra en el venv (poco probable pero seguro)
+        if not os.path.exists(ansible_bin):
+            runner_logger.warning(f"ansible-playbook no encontrado en {python_bin_dir}. Usando PATH global.")
+            ansible_bin = "ansible-playbook"
+            
         cmd = [
-            "ansible-playbook",
+            ansible_bin,
             str(pb),
             "-i", str(inventory)
         ]
@@ -73,7 +93,9 @@ class RealAnsibleRunner:
         if vars_file.exists():
             cmd.extend(["-e", f"@{vars_file}"])
         
-        self._emit({"type": "log", "level": "info", "message": f"Ejecutando: {' '.join(cmd)}"})
+        msg_cmd = f"Ejecutando: {' '.join(cmd)}"
+        self._emit({"type": "log", "level": "info", "message": msg_cmd})
+        runner_logger.info(msg_cmd)
         
         try:
             # Call subprocess inside a separate thread to not block the asyncio event loop
@@ -94,18 +116,24 @@ class RealAnsibleRunner:
                     if line:
                         clean_line = self._clean_ansi(line.rstrip())
                         self._emit({"type": "log", "level": "info", "message": clean_line})
+                        runner_logger.info(f"ANSIBLE: {clean_line}")
                 
                 return process.wait()
 
             returncode = await asyncio.to_thread(run_subprocess)
             success = (returncode == 0)
+            runner_logger.info(f"Ansible finalizado con código: {returncode}")
             self._emit({"type": "done", "success": success})
             
-        except FileNotFoundError:
-            self._emit({"type": "log", "level": "error", "message": "ansible-playbook no encontrado en PATH."})
+        except FileNotFoundError as e:
+            err_msg = f"ansible-playbook no encontrado: {e}"
+            runner_logger.error(err_msg)
+            self._emit({"type": "log", "level": "error", "message": err_msg})
             self._emit({"type": "done", "success": False})
         except Exception as e:
-            self._emit({"type": "log", "level": "error", "message": f"Error ejecutando Ansible: {e}", "stderr": str(e)})
+            err_msg = f"Error ejecutando Ansible: {e}"
+            runner_logger.error(err_msg, exc_info=True)
+            self._emit({"type": "log", "level": "error", "message": err_msg, "stderr": str(e)})
             self._emit({"type": "done", "success": False})
         finally:
             if vars_file.exists():

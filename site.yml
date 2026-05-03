@@ -77,6 +77,22 @@
           - ""
 
     # -------------------------------------------------------------------------
+    # Verificar e Inicializar Docker Swarm
+    # -------------------------------------------------------------------------
+    - name: "🐳 Verificar estado de Docker Swarm"
+      community.docker.docker_swarm_info:
+      register: swarm_info
+      ignore_errors: yes
+
+    - name: "🐳 Inicializar Docker Swarm si está inactivo"
+      community.docker.docker_swarm:
+        state: present
+      when: >
+        swarm_info.failed or 
+        not swarm_info.can_operate or 
+        (swarm_info.swarm_facts is defined and swarm_info.swarm_facts.LocalNodeState != 'active')
+
+    # -------------------------------------------------------------------------
     # Crear/Verificar Red Docker Overlay
     # -------------------------------------------------------------------------
     - name: "🌐 Verificar si la red Docker existe"
