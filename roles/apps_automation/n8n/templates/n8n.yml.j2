@@ -6,9 +6,9 @@ services:
     image: n8nio/n8n:latest
     command: start
     environment:
-      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY') }}
+      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -46,9 +46,9 @@ services:
     image: n8nio/n8n:latest
     command: webhook
     environment:
-      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY') }}
+      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -86,9 +86,9 @@ services:
     image: n8nio/n8n:latest
     command: worker --concurrency=10
     environment:
-      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY') }}
+      - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/

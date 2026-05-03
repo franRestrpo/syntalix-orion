@@ -21,7 +21,7 @@ services:
       - {{ app_actual.internal_network | default('SyntalixNet') }}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.authentik.rule=Host(`auth.{{ domain_name }}`)"
+      - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost') }}`)"
       - "traefik.http.services.authentik.loadbalancer.server.port=9000"
 
   authentik-worker:

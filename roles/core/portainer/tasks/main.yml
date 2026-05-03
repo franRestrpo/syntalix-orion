@@ -9,8 +9,8 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "portainer"
-      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') | regex_replace('traefik\\.', 'portainer.') }}"
-      acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
+      dominio: "{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='traefik.localhost') | regex_replace('traefik\\.', 'portainer.') }}"
+      acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
 
 - name: "Generar archivo .env para portainer"
   ansible.builtin.template:
