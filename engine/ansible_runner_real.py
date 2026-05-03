@@ -101,7 +101,8 @@ class RealAnsibleRunner:
             # Call subprocess inside a separate thread to not block the asyncio event loop
             def run_subprocess():
                 env = os.environ.copy()
-                env["ANSIBLE_STDOUT_CALLBACK"] = "yaml"  # Formato legible por humanos en vez de JSON
+                env["ANSIBLE_STDOUT_CALLBACK"] = "default"
+                env["ANSIBLE_CALLBACK_RESULT_FORMAT"] = "yaml"
                 
                 process = subprocess.Popen(
                     cmd,
