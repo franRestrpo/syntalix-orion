@@ -89,8 +89,8 @@
         state: present
       when: >
         swarm_info.failed or 
-        not swarm_info.can_operate or 
-        (swarm_info.swarm_facts is defined and swarm_info.swarm_facts.LocalNodeState != 'active')
+        (not swarm_info.get('can_operate', False)) or 
+        (swarm_info.get('swarm_facts', {}).get('LocalNodeState', '') != 'active')
 
     # -------------------------------------------------------------------------
     # Crear/Verificar Red Docker Overlay
