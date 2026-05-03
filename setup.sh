@@ -23,19 +23,29 @@ fi
 log "Iniciando preparación del entorno Syntalix-Orion V2..."
 
 # 2. Instalación de dependencias del SISTEMA
-SYS_DEPS="python3 python3-venv python3-pip git sshpass curl docker.io"
+SYS_DEPS="python3 python3-venv python3-pip git sshpass curl"
 
 export DEBIAN_FRONTEND=noninteractive
 
 log "Actualizando repositorios..."
 apt-get update -qq >> setup.log 2>&1
 
-log "Instalando dependencias base y Docker..."
+log "Instalando dependencias base (Python, Git, etc.)..."
 apt-get install -y $SYS_DEPS >> setup.log 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS). Revisa el archivo setup.log para ver el error exacto."
 
+# Instalación limpia y oficial de Docker
+if ! command -v docker &> /dev/null; then
+    log "Docker no encontrado. Instalando motor Docker oficial..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh >> setup.log 2>&1 || error "Fallo al instalar Docker. Revisa setup.log."
+    rm -f get-docker.sh
+else
+    log "Docker ya está instalado."
+fi
+
 log "Iniciando y habilitando servicio Docker..."
-systemctl enable --now docker > /dev/null 2>&1 || warn "No se pudo habilitar Docker (¿Estás en un entorno sin systemd?)"
-success "Dependencias del sistema instaladas."
+systemctl enable --now docker >> setup.log 2>&1 || warn "No se pudo habilitar Docker (¿Estás en un entorno sin systemd?)"
+success "Dependencias del sistema y Docker instalados correctamente."
 
 # 3. Creación del Entorno Virtual
 VENV_DIR="$(pwd)/.venv"
