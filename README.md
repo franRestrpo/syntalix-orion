@@ -97,14 +97,13 @@ flowchart TD
 ├── setup.sh                # Script de bootstrapping del servidor
 ├── site.yml                # Playbook maestro de Ansible
 ├── group_vars/all/vars.yml # Archivo consolidado de credenciales generado por la UI
-├── ui/                     # Componentes de la interfaz de usuario (Textual)
-├── engine/                 # Runners de Ansible desde Python
+├── Orion-Python-Ansible/   # Capa lógica (Python) y utilidades
+│   └── scripts/            # Núcleo Python: TUI, dependencia de grafos, seguridad
 ├── roles/                  # Roles de Ansible separados por capas:
 │   ├── core/               # - Base del sistema y Docker
 │   ├── data/               # - Bases de datos (Postgres, Mongo, etc.)
 │   ├── monitoring/         # - Observabilidad y Portainer
 │   └── apps/               # - Chatwoot, Evolution API, Odoo, etc.
-├── tests/                  # Suite de pruebas unitarias
 └── docs/                   # Documentación técnica detallada
 ```
 
@@ -138,8 +137,8 @@ Para iniciar el despliegue de la infraestructura, clone el repositorio en su ser
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/franRestrpo/Syntalix-Orion.git
-cd Syntalix-Orion
+git clone https://github.com/franRestrpo/syntalix-orion.git
+cd syntalix-orion
 
 # 1. Preparar el entorno (Ansible + Python)
 sudo ./setup.sh
@@ -160,6 +159,7 @@ python main.py
 | 🛡️ [**Hardening & Seguridad**](docs/HARDENING.md) | Mejores prácticas y configuraciones de seguridad aplicadas |
 | ⚙️ [**Guía de Despliegue**](docs/CONFIG_DEPLOY.md) | Configuración paso a paso y gestión de aplicaciones |
 | 🛠️ [**Arquitectura Técnica V2**](docs/V2_ARCHITECTURE.md) | Detalles de la nueva arquitectura de 3 capas |
+| 📄 [**Informe de Análisis**](docs/INFORME_ANALISIS.md) | Análisis detallado de la arquitectura V2 |
 
 ---
 

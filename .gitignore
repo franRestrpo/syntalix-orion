@@ -3,7 +3,6 @@
 __pycache__/
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -26,7 +25,6 @@ venv/
 .venv/
 env/
 .env/
-
 .env
 *.env
 
@@ -44,6 +42,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+pytest_cache/
 
 # Ansible
 *.retry
@@ -68,17 +67,9 @@ secrets.yml
 deploy/
 credenciales/
 ansible_vars.yml
-.venv/
 node_modules/
+
 # General
 state.json
 textual.log
 logs/
-.venv/
-venv/
-env/
-__pycache__/
-build/
-dist/
-pytest_cache/
-*.pyc
