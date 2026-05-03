@@ -32,12 +32,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "TRAEFIK_DASHBOARD_URL": {
                 "type": "domain",
                 "description": "Domain for Traefik Dashboard",
-                "required": True
+                "required": True,
+                "auto_generate": False
             },
             "ACME_EMAIL": {
                 "type": "email",
                 "description": "Email for Let's Encrypt certificates",
-                "required": True
+                "required": True,
+                "auto_generate": False
             },
             "INTERNAL_NETWORK": {
                 "type": "string",
@@ -408,7 +410,8 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "ACME_EMAIL": {
                 "type": "email",
                 "description": "Email for TLS certificates",
-                "required": True
+                "required": True,
+                "auto_generate": False
             }
         }
     },
