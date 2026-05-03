@@ -194,66 +194,43 @@
   # ---------------------------------------------------------------------------
   post_tasks:
 
-    - name: "✅ Resumen de Despliegue Completado"
+    - name: "Resumen de Despliegue Completado"
       ansible.builtin.debug:
         msg:
-          - ""
-          - "╔══════════════════════════════════════════════════════════════════╗"
-          - "║           SYNTALIX-ORION V2 - DESPLIEGUE COMPLETADO          ║"
-          - "╠══════════════════════════════════════════════════════════════════╣"
-          - "║ Roles instalados: {{ ansible_enabled_roles | length }}                               ║"
-          - "╠══════════════════════════════════════════════════════════════════╣"
+          - "========================================================================"
+          - "           SYNTALIX-ORION V2 - DESPLIEGUE COMPLETADO"
+          - "========================================================================"
+          - " Roles instalados: {{ ansible_enabled_roles | length }}"
+          - "========================================================================"
 
-    - name: "📦 Listar servicios desplegados"
+    - name: "Listar servicios desplegados"
       ansible.builtin.debug:
-        msg: "{{ ansible_enabled_roles | map('regex_replace', '^', '  ✓ ') | list | join('\n') }}"
+        msg: "{{ ansible_enabled_roles | map('regex_replace', '^', '  * ') | list }}"
 
-    - name: "🔗 URLs de Acceso (configuradas con Traefik)"
+    - name: "URLs de Acceso"
       ansible.builtin.debug:
-        msg: |
-          ║                                                                          ║
-          ║  URLs de Acceso (configuradas con Traefik):                              ║
-          ║    - Traefik Dashboard: https://traefik.{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('localhost') }}/dashboard    ║
-          ║    - Portainer: https://portainer.{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('localhost') }}                          ║
-          ╚══════════════════════════════════════════════════════════════════╝
+        msg:
+          - " URLs de Acceso:"
+          - "   - Traefik: https://traefik.{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='localhost') }}"
+          - "   - Portainer: https://portainer.{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='localhost') }}"
 
-    - name: "⚡ Comandos útiles post-despliegue"
+    - name: "Comandos utiles post-despliegue"
       ansible.builtin.debug:
-        msg: |
-          ⚡ Comandos útiles post-despliegue:
+        msg:
+          - "Comandos utiles:"
+          - "  docker stack ls"
+          - "  docker service logs <service_name>"
 
-          Ver servicios Docker Swarm:
-            docker stack ls
-            docker stack services <stack_name>
-
-          Ver logs de un servicio:
-            docker service logs <service_name> --tail 100
-
-          Escalar un servicio:
-            docker service scale <service_name>=3
-
-          Ver estado de un nodo:
-            docker node ls
-            docker node inspect <node_name>
-
-    - name: "🔄 Mensaje Final"
+    - name: "Mensaje Final"
       when: "ansible_check_mode | default(false) == false"
       ansible.builtin.debug:
-        msg: |
-          ╔══════════════════════════════════════════════════════════════════╗
-          ║                    ¡DESPLIEGUE EXITOSO!                        ║
-          ║                                                                      ║
-          ║ Syntalix-Orion V2 ha completado la instalación de los roles   ║
-          ║ seleccionados en este servidor.                                 ║
-          ║                                                                      ║
-          ║ RECORDATORIOS IMPORTANTES:                                       ║
-          ║                                                                      ║
-          ║   ⚠️ Los secretos están en ansible_vars.yml                       ║
-          ║      (¡NUNCA COMMITEAR este archivo a Git!)                     ║
-          ║                                                                      ║
-          ║   🔐 Usa ansible-vault para cifrar en producción:               ║
-          ║      ansible-vault encrypt ansible_vars.yml                      ║
-          ║                                                                      ║
-          ║   📊 Revisa los logs de cada servicio regularmente              ║
-          ║                                                                      ║
-          ╚══════════════════════════════════════════════════════════════════╝
+        msg:
+          - "========================================================================"
+          - "                      ¡DESPLIEGUE EXITOSO!"
+          - " "
+          - " Syntalix-Orion V2 ha completado la instalacion de los roles seleccionados."
+          - " "
+          - " RECORDATORIOS IMPORTANTES:"
+          - "   - Los secretos estan guardados de forma segura en .env"
+          - "     (¡NUNCA COMMITEAR este archivo a Git!)"
+          - "========================================================================"
