@@ -100,7 +100,8 @@ def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
     try:
         with open(env_path, 'w', encoding='utf-8') as f:
             for key, value in variables.items():
-                f.write(f"{key}={value}\n")
+                if value not in (None, "None", "null", ""):
+                    f.write(f"{key}={value}\n")
         
         # Establecer permisos restrictivos (solo propietario puede leer/escribir)
         try:

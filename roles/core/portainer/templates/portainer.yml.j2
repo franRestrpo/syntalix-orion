@@ -15,10 +15,9 @@ services:
 
   portainer:
     image: portainer/portainer-ce:latest
-    command: -H tcp://tasks.agent:9001 --tlsskipverify --encryption-key-file=/run/secrets/portainer
+    command: -H tcp://tasks.agent:9001 --tlsskipverify
     volumes:
       - portainer_data:/data
-      - {{ playbook_dir }}/deploy/portainer_encryption.key:/run/secrets/portainer:ro
     networks:
       - {{ app_actual.internal_network | default('SyntalixNet', true) }}
     deploy:

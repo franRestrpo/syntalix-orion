@@ -69,8 +69,10 @@ class RealAnsibleRunner:
         
         vars_file = Path(private_data_dir) / ".ansible_vars.json"
         try:
+            # Eliminar todos los valores nulos o vacíos para que Ansible use los defaults
+            clean_config = {k: v for k, v in config.items() if v not in (None, "None", "null", "")}
             with open(vars_file, "w") as f:
-                json.dump(config, f)
+                json.dump(clean_config, f)
             os.chmod(vars_file, 0o600)
         except Exception as e:
             self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear .ansible_vars.json: {e}"})

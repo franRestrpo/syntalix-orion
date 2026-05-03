@@ -366,6 +366,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "type": "secret",
                 "description": "n8n Encryption Key",
                 "auto_generate": True
+            },
+            "N8N_RUNNERS_AUTH_TOKEN": {
+                "type": "secret",
+                "description": "n8n Worker Auth Token",
+                "auto_generate": True,
+                "length": 32
             }
         }
     },

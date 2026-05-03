@@ -24,8 +24,8 @@ services:
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
       - QUEUE_BULL_REDIS_DB=1
-      - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_AUTH_TOKEN={{ N8N__N8N_RUNNERS_AUTH_TOKEN | default("changeme", true) }}
       - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
@@ -69,8 +69,8 @@ services:
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
       - QUEUE_BULL_REDIS_DB=1
-      - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_AUTH_TOKEN={{ N8N__N8N_RUNNERS_AUTH_TOKEN | default("changeme", true) }}
       - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
@@ -114,8 +114,8 @@ services:
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
       - QUEUE_BULL_REDIS_DB=1
-      - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_AUTH_TOKEN={{ N8N__N8N_RUNNERS_AUTH_TOKEN | default("changeme", true) }}
       - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
