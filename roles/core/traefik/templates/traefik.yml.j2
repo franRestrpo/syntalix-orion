@@ -63,7 +63,7 @@ services:
         - "traefik.http.routers.traefik.priority=1"
         - "traefik.http.routers.traefik.middlewares=authtraefik"
         # Basic Auth Middleware (User: {{ app_actual.usuario_admin | default('admin') }})
-        - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin') }}:{{ app_actual.password_db | default('password_seguro') }}"
+        - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin') }}:{{ app_actual.password_db | default('password_seguro') | replace('$', '$$') }}"
 
 volumes:
   vol_shared:
