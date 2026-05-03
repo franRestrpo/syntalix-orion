@@ -29,12 +29,12 @@
 - name: "Scale down n8n services before clearing config"
   ansible.builtin.command:
     cmd: "docker service scale n8n_worker=0 n8n_editor=0 n8n_webhook=0"
-  ignore_errors: true
+  failed_when: false
 
 - name: "Remove old n8n config from volume to force regeneration"
   ansible.builtin.shell:
     cmd: "docker run --rm -v n8n_n8n_data:/home/node/.n8n alpine rm -f /home/node/.n8n/config || docker run --rm -v n8n_data:/home/node/.n8n alpine rm -f /home/node/.n8n/config"
-  ignore_errors: true
+  failed_when: false
 
 - name: "🚀 Desplegar Stack n8n en Docker Swarm"
   ansible.builtin.command:
