@@ -10,7 +10,9 @@ This repository is transitioning to a **V2 3-layer architecture**: Metadata (Pyt
 ## Crucial App Constraints & Secrets (DO NOT MISS)
 - **Database passwords MUST be deduplicated:** `POSTGRES_PASSWORD` should only exist in the `postgres_pgvector` entry. Do not repeat or redefine DB passwords in dependent apps (Chatwoot, Odoo, Dify, etc.). Apps must consume the centrally generated global DB password.
 - **Secret Generation:** Use `secrets.token_urlsafe()` for all generated credentials.
-- **Bcrypt:** ONLY use `bcrypt` for application secrets (like UI login credentials). NEVER use bcrypt for database passwords (DB passwords must be kept in safe plaintext or Vault).
+- **CRITICAL RULE FOR PASSWORDS (ENCRYPTED VS PLAINTEXT):** 
+  - Applicative UI credentials and web-facing access keys MUST be encrypted (e.g., using `bcrypt`).
+  - **Database passwords (Postgres, Redis, MongoDB, etc.) MUST ALWAYS be random secure plaintext.** NEVER encrypt or hash database passwords. Applications (like n8n, Authentik) need the raw plaintext password to pass it over the network protocol for DB authentication. Hashing a DB password will immediately crash the dependent services (connection failed / NOAUTH).
 - **RAM Limits:** The engine MUST sum the total RAM required (selected app + dependencies) and emit a critical warning if the plan exceeds the server threshold (e.g., 8 GB).
 - **Networking:** Do NOT expose HTTP app ports directly to the host. All web apps must remain behind **Traefik** using dynamic Docker labels for TLS and security policies.
 
