@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - POSTGRES_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
+      - POSTGRES_PASSWORD={{ app_actual.password_db | default(lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret')) }}
+      - POSTGRES_DB={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_DB', default='appdb') }}
+    networks:
+      SyntalixNet:
+        aliases:
+          - postgres-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+networks:
+  SyntalixNet:
+    external: true
+
+volumes:
+  postgres_data:

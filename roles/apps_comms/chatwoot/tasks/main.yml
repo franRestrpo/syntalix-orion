@@ -17,13 +17,13 @@
 
 - name: "Generar archivo .env para chatwoot"
   ansible.builtin.template:
-    src: "chatwoot.env.j2"
+    src: "{{ role_path }}/templates/chatwoot.env.j2"
     dest: "{{ playbook_dir }}/deploy/chatwoot.env"
   register: config_env
 
 - name: "Generar docker-compose para chatwoot"
   ansible.builtin.template:
-    src: "chatwoot.yml.j2"
+    src: "{{ role_path }}/templates/chatwoot.yml.j2"
     dest: "{{ playbook_dir }}/deploy/chatwoot_stack.yml"
   register: config_stack
 

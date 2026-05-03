@@ -9,20 +9,20 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "n8n"
-      dominio: "{{ vars.get('TRAEFIK__TRAEFIK_DASHBOARD_URL', 'traefik.localhost') | regex_replace('traefik\\.', 'n8n.') }}"
-      acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
-      password_db: "{{ vars.get('POSTGRES_PGVECTOR__POSTGRES_PASSWORD', 'securepass') }}"
-      basic_auth: "{{ vars.get('N8N__N8N_BASIC_AUTH', 'admin:securepass') }}"
+      dominio: "{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='traefik.localhost') | regex_replace('traefik\\.', 'n8n.') }}"
+      acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
+      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='securepass') }}"
+      basic_auth: "{{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin:securepass') }}"
 
 - name: "Generar archivo .env para n8n"
   ansible.builtin.template:
-    src: "n8n.env.j2"
+    src: "{{ role_path }}/templates/n8n.env.j2"
     dest: "{{ playbook_dir }}/deploy/n8n.env"
   register: config_env
 
 - name: "Generar docker-compose para n8n"
   ansible.builtin.template:
-    src: "n8n.yml.j2"
+    src: "{{ role_path }}/templates/n8n.yml.j2"
     dest: "{{ playbook_dir }}/deploy/n8n_stack.yml"
   register: config_stack
 
