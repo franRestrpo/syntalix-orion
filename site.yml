@@ -211,8 +211,8 @@
       ansible.builtin.debug:
         msg:
           - " URLs de Acceso:"
-          - "   - Traefik: https://traefik.{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='localhost') }}"
-          - "   - Portainer: https://portainer.{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='localhost') }}"
+          - "   - Traefik: https://{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='') | default('localhost', true) }}"
+          - "   - Portainer: https://{{ lookup('vars', 'PORTAINER__PORTAINER_DOMAIN', default='') | default('localhost', true) }}"
 
     - name: "Comandos utiles post-despliegue"
       ansible.builtin.debug:
