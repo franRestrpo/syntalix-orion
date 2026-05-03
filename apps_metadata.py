@@ -32,12 +32,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "TRAEFIK_DASHBOARD_URL": {
                 "type": "domain",
                 "description": "Domain for Traefik Dashboard",
-                "required": True
+                "required": True,
+                "auto_generate": False
             },
             "ACME_EMAIL": {
                 "type": "email",
                 "description": "Email for Let's Encrypt certificates",
-                "required": True
+                "required": True,
+                "auto_generate": False
             },
             "INTERNAL_NETWORK": {
                 "type": "string",
@@ -85,6 +87,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 512,
         "dependencies": ["crowdsec", "traefik"],
         "variables": {
+            "AUTHENTIK_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Authentik platform",
+                "required": True,
+                "auto_generate": False
+            },
             "AUTHENTIK_SECRET_KEY": {
                 "type": "secret",
                 "description": "Authentik Secret Key",
@@ -105,6 +113,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "description": "Domain for Portainer Dashboard",
                 "required": True,
                 "auto_generate": False
+            },
+            "PORTAINER_ENCRYPTION_KEY": {
+                "type": "secret",
+                "description": "Encryption key for Portainer DB",
+                "auto_generate": True,
+                "length": 32
             }
         }
     },
@@ -354,6 +368,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "type": "secret",
                 "description": "n8n Encryption Key",
                 "auto_generate": True
+            },
+            "N8N_RUNNERS_AUTH_TOKEN": {
+                "type": "secret",
+                "description": "n8n Worker Auth Token",
+                "auto_generate": True,
+                "length": 32
             }
         }
     },
@@ -390,7 +410,8 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "ACME_EMAIL": {
                 "type": "email",
                 "description": "Email for TLS certificates",
-                "required": True
+                "required": True,
+                "auto_generate": False
             }
         }
     },

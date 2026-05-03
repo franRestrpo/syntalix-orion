@@ -6,7 +6,7 @@ services:
     volumes:
       - {{ app_actual.nombre }}_instances:/evolution/instances
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
     env_file:
       - ./{{ app_actual.nombre }}.env
     deploy:
@@ -31,7 +31,7 @@ services:
     volumes:
       - {{ app_actual.nombre }}_redis:/data
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
     deploy:
       placement:
         constraints:
@@ -50,6 +50,6 @@ volumes:
     name: {{ app_actual.nombre }}_redis
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
     external: true
-    name: {{ app_actual.internal_network | default('SyntalixNet') }}
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}

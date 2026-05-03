@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "traefik"
-      dominio: "{{ lookup('vars', 'TRAEFIK__TRAEFIK_DASHBOARD_URL', default='traefik.localhost') }}"
-      usuario_admin: "{{ lookup('vars', 'TRAEFIK__TRAEFIK_USER', default='admin') }}"
-      acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'TRAEFIK__TRAEFIK_PASSWORD', default='securepass') }}"
+      dominio: "{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('traefik.localhost', true) }}"
+      usuario_admin: "{{ TRAEFIK__TRAEFIK_USER | default('admin', true) }}"
+      acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
+      password_db: "{{ TRAEFIK__TRAEFIK_PASSWORD | default('securepass', true) }}"
 
 - name: "🌐 Asegurar que existen los volúmenes externos necesarios"
   ansible.builtin.shell:
@@ -37,8 +37,7 @@
 
 - name: "🚀 Desplegar Stack traefik en Docker Swarm"
   ansible.builtin.command:
-    cmd: "docker stack deploy -c traefik_stack.yml traefik"
-    chdir: "{{ playbook_dir }}/deploy"
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/traefik_stack.yml traefik"
   when: not config_stack.failed | default(false)
   register: stack_deploy
   changed_when: "'Creating' in stack_deploy.stdout or 'Updating' in stack_deploy.stdout"
