@@ -8,7 +8,7 @@ services:
     environment:
       - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') | replace('$', '$$') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -48,7 +48,7 @@ services:
     environment:
       - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') | replace('$', '$$') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/
@@ -88,7 +88,7 @@ services:
     environment:
       - N8N_ENCRYPTION_KEY={{ lookup('vars', 'N8N__N8N_ENCRYPTION_KEY', default='CHANGEME') }}
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') }}
+      - N8N_BASIC_AUTH_PASSWORD={{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin') | replace('$', '$$') }}
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_HOST={{ app_actual.dominio }}
       - N8N_EDITOR_BASE_URL=https://{{ app_actual.dominio }}/

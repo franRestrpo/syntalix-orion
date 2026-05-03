@@ -69,6 +69,11 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "type": "secret",
                 "description": "CrowdSec Enrollment Key",
                 "auto_generate": True
+            },
+            "BOUNCER_KEY_TRAEFIK": {
+                "type": "secret",
+                "description": "CrowdSec Bouncer Key for Traefik",
+                "auto_generate": True
             }
         }
     },
