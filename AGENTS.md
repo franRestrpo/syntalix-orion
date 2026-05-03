@@ -40,3 +40,7 @@ This repository is transitioning to a **V2 3-layer architecture**: Metadata (Pyt
 ## Execution & TUI
 - `main.py` is the main entrypoint for the V2 Textual TUI (`SyntalixApp`). 
 - When working on the TUI deployment monitor, use the `RUNNER_MODE=mock` environment variable (or toggle via the UI) to test the UI flow without executing real Ansible playbooks.
+
+## Remote VPS Testing & Git Workflow
+- **CRITICAL WORKFLOW:** This project is actively executed and tested on a remote VPS, not directly on the local agent's environment.
+- **MANDATORY RULE:** Whenever you make file changes, fix bugs, or implement features, you MUST automatically commit the changes and execute `git push origin main`. This allows the user to immediately pull the changes to their remote VPS and test the deployment. Never leave modified files unpushed when concluding a task.
