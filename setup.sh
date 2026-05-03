@@ -25,11 +25,13 @@ log "Iniciando preparación del entorno Syntalix-Orion V2..."
 # 2. Instalación de dependencias del SISTEMA
 SYS_DEPS="python3 python3-venv python3-pip git sshpass curl docker.io"
 
+export DEBIAN_FRONTEND=noninteractive
+
 log "Actualizando repositorios..."
-apt-get update -qq > /dev/null
+apt-get update -qq >> setup.log 2>&1
 
 log "Instalando dependencias base y Docker..."
-apt-get install -y $SYS_DEPS > /dev/null 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS). Revisa los logs del sistema."
+apt-get install -y $SYS_DEPS >> setup.log 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS). Revisa el archivo setup.log para ver el error exacto."
 
 log "Iniciando y habilitando servicio Docker..."
 systemctl enable --now docker > /dev/null 2>&1 || warn "No se pudo habilitar Docker (¿Estás en un entorno sin systemd?)"
