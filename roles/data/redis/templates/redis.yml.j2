@@ -9,7 +9,9 @@ services:
     environment:
       - REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD') }}
     networks:
-      - SyntalixNet
+      SyntalixNet:
+        aliases:
+          - redis-cache
     volumes:
       - redis_data:/data
 

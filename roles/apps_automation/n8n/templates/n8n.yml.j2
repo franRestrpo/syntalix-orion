@@ -16,11 +16,11 @@ services:
       - N8N_PROTOCOL=https
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_DATABASE=appdb
-      - DB_POSTGRESDB_HOST=postgres_pgvector_postgres
+      - DB_POSTGRESDB_HOST=postgres-db
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
       - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
-      - QUEUE_BULL_REDIS_HOST=redis_redis
+      - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
@@ -56,11 +56,11 @@ services:
       - N8N_PROTOCOL=https
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_DATABASE=appdb
-      - DB_POSTGRESDB_HOST=postgres_pgvector_postgres
+      - DB_POSTGRESDB_HOST=postgres-db
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
       - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
-      - QUEUE_BULL_REDIS_HOST=redis_redis
+      - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
@@ -96,11 +96,11 @@ services:
       - N8N_PROTOCOL=https
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_DATABASE=appdb
-      - DB_POSTGRESDB_HOST=postgres_pgvector_postgres
+      - DB_POSTGRESDB_HOST=postgres-db
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
       - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
-      - QUEUE_BULL_REDIS_HOST=redis_redis
+      - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue

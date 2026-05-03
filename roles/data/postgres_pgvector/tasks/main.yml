@@ -30,6 +30,14 @@
   register: config_stack
   ignore_errors: true
 
+- name: "Scale down postgres"
+  ansible.builtin.command: "docker service scale postgres_pgvector_postgres=0"
+  ignore_errors: true
+
+- name: "Wipe postgres volume to reset password"
+  ansible.builtin.shell: "docker run --rm -v postgres_pgvector_postgres_data:/var/lib/postgresql/data alpine rm -rf /var/lib/postgresql/data/* || docker run --rm -v postgres_data:/var/lib/postgresql/data alpine rm -rf /var/lib/postgresql/data/*"
+  ignore_errors: true
+
 - name: "Desplegar Stack postgres_pgvector"
   ansible.builtin.command:
     cmd: "docker stack deploy -c postgres_pgvector_stack.yml postgres_pgvector"
