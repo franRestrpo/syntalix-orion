@@ -85,8 +85,16 @@ class SelectionScreen(Screen):
             app_id = event.checkbox.app_id
             if event.checkbox.value:
                 self.app.state_store.add_app(app_id)
+                # Auto-select dependencies
+                app_meta = self.catalog.get(app_id)
+                if app_meta and app_meta.dependencies:
+                    for dep_id in app_meta.dependencies:
+                        if dep_id not in self.app.state_store.selected_apps:
+                            dep_checkbox = self.query_one(f"#checkbox-{dep_id}", AppCheckbox)
+                            if dep_checkbox:
+                                dep_checkbox.value = True
             else:
-                if event.checkbox.is_mandatory:
+                if getattr(event.checkbox, 'is_mandatory', False):
                     event.checkbox.value = True
                 else:
                     self.app.state_store.remove_app(app_id)
