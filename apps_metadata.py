@@ -85,6 +85,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "ram_mb": 512,
         "dependencies": ["crowdsec", "traefik"],
         "variables": {
+            "AUTHENTIK_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Authentik platform",
+                "required": True,
+                "auto_generate": False
+            },
             "AUTHENTIK_SECRET_KEY": {
                 "type": "secret",
                 "description": "Authentik Secret Key",

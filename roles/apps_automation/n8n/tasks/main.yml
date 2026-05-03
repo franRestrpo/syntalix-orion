@@ -9,7 +9,7 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "n8n"
-      dominio: "{{ lookup('vars', 'N8N__N8N_DOMAIN', default=lookup('vars', 'N8N_DOMAIN', default='n8n.localhost')) }}"
+      dominio: "{{ lookup('vars', 'N8N__N8N_DOMAIN', default='n8n.localhost') }}"
       acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
       password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='securepass') }}"
       basic_auth: "{{ lookup('vars', 'N8N__N8N_BASIC_AUTH', default='admin:securepass') }}"
