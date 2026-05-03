@@ -26,10 +26,8 @@ This repository is transitioning to a **V2 3-layer architecture**: Metadata (Pyt
 - **Chatwoot**: Must declare `RabbitMQ` as a mandatory dependency (not just Redis).
 
 ## Testing Commands
-- The CI runs two test suites:
-  1. `python -m unittest discover -v` (for tests in the root `tests/` directory)
-  2. `pytest` for the newer modules.
-- To run the modern tests:
+- The CI runs a `pytest` suite for the newer modules.
+- To run the tests locally:
   ```bash
   cd Orion-Python-Ansible/scripts
   pytest
@@ -39,6 +37,7 @@ This repository is transitioning to a **V2 3-layer architecture**: Metadata (Pyt
 
 ## Execution & TUI
 - `main.py` is the main entrypoint for the V2 Textual TUI (`SyntalixApp`). 
+- **Python Path Injection**: `main.py` dynamically injects `Orion-Python-Ansible/scripts` into `sys.path`. The actual Python modules (`ui/`, `core/`, `utils.py`, `tui.py`, etc.) live inside `Orion-Python-Ansible/scripts`, NOT at the repository root. If you need to edit Python source files, look inside `Orion-Python-Ansible/scripts`.
 - When working on the TUI deployment monitor, use the `RUNNER_MODE=mock` environment variable (or toggle via the UI) to test the UI flow without executing real Ansible playbooks.
 
 ## Remote VPS Testing & Git Workflow
