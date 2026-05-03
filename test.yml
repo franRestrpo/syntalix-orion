@@ -1,6 +1,0 @@
-
-- hosts: localhost
-  gather_facts: no
-  tasks:
-    - debug:
-        msg: "Val: {{ MY_VAR | default('fallback', true) }}"
