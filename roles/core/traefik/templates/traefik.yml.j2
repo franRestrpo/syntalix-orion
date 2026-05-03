@@ -57,11 +57,19 @@ services:
         - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker"
         - "traefik.http.routers.http-catchall.priority=1"
         # Dashboard labels
-        - "traefik.http.routers.traefik.rule=Host(`{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.traefik.rule=Host(`{{ app_actual.dominio }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
         - "traefik.http.routers.traefik.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.traefik.service=api@internal"
         - "traefik.http.routers.traefik.entrypoints=websecure"
         - "traefik.http.routers.traefik.middlewares=authtraefik"
+        
+        # Redirección de / al /dashboard/
+        - "traefik.http.middlewares.redirect-dashboard.redirectregex.regex=^https?://([^/]+)/?$$"
+        - "traefik.http.middlewares.redirect-dashboard.redirectregex.replacement=https://$${1}/dashboard/"
+        - "traefik.http.routers.traefik-root.rule=Host(`{{ app_actual.dominio }}`) && Path(`/`)"
+        - "traefik.http.routers.traefik-root.entrypoints=websecure"
+        - "traefik.http.routers.traefik-root.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.traefik-root.middlewares=authtraefik,redirect-dashboard"
         # Basic Auth Middleware (User: {{ app_actual.usuario_admin | default('admin', true) }})
         - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin', true) }}:{{ app_actual.password_db | default('password_seguro', true) | replace('$', '$$') }}"
 
