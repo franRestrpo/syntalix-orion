@@ -18,6 +18,7 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
+        - "traefik.swarm.network=SyntalixNet"
         - "traefik.http.routers.{{ app_actual.nombre }}.rule=Host(`{{ app_actual.dominio }}`)"
         - "traefik.http.routers.{{ app_actual.nombre }}.entrypoints=websecure"
         - "traefik.http.routers.{{ app_actual.nombre }}.tls.certresolver=letsencryptresolver"

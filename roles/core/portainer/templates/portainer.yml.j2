@@ -27,7 +27,7 @@ services:
         constraints: [node.role == manager]
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
+        - "traefik.swarm.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
         - "traefik.http.routers.portainer.rule=Host(`{{ app_actual.dominio }}`)"
         - "traefik.http.services.portainer.loadbalancer.server.port=9000"
         - "traefik.http.routers.portainer.tls.certresolver=letsencryptresolver"

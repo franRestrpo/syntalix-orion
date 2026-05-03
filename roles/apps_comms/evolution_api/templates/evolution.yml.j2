@@ -17,6 +17,7 @@ services:
           - node.role == manager
       labels:
         - traefik.enable=1
+        - "traefik.swarm.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
         - traefik.http.routers.{{ app_actual.nombre }}.rule=Host(`{{ app_actual.dominio }}`)
         - traefik.http.routers.{{ app_actual.nombre }}.entrypoints=websecure
         - traefik.http.routers.{{ app_actual.nombre }}.priority=1

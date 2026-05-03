@@ -6,11 +6,11 @@ networks:
 
 services:
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.5.3
     command:
-      - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true"
-      - "--providers.docker.exposedbydefault=false"
+      - "--providers.swarm=true"
+      - "--providers.swarm.exposedbydefault=false"
+      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
 
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
@@ -50,6 +50,7 @@ services:
 
         - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)"
         - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.services.traefik-dummy-svc.loadbalancer.server.port=8080"
         - "traefik.http.routers.traefik.entrypoints=websecure"
         - "traefik.http.routers.traefik.tls.certresolver=letsencryptresolver"
 

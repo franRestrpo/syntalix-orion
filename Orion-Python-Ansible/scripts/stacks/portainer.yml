@@ -33,6 +33,7 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
+        - "traefik.swarm.network={{RED_DOCKER}}"
 
         - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_DOMAIN}`)"
         - "traefik.http.routers.portainer.entrypoints=websecure"

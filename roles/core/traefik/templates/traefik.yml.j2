@@ -2,16 +2,13 @@ version: "3.7"
 services:
 
   traefik:
-    image: traefik:v2.11
-    environment:
-      - DOCKER_API_VERSION=1.44
+    image: traefik:v3.5.3
     command:
       - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
+      - "--providers.swarm=true"
+      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
+      - "--providers.swarm.exposedbydefault=false"
+      - "--providers.swarm.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -49,17 +46,18 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
+        - "traefik.swarm.network={{ app_actual.internal_network | default('SyntalixNet', true) }}"
         - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
         - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
         - "traefik.http.routers.http-catchall.rule=Host(`{host:.+}`)"
         - "traefik.http.routers.http-catchall.entrypoints=web"
-        - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker"
+        - "traefik.http.routers.http-catchall.middlewares=redirect-https@swarm"
         - "traefik.http.routers.http-catchall.priority=1"
         # Dashboard labels
         - "traefik.http.routers.traefik.rule=Host(`{{ app_actual.dominio }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
         - "traefik.http.routers.traefik.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.services.traefik-dummy-svc.loadbalancer.server.port=8080"
         - "traefik.http.routers.traefik.entrypoints=websecure"
         - "traefik.http.routers.traefik.middlewares=authtraefik"
         

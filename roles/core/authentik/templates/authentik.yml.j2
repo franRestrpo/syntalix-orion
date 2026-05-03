@@ -8,7 +8,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=SyntalixNet"
+        - "traefik.swarm.network=SyntalixNet"
         - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost', true) }}`)"
         - "traefik.http.routers.authentik.entrypoints=websecure"
         - "traefik.http.routers.authentik.tls.certresolver=letsencryptresolver"
