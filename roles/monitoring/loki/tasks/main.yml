@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para loki"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/loki.env.j2"
+    src: "loki.env.j2"
     dest: "{{ playbook_dir }}/deploy/loki.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para loki"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/loki.yml.j2"
+    src: "loki.yml.j2"
     dest: "{{ playbook_dir }}/deploy/loki_stack.yml"
   register: config_stack
   ignore_errors: true

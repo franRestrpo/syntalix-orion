@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para authentik"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/authentik.env.j2"
+    src: "authentik.env.j2"
     dest: "{{ playbook_dir }}/deploy/authentik.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para authentik"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/authentik.yml.j2"
+    src: "authentik.yml.j2"
     dest: "{{ playbook_dir }}/deploy/authentik_stack.yml"
   register: config_stack
   ignore_errors: true

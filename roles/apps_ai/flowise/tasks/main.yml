@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para flowise"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/flowise.env.j2"
+    src: "flowise.env.j2"
     dest: "{{ playbook_dir }}/deploy/flowise.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para flowise"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/flowise.yml.j2"
+    src: "flowise.yml.j2"
     dest: "{{ playbook_dir }}/deploy/flowise_stack.yml"
   register: config_stack
   ignore_errors: true

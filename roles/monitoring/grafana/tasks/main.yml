@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para grafana"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/grafana.env.j2"
+    src: "grafana.env.j2"
     dest: "{{ playbook_dir }}/deploy/grafana.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para grafana"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/grafana.yml.j2"
+    src: "grafana.yml.j2"
     dest: "{{ playbook_dir }}/deploy/grafana_stack.yml"
   register: config_stack
   ignore_errors: true

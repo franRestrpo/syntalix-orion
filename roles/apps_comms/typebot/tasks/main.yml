@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para typebot"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/typebot.env.j2"
+    src: "typebot.env.j2"
     dest: "{{ playbook_dir }}/deploy/typebot.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para typebot"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/typebot.yml.j2"
+    src: "typebot.yml.j2"
     dest: "{{ playbook_dir }}/deploy/typebot_stack.yml"
   register: config_stack
   ignore_errors: true

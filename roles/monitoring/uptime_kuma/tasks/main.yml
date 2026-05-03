@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para uptime_kuma"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/uptime_kuma.env.j2"
+    src: "uptime_kuma.env.j2"
     dest: "{{ playbook_dir }}/deploy/uptime_kuma.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para uptime_kuma"
   ansible.builtin.template:
-    src: "{{ playbook_dir }}/Orion-Python-Ansible/ansible/roles/desplegador_aplicaciones/templates/uptime_kuma.yml.j2"
+    src: "uptime_kuma.yml.j2"
     dest: "{{ playbook_dir }}/deploy/uptime_kuma_stack.yml"
   register: config_stack
   ignore_errors: true
