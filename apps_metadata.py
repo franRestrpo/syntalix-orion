@@ -64,7 +64,13 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 256,
         "dependencies": ["traefik"],
-        "variables": {}
+        "variables": {
+            "CROWDSEC_ENROLL_KEY": {
+                "type": "secret",
+                "description": "CrowdSec Enrollment Key",
+                "auto_generate": True
+            }
+        }
     },
     "authentik": {
         "id": "authentik",
@@ -73,7 +79,13 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": ["crowdsec", "traefik"],
-        "variables": {}
+        "variables": {
+            "AUTHENTIK_SECRET_KEY": {
+                "type": "secret",
+                "description": "Authentik Secret Key",
+                "auto_generate": True
+            }
+        }
     },
     "portainer": {
         "id": "portainer",
@@ -332,6 +344,11 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "description": "n8n basic auth password",
                 "auto_generate": True,
                 "transform": "bcrypt"
+            },
+            "N8N_ENCRYPTION_KEY": {
+                "type": "secret",
+                "description": "n8n Encryption Key",
+                "auto_generate": True
             }
         }
     },
