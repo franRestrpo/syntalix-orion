@@ -7,18 +7,18 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - AUTHENTIK_POSTGRESQL__HOST=postgres_pgvector
+      - AUTHENTIK_POSTGRESQL__HOST=postgres_pgvector_postgres
       - AUTHENTIK_POSTGRESQL__USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
       - AUTHENTIK_POSTGRESQL__NAME=authentik
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret') }}
-      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_REDIS__HOST=redis_redis
       - AUTHENTIK_REDIS__PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
       - AUTHENTIK_SECRET_KEY={{ lookup('vars', 'AUTHENTIK__SECRET_KEY', default='mysecret') }}
     volumes:
       - authentik_media:/media
       - authentik_custom_templates:/templates
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - SyntalixNet
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost') }}`)"
@@ -31,11 +31,11 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - AUTHENTIK_POSTGRESQL__HOST=postgres_pgvector
+      - AUTHENTIK_POSTGRESQL__HOST=postgres_pgvector_postgres
       - AUTHENTIK_POSTGRESQL__USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
       - AUTHENTIK_POSTGRESQL__NAME=authentik
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret') }}
-      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_REDIS__HOST=redis_redis
       - AUTHENTIK_REDIS__PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
       - AUTHENTIK_SECRET_KEY={{ lookup('vars', 'AUTHENTIK__SECRET_KEY', default='mysecret') }}
     volumes:
@@ -43,10 +43,10 @@ services:
       - authentik_certs:/certs
       - authentik_custom_templates:/templates
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - SyntalixNet
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  SyntalixNet:
     external: true
 
 volumes:

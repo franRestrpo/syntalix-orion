@@ -10,12 +10,12 @@ services:
       - POSTGRES_PASSWORD={{ app_actual.password_db | default(lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret')) }}
       - POSTGRES_DB={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_DB', default='appdb') }}
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - SyntalixNet
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  SyntalixNet:
     external: true
 
 volumes:

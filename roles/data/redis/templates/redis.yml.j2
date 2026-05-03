@@ -9,12 +9,12 @@ services:
     environment:
       - REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD') }}
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - SyntalixNet
     volumes:
       - redis_data:/data
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  SyntalixNet:
     external: true
 
 volumes:

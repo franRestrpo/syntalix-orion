@@ -9,7 +9,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - {{ app_actual.internal_network | default('SyntalixNet') }}
+      - SyntalixNet
     volumes:
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_config:/etc/crowdsec
@@ -17,7 +17,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
 networks:
-  {{ app_actual.internal_network | default('SyntalixNet') }}:
+  SyntalixNet:
     external: true
 
 volumes:
