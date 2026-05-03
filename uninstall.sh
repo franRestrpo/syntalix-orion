@@ -39,7 +39,13 @@ fi
 # 2. Limpieza de volúmenes (Opcional)
 read -p "¿Deseas eliminar también los VOLÚMENES de datos? (¡Esto es IRREVERSIBLE!) (y/N): " del_volumes
 if [[ $del_volumes =~ ^[yY]$ ]]; then
-    log "Eliminando volúmenes no utilizados..."
+    log "Forzando eliminación de configuración cacheada en volúmenes críticos (n8n, postgres)..."
+    docker run --rm -v n8n_n8n_data:/home/node/.n8n alpine rm -rf /home/node/.n8n/* 2>/dev/null || true
+    docker run --rm -v n8n_data:/home/node/.n8n alpine rm -rf /home/node/.n8n/* 2>/dev/null || true
+    docker run --rm -v postgres_pgvector_postgres_data:/var/lib/postgresql/data alpine rm -rf /var/lib/postgresql/data/* 2>/dev/null || true
+    docker run --rm -v postgres_data:/var/lib/postgresql/data alpine rm -rf /var/lib/postgresql/data/* 2>/dev/null || true
+
+    log "Eliminando volúmenes de Docker no utilizados..."
     docker volume prune -f
     success "Volúmenes eliminados."
 fi
