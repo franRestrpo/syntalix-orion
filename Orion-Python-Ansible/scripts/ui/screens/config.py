@@ -140,7 +140,7 @@ class ConfigScreen(Screen):
         """Aplica Fail-Fast validando las entradas obligatorias."""
         for var_name, desc, v_type in self.required_vars:
             val = self.user_inputs.get(var_name, "").strip()
-            if not val:
+            if not val or val in ("None", "null"):
                 return False, f"El campo '{desc}' ({var_name}) es obligatorio."
             
             if v_type == "domain":

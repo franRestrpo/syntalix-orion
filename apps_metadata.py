@@ -111,6 +111,12 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "description": "Domain for Portainer Dashboard",
                 "required": True,
                 "auto_generate": False
+            },
+            "PORTAINER_ENCRYPTION_KEY": {
+                "type": "secret",
+                "description": "Encryption key for Portainer DB",
+                "auto_generate": True,
+                "length": 32
             }
         }
     },

@@ -12,6 +12,12 @@
       dominio: "{{ PORTAINER__PORTAINER_DOMAIN | default('portainer.localhost', true) }}"
       acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
 
+- name: "Crear archivo de clave de encriptación para Portainer"
+  ansible.builtin.copy:
+    content: "{{ PORTAINER__PORTAINER_ENCRYPTION_KEY | default('CHANGEME_32_CHARS_MINIMUM_xxxxxxxx', true) }}"
+    dest: "{{ playbook_dir }}/deploy/portainer_encryption.key"
+    mode: "0600"
+
 - name: "Generar archivo .env para portainer"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/portainer.env.j2"

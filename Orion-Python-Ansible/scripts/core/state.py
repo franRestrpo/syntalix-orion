@@ -61,12 +61,8 @@ def load_state(path: str = STATE_FILE) -> Dict[str, Any]:
 def load_env_file(env_path: str) -> Dict[str, str]:
     """
     Lee un archivo .env y devuelve un diccionario de variables.
-    
-    Args:
-        env_path: Ruta al archivo .env
-        
-    Returns:
-        Diccionario con las variables del entorno
+    Ignora los valores 'None', 'null' o vacíos que puedan haber quedado
+    cacheados por despliegues fallidos.
     """
     env_vars: Dict[str, str] = {}
     if os.path.exists(env_path):
@@ -76,7 +72,12 @@ def load_env_file(env_path: str) -> Dict[str, str]:
                     line = line.strip()
                     if line and not line.startswith('#') and '=' in line:
                         key, value = line.split('=', 1)
-                        env_vars[key.strip()] = value.strip()
+                        key = key.strip()
+                        value = value.strip()
+                        # Si el valor es el string "None" o "null", lo tratamos como vacío para que la TUI lo pida de nuevo
+                        if value in ("None", "null", ""):
+                            continue
+                        env_vars[key] = value
         except Exception:
             pass
     return env_vars
