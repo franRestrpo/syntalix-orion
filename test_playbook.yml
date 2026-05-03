@@ -1,0 +1,15 @@
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Successful task
+      ansible.builtin.command: echo 'hello'
+      register: my_task
+
+    - name: Debug my_task
+      ansible.builtin.debug:
+        var: my_task
+
+    - name: Conditional task
+      ansible.builtin.debug:
+        msg: 'Task ran'
+      when: not my_task.failed | default(false)

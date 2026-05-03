@@ -7,10 +7,11 @@ services:
       - DOCKER_API_VERSION=1.44
     command:
       - "--api.dashboard=true"
-      - "--providers.swarm=true"
-      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
-      - "--providers.swarm.exposedbydefault=false"
-      - "--providers.swarm.network={{ app_actual.internal_network | default('SyntalixNet') }}"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network={{ app_actual.internal_network | default('SyntalixNet') }}"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -48,19 +49,18 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
+        - "traefik.docker.network={{ app_actual.internal_network | default('SyntalixNet') }}"
         - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
         - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
         - "traefik.http.routers.http-catchall.rule=Host(`{host:.+}`)"
         - "traefik.http.routers.http-catchall.entrypoints=web"
-        - "traefik.http.routers.http-catchall.middlewares=redirect-https@swarm"
+        - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker"
         - "traefik.http.routers.http-catchall.priority=1"
         # Dashboard labels
         - "traefik.http.routers.traefik.rule=Host(`{{ app_actual.dominio }}`)"
-        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
         - "traefik.http.routers.traefik.tls.certresolver=letsencryptresolver"
-        - "traefik.http.routers.traefik.service=traefik"
+        - "traefik.http.routers.traefik.service=api@internal"
         - "traefik.http.routers.traefik.entrypoints=websecure"
-        - "traefik.http.routers.traefik.priority=1"
         - "traefik.http.routers.traefik.middlewares=authtraefik"
         # Basic Auth Middleware (User: {{ app_actual.usuario_admin | default('admin') }})
         - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin') }}:{{ app_actual.password_db | default('password_seguro') | replace('$', '$$') }}"

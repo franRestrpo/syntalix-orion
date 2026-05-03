@@ -1,0 +1,21 @@
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: "Fail task"
+      ansible.builtin.command: "false"
+      ignore_errors: true
+      register: failed_task
+    
+    - name: "Succeed task"
+      ansible.builtin.command: "true"
+      register: success_task
+    
+    - name: "Check fail"
+      ansible.builtin.debug:
+        msg: "Failed task check passed"
+      when: not failed_task.failed | default(false)
+
+    - name: "Check success"
+      ansible.builtin.debug:
+        msg: "Success task check passed"
+      when: not success_task.failed | default(false)
