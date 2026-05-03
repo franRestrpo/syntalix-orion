@@ -19,7 +19,9 @@ from core.models import load_app_catalog
 
 from ui.widgets.lists import CatalogCategory, AppCheckbox
 
-CATEGORY_ORDER = ["Core", "AI", "Automation", "Communication", "Management"]
+from textual.css.query import NoMatches
+
+CATEGORY_ORDER = ["Core", "Data", "Monitoring", "AI", "Automation", "Communication", "Management"]
 CORE_CATEGORIES = {"Core"}
 
 class SelectionScreen(Screen):
@@ -90,9 +92,13 @@ class SelectionScreen(Screen):
                 if app_meta and app_meta.dependencies:
                     for dep_id in app_meta.dependencies:
                         if dep_id not in self.app.state_store.selected_apps:
-                            dep_checkbox = self.query_one(f"#checkbox-{dep_id}", AppCheckbox)
-                            if dep_checkbox:
-                                dep_checkbox.value = True
+                            try:
+                                dep_checkbox = self.query_one(f"#checkbox-{dep_id}", AppCheckbox)
+                                if dep_checkbox:
+                                    dep_checkbox.value = True
+                            except NoMatches:
+                                # Fallback si no está en la UI por alguna razón
+                                self.app.state_store.add_app(dep_id)
             else:
                 if getattr(event.checkbox, 'is_mandatory', False):
                     event.checkbox.value = True
