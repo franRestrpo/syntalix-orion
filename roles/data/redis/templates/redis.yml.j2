@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet') }}
+    volumes:
+      - redis_data:/data
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet') }}:
+    external: true
+
+volumes:
+  redis_data:

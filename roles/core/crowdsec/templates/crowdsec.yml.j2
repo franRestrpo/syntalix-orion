@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    environment:
+      - COLLECTIONS=crowdsecurity/traefik
+      - CROWDSEC_BOUNCER_KEY_TRAEFIK=${CROWDSEC_BOUNCER_KEY_TRAEFIK}
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet') }}
+    volumes:
+      - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_config:/etc/crowdsec
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet') }}:
+    external: true
+
+volumes:
+  crowdsec_data:
+  crowdsec_config:

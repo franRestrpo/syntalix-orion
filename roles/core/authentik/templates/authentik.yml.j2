@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    command: server
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - AUTHENTIK_POSTGRESQL__HOST=${AUTHENTIK_POSTGRESQL__HOST}
+      - AUTHENTIK_POSTGRESQL__USER=${AUTHENTIK_POSTGRESQL__USER}
+      - AUTHENTIK_POSTGRESQL__NAME=${AUTHENTIK_POSTGRESQL__NAME}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_POSTGRESQL__PASSWORD}
+      - AUTHENTIK_REDIS__HOST=${AUTHENTIK_REDIS__HOST}
+      - AUTHENTIK_REDIS__PASSWORD=${AUTHENTIK_REDIS__PASSWORD}
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+    volumes:
+      - authentik_media:/media
+      - authentik_custom_templates:/templates
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet') }}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`auth.{{ domain_name }}`)"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    command: worker
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - AUTHENTIK_POSTGRESQL__HOST=${AUTHENTIK_POSTGRESQL__HOST}
+      - AUTHENTIK_POSTGRESQL__USER=${AUTHENTIK_POSTGRESQL__USER}
+      - AUTHENTIK_POSTGRESQL__NAME=${AUTHENTIK_POSTGRESQL__NAME}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_POSTGRESQL__PASSWORD}
+      - AUTHENTIK_REDIS__HOST=${AUTHENTIK_REDIS__HOST}
+      - AUTHENTIK_REDIS__PASSWORD=${AUTHENTIK_REDIS__PASSWORD}
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+    volumes:
+      - authentik_media:/media
+      - authentik_certs:/certs
+      - authentik_custom_templates:/templates
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet') }}
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet') }}:
+    external: true
+
+volumes:
+  authentik_media:
+  authentik_certs:
+  authentik_custom_templates:
