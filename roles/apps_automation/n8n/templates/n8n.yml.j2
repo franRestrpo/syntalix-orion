@@ -22,6 +22,7 @@ services:
       - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
+      - QUEUE_BULL_REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
@@ -62,6 +63,7 @@ services:
       - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
+      - QUEUE_BULL_REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true
@@ -102,6 +104,7 @@ services:
       - DB_POSTGRESDB_PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secretpass') }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
+      - QUEUE_BULL_REDIS_PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
       - QUEUE_BULL_REDIS_DB=1
       - EXECUTIONS_MODE=queue
       - N8N_ONBOARDING_FLOW_DISABLED=true

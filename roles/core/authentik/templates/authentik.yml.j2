@@ -9,7 +9,7 @@ services:
     environment:
       - AUTHENTIK_POSTGRESQL__HOST=postgres-db
       - AUTHENTIK_POSTGRESQL__USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__NAME={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_DB', default='appdb') }}
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret') }}
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
@@ -33,7 +33,7 @@ services:
     environment:
       - AUTHENTIK_POSTGRESQL__HOST=postgres-db
       - AUTHENTIK_POSTGRESQL__USER={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_USER', default='orion_admin') }}
-      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__NAME={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_DB', default='appdb') }}
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='secret') }}
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ lookup('vars', 'REDIS__REDIS_PASSWORD', default='secret') }}
