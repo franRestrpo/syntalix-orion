@@ -37,7 +37,7 @@ services:
       replicas: 1
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=SyntalixNet"
+        - "traefik.swarm.network=SyntalixNet"
         - "traefik.http.routers.{{ app_actual.nombre }}_editor.rule=Host(`{{ app_actual.dominio }}`)"
         - "traefik.http.routers.{{ app_actual.nombre }}_editor.entrypoints=websecure"
         - "traefik.http.routers.{{ app_actual.nombre }}_editor.tls.certresolver=letsencryptresolver"
@@ -82,7 +82,7 @@ services:
       replicas: 1
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=SyntalixNet"
+        - "traefik.swarm.network=SyntalixNet"
         - "traefik.http.routers.{{ app_actual.nombre }}_webhook.rule=Host(`webhook.{{ app_actual.dominio }}`)"
         - "traefik.http.routers.{{ app_actual.nombre }}_webhook.entrypoints=websecure"
         - "traefik.http.routers.{{ app_actual.nombre }}_webhook.tls.certresolver=letsencryptresolver"

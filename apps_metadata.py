@@ -49,13 +49,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "TRAEFIK_USER": {
                 "type": "string",
                 "description": "Traefik Dashboard Username",
-                "default": "traefik-admin"
+                "default": "traefik-admin",
+                "required": True
             },
             "TRAEFIK_PASSWORD": {
-                "type": "secret",
-                "description": "Traefik Dashboard Password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "type": "string",
+                "description": "Traefik Dashboard Password (texto plano)",
+                "required": True,
+                "auto_generate": False
             }
         }
     },
@@ -96,7 +97,8 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "AUTHENTIK_SECRET_KEY": {
                 "type": "secret",
                 "description": "Authentik Secret Key",
-                "auto_generate": True
+                "auto_generate": True,
+                "length": 50
             }
         }
     },
@@ -349,7 +351,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "name": "n8n",
         "category": "Automation",
         "version": "latest",
-        "ram_mb": 512,
+        "ram_mb": 1024,
         "dependencies": ["postgres_pgvector", "redis", "traefik"],
         "variables": {
             "N8N_DOMAIN": {

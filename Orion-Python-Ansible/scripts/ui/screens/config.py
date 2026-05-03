@@ -103,7 +103,11 @@ class ConfigScreen(Screen):
                     if is_required and not is_auto:
                         desc = var_info.get("description", var_name)
                         v_type = var_info.get("type", "string")
-                        full_key = f"{app_id}__{var_name}".upper()
+                        clean_var_name = var_name.upper()
+                        app_prefix = app_id.upper() + "_"
+                        if clean_var_name.startswith(app_prefix):
+                            clean_var_name = clean_var_name[len(app_prefix):]
+                        full_key = f"{app_id.upper()}__{clean_var_name}"
                         app_specific_vars.append((full_key, desc, v_type))
                         self.required_vars.append((full_key, desc, v_type))
                 
