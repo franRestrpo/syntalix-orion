@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para qdrant"
   ansible.builtin.template:
-    src: "qdrant.env.j2"
+    src: "{{ role_path }}/templates/qdrant.env.j2"
     dest: "{{ playbook_dir }}/deploy/qdrant.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para qdrant"
   ansible.builtin.template:
-    src: "qdrant.yml.j2"
+    src: "{{ role_path }}/templates/qdrant.yml.j2"
     dest: "{{ playbook_dir }}/deploy/qdrant_stack.yml"
   register: config_stack
   ignore_errors: true

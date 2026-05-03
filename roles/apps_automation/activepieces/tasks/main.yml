@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para activepieces"
   ansible.builtin.template:
-    src: "activepieces.env.j2"
+    src: "{{ role_path }}/templates/activepieces.env.j2"
     dest: "{{ playbook_dir }}/deploy/activepieces.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para activepieces"
   ansible.builtin.template:
-    src: "activepieces.yml.j2"
+    src: "{{ role_path }}/templates/activepieces.yml.j2"
     dest: "{{ playbook_dir }}/deploy/activepieces_stack.yml"
   register: config_stack
   ignore_errors: true

@@ -16,13 +16,13 @@
 
 - name: "Generar archivo .env para evolution_api"
   ansible.builtin.template:
-    src: "evolution.env.j2"
+    src: "{{ role_path }}/templates/evolution.env.j2"
     dest: "{{ playbook_dir }}/deploy/evolution_api.env"
   register: config_env
 
 - name: "Generar docker-compose para evolution_api"
   ansible.builtin.template:
-    src: "evolution.yml.j2"
+    src: "{{ role_path }}/templates/evolution.yml.j2"
     dest: "{{ playbook_dir }}/deploy/evolution_api_stack.yml"
   register: config_stack
 

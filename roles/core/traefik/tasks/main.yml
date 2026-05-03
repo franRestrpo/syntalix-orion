@@ -25,13 +25,13 @@
 
 - name: "Generar archivo .env para traefik"
   ansible.builtin.template:
-    src: "traefik.env.j2"
+    src: "{{ role_path }}/templates/traefik.env.j2"
     dest: "{{ playbook_dir }}/deploy/traefik.env"
   register: config_env
 
 - name: "Generar docker-compose para traefik"
   ansible.builtin.template:
-    src: "traefik.yml.j2"
+    src: "{{ role_path }}/templates/traefik.yml.j2"
     dest: "{{ playbook_dir }}/deploy/traefik_stack.yml"
   register: config_stack
 

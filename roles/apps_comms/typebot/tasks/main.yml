@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para typebot"
   ansible.builtin.template:
-    src: "typebot.env.j2"
+    src: "{{ role_path }}/templates/typebot.env.j2"
     dest: "{{ playbook_dir }}/deploy/typebot.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para typebot"
   ansible.builtin.template:
-    src: "typebot.yml.j2"
+    src: "{{ role_path }}/templates/typebot.yml.j2"
     dest: "{{ playbook_dir }}/deploy/typebot_stack.yml"
   register: config_stack
   ignore_errors: true

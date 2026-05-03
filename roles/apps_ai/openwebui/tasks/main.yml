@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para openwebui"
   ansible.builtin.template:
-    src: "openwebui.env.j2"
+    src: "{{ role_path }}/templates/openwebui.env.j2"
     dest: "{{ playbook_dir }}/deploy/openwebui.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para openwebui"
   ansible.builtin.template:
-    src: "openwebui.yml.j2"
+    src: "{{ role_path }}/templates/openwebui.yml.j2"
     dest: "{{ playbook_dir }}/deploy/openwebui_stack.yml"
   register: config_stack
   ignore_errors: true

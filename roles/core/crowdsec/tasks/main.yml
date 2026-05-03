@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para crowdsec"
   ansible.builtin.template:
-    src: "crowdsec.env.j2"
+    src: "{{ role_path }}/templates/crowdsec.env.j2"
     dest: "{{ playbook_dir }}/deploy/crowdsec.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para crowdsec"
   ansible.builtin.template:
-    src: "crowdsec.yml.j2"
+    src: "{{ role_path }}/templates/crowdsec.yml.j2"
     dest: "{{ playbook_dir }}/deploy/crowdsec_stack.yml"
   register: config_stack
   ignore_errors: true

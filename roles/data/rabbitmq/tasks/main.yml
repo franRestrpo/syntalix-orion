@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para rabbitmq"
   ansible.builtin.template:
-    src: "rabbitmq.env.j2"
+    src: "{{ role_path }}/templates/rabbitmq.env.j2"
     dest: "{{ playbook_dir }}/deploy/rabbitmq.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para rabbitmq"
   ansible.builtin.template:
-    src: "rabbitmq.yml.j2"
+    src: "{{ role_path }}/templates/rabbitmq.yml.j2"
     dest: "{{ playbook_dir }}/deploy/rabbitmq_stack.yml"
   register: config_stack
   ignore_errors: true

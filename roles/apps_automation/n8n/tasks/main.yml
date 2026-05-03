@@ -16,13 +16,13 @@
 
 - name: "Generar archivo .env para n8n"
   ansible.builtin.template:
-    src: "n8n.env.j2"
+    src: "{{ role_path }}/templates/n8n.env.j2"
     dest: "{{ playbook_dir }}/deploy/n8n.env"
   register: config_env
 
 - name: "Generar docker-compose para n8n"
   ansible.builtin.template:
-    src: "n8n.yml.j2"
+    src: "{{ role_path }}/templates/n8n.yml.j2"
     dest: "{{ playbook_dir }}/deploy/n8n_stack.yml"
   register: config_stack
 

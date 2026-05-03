@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para dify"
   ansible.builtin.template:
-    src: "dify.env.j2"
+    src: "{{ role_path }}/templates/dify.env.j2"
     dest: "{{ playbook_dir }}/deploy/dify.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para dify"
   ansible.builtin.template:
-    src: "dify.yml.j2"
+    src: "{{ role_path }}/templates/dify.yml.j2"
     dest: "{{ playbook_dir }}/deploy/dify_stack.yml"
   register: config_stack
   ignore_errors: true

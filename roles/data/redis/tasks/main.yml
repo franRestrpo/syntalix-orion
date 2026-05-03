@@ -18,14 +18,14 @@
 
 - name: "Generar archivo .env para redis"
   ansible.builtin.template:
-    src: "redis.env.j2"
+    src: "{{ role_path }}/templates/redis.env.j2"
     dest: "{{ playbook_dir }}/deploy/redis.env"
   register: config_env
   ignore_errors: true
 
 - name: "Generar docker-compose para redis"
   ansible.builtin.template:
-    src: "redis.yml.j2"
+    src: "{{ role_path }}/templates/redis.yml.j2"
     dest: "{{ playbook_dir }}/deploy/redis_stack.yml"
   register: config_stack
   ignore_errors: true
