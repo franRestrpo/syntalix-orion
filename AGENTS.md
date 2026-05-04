@@ -1,45 +1,226 @@
-# Syntalix-Orion Agent Instructions
+# Syntalix-Orion - Instrucciones para Agentes
 
-This repository is transitioning to a **V2 3-layer architecture**: Metadata (Python), TUI Planner (Textual), and Orchestration (Ansible). 
+## Descripción General
 
-## Architecture & Source of Truth
-- **`apps_metadata.py`** is the ONLY source of truth for the app catalog, RAM specs, and dependencies.
-- The **Dependency Graph** must load `apps_metadata.py`, resolve transitive dependencies (detecting cycles), and emit a deterministic deployment plan.
-- The Textual UI/Planner outputs a single master `vars.yml` (or `.env`). Ansible playbooks must consume this single source of truth.
+**Syntalix-Orion** es una plataforma de Infraestructura como Código (IaC) para desplegar aplicaciones self-hosted en Docker Swarm, utilizando automatización declarativa (Ansible) y una interfaz de terminal guiada (TUI en Textual).
 
-## Crucial App Constraints & Secrets (DO NOT MISS)
-- **Database passwords MUST be deduplicated:** `POSTGRES_PASSWORD` should only exist in the `postgres_pgvector` entry. Do not repeat or redefine DB passwords in dependent apps (Chatwoot, Odoo, Dify, etc.). Apps must consume the centrally generated global DB password.
-- **Secret Generation:** Use `secrets.token_urlsafe()` for all generated credentials.
-- **CRITICAL RULE FOR PASSWORDS (ENCRYPTED VS PLAINTEXT):** 
-  - Applicative UI credentials and web-facing access keys MUST be encrypted (e.g., using `bcrypt`).
-  - **Database passwords (Postgres, Redis, MongoDB, etc.) MUST ALWAYS be random secure plaintext.** NEVER encrypt or hash database passwords. Applications (like n8n, Authentik) need the raw plaintext password to pass it over the network protocol for DB authentication. Hashing a DB password will immediately crash the dependent services (connection failed / NOAUTH).
-- **RAM Limits:** The engine MUST sum the total RAM required (selected app + dependencies) and emit a critical warning if the plan exceeds the server threshold (e.g., 8 GB).
-- **Networking:** Do NOT expose HTTP app ports directly to the host. All web apps must remain behind **Traefik** using dynamic Docker labels for TLS and security policies.
+## Arquitectura V2 (3 Capas)
 
-## Known Environment Constraints
-- **WAF / Cloudflare Restrictions:** The deployment environment is protected by an external WAF (like Cloudflare). When debugging `526 Invalid SSL Certificate` or `404 Not Found` errors on domains, ALWAYS consider the WAF configuration (e.g., SSL/TLS modes like "Full (strict)" blocking Traefik's ACME challenge) and Traefik's provider settings (`providers.swarm.network` vs `providers.docker.network`).
-- **Outbound Traffic Blocks:** Services like CrowdSec or Authentik may log `[Errno 111] Connection refused` or timeout errors when attempting to reach external APIs or SMTP servers. This is likely caused by the WAF or network firewall blocking outbound traffic, NOT necessarily a misconfiguration in the Docker setup. Do not spend excessive time debugging internal Docker networking if the failure is on an external outbound connection.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  CAPA 1: METADATOS (Fuente de Verdad)                      │
+│  apps_metadata.py - Catálogo de apps, RAM, dependencias     │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  CAPA 2: PRESENTACIÓN Y LÓGICA (Textual TUI)              │
+│  main.py → TUI → DependencyGraph → vars.yml               │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  CAPA 3: ORQUESTACIÓN (Ansible)                            │
+│  site.yml → roles/ → Docker Swarm                         │
+└─────────────────────────────────────────────────────────────┘
+```
 
-## Hardcoded Application Dependencies
-- **Flowise** and **ActivePieces**: Must depend on `Postgres_pgvector` and `Redis`. They cannot run without persistent storage.
-- **Evolution API**: Must include `MongoDB` as a mandatory dependency.
-- **Chatwoot**: Must declare `RabbitMQ` as a mandatory dependency (not just Redis).
+## Estructura del Proyecto
 
-## Testing Commands
-- The CI runs a `pytest` suite for the newer modules.
-- To run the tests locally:
-  ```bash
-  cd Orion-Python-Ansible/scripts
-  pytest
-  # Or run specific tests: pytest tests/test_security.py
-  ```
-- Important fixtures are available in `Orion-Python-Ansible/scripts/tests/conftest.py` (e.g., `sample_metadata`).
+```
+syntalix-orion/
+├── main.py                          # Punto de entrada (raíz)
+├── apps_metadata.py                  # Fuente de verdad (catálogo de apps)
+├── site.yml                         # Playbook maestro de Ansible
+├── setup.sh                         # Script de bootstrap
+├── requirements.yml                  # Dependencias Ansible Galaxy
+├── ansible.cfg                       # Configuración Ansible
+├── inventory.ini                     # Inventario (localhost)
+│
+├── Orion-Python-Ansible/scripts/    # Módulos Python (TUI, core, tests)
+│   ├── main.py                     # (legacy - no usar)
+│   ├── tui.py                      # Interfaz Textual (OrionTUI)
+│   ├── core/                       # Módulos core
+│   │   ├── dependency_graph.py    # Grafo de dependencias
+│   │   ├── models.py              # Modelos Pydantic
+│   │   ├── security.py            # Generación de secretos
+│   │   ├── state.py               # Persistencia de estado
+│   │   ├── preflight.py           # Verificaciones del sistema
+│   │   └── logging_config.py      # Logging estructurado
+│   └── tests/                      # Suite de tests pytest
+│       ├── conftest.py            # Fixtures
+│       ├── test_dependency_graph.py
+│       ├── test_models.py
+│       ├── test_security.py
+│       └── test_tui.py
+│
+├── roles/                          # Roles Ansible (organizados por categoría)
+│   ├── core/                       # traefik, crowdsec, authentik, portainer
+│   ├── data/                       # postgres_pgvector, mariadb, mongodb, redis, rabbitmq, qdrant, minio
+│   ├── monitoring/                 # prometheus, grafana, loki, uptime_kuma
+│   └── apps_*/                     # apps_ai, apps_automation, apps_comms
+│
+├── group_vars/all/vars.yml         # Variables centralizadas
+├── credenciales/                   # Almacenamiento de credenciales (gitignored)
+└── docs/                           # Documentación técnica
+```
 
-## Execution & TUI
-- `main.py` is the main entrypoint for the V2 Textual TUI (`SyntalixApp`). 
-- **Python Path Injection**: `main.py` dynamically injects `Orion-Python-Ansible/scripts` into `sys.path`. The actual Python modules (`ui/`, `core/`, `utils.py`, `tui.py`, etc.) live inside `Orion-Python-Ansible/scripts`, NOT at the repository root. If you need to edit Python source files, look inside `Orion-Python-Ansible/scripts`.
-- When working on the TUI deployment monitor, use the `RUNNER_MODE=mock` environment variable (or toggle via the UI) to test the UI flow without executing real Ansible playbooks.
+## Fuente de Verdad
 
-## Remote VPS Testing & Git Workflow
-- **CRITICAL WORKFLOW:** This project is actively executed and tested on a remote VPS, not directly on the local agent's environment.
-- **MANDATORY RULE:** Whenever you make file changes, fix bugs, or implement features, you MUST automatically commit the changes and execute `git push origin main`. This allows the user to immediately pull the changes to their remote VPS and test the deployment. Never leave modified files unpushed when concluding a task.
+**`apps_metadata.py`** es la ÚNICA fuente de verdad para:
+- Catálogo de aplicaciones disponibles
+- Requerimientos de RAM por aplicación
+- Dependencias entre aplicaciones
+- Variables de configuración
+
+**Reglas CRÍTICAS:**
+1. El `DependencyGraph` debe cargar `apps_metadata.py` y resolver dependencias transitivas
+2. El grafo debe detectar ciclos y emitir error si los hay
+3. La TUI genera un único archivo `vars.yml` que Ansible consume
+4. No يجوز editar roles de Ansible directamente para agregar apps - siempre modificar `apps_metadata.py`
+
+## Reglas de Contraseñas y Secretos
+
+### CONTRASEÑAS DE BASE DE DATOS (PLAINTEXT - NUNCA HASHEAR)
+Las contraseñas de bases de datos DEBEN ser texto plano seguro generado con `secrets.token_urlsafe()`:
+- `postgres_pgvector` → `POSTGRES_PASSWORD`
+- `mariadb` → `MYSQL_ROOT_PASSWORD`
+- `mongodb` → `MONGODB_ROOT_PASSWORD`
+- `redis` → `REDIS_PASSWORD`
+- `qdrant` → `QDRANT_PASSWORD`
+- `minio` → `MINIO_SECRET_KEY`
+
+**RAZÓN:** Las aplicaciones de base de datos necesitan la contraseña en texto plano para el protocolo de autenticación. Un hash bcrypt causaría fallo de conexión.
+
+### CREDENCIALES DE APLICACIÓN UI (BCRYPT)
+Las contraseñas de login web DEBEN ser hasheadas con bcrypt:
+- `traefik` → `TRAEFIK_PASSWORD` (hasheado)
+- `n8n` → `N8N_BASIC_AUTH` (hasheado)
+- `odoo` → `ADMIN_PASSWORD` (hasheado)
+
+### API KEYS Y SECRETOS
+Generados con `secrets.token_urlsafe()` en texto plano:
+- `CROWDSEC_ENROLL_KEY`
+- `BOUNCER_KEY_TRAEFIK`
+- `AUTHENTIK_SECRET_KEY`
+- `EV_API_KEY`
+
+### DEDUPLICACIÓN
+- `POSTGRES_PASSWORD` solo existe en `postgres_pgvector`
+- Apps dependientes (Chatwoot, Odoo, Dify, n8n) consumen la contraseña centralizada
+- NO redefinir contraseñas de base de datos en apps dependientes
+
+## Límites de RAM
+
+El motor DEBE:
+1. Sumar la RAM de todas las apps seleccionadas + dependencias
+2. Emitir advertencia CRÍTICA si el total excede el umbral del servidor (por defecto 8 GB)
+3. Advertir pero permitir despliegue si el usuario lo confirma
+
+## Redes y Networking
+
+**REGLAS:**
+- NO exponer puertos HTTP directamente al host
+- Todas las apps web deben estar detrás de Traefik
+- Usar labels dinámicos de Docker para TLS y políticas de seguridad
+- Red overlay: `SyntalixNet` (o configurable)
+
+## Dependencias Obligatorias de Apps
+
+| App | Dependencias Obligatorias |
+|-----|---------------------------|
+| Flowise | postgres_pgvector + redis |
+| ActivePieces | postgres_pgvector + redis |
+| Evolution API | mongodb |
+| Chatwoot | rabbitmq (NO solo redis) |
+| n8n | postgres_pgvector + redis |
+| dify | postgres_pgvector + redis |
+
+## Restricciones del Entorno
+
+### WAF / Cloudflare
+El entorno está protegido por un WAF externo (Cloudflare).
+- Error `526 Invalid SSL Certificate`: Verificar configuración SSL/TLS en Cloudflare
+- Error `404 Not Found`: Verificar rutas en Traefik Y en Cloudflare
+- Traefik ACME challenge puede ser bloqueado por modo "Full (strict)"
+
+### Tráfico Saliente Bloqueado
+Servicios como CrowdSec o Authentik pueden mostrar `[Errno 111] Connection refused` si el WAF/firewall bloquea tráfico saliente externo. Esto NO es un problema de configuración Docker interna.
+
+## Comandos de Testing
+
+```bash
+# Ejecutar suite de tests
+cd Orion-Python-Ansible/scripts
+pytest
+
+# Tests específicos
+pytest tests/test_security.py
+pytest tests/test_dependency_graph.py
+
+# Con cobertura
+pytest --cov=core tests/
+```
+
+**Fixtures disponibles** (`conftest.py`):
+- `sample_metadata`: Catálogo de ejemplo
+- `temp_dir`: Directorio temporal
+- `mock_env_file`: Archivo .env simulado
+- `security_config`: Configuración de seguridad
+
+## Ejecución y TUI
+
+### Punto de Entrada
+- `main.py` (raíz): Selector de bootstrap (modo local/remote)
+- `Orion-Python-Ansible/scripts/tui.py`: OrionTUI (Textual App)
+
+### Inyección de Path
+`main.py` inyecta `Orion-Python-Ansible/scripts` en `sys.path` para importar los módulos core.
+
+### Modo Mock
+Para testing sin ejecutar Ansible real:
+```bash
+RUNNER_MODE=mock python main.py
+```
+
+## Workflow de Desarrollo y Deploy
+
+### FLUJO CRÍTICO:
+1. Realizar cambios en el código
+2. **Commit y push immediatamente**: `git add . && git commit -m "..." && git push origin main`
+3. En el VPS remoto: `git pull origin main`
+4. Ejecutar los cambios
+
+**RAZÓN:** El proyecto se testa activamente en un VPS remoto, no en el entorno local del agente.
+
+## Ejecución de Playbooks Ansible
+
+```bash
+# Despliegue completo
+ansible-playbook site.yml -e @ansible_vars.yml
+
+# Verificar syntax
+ansible-playbook site.yml --syntax-check
+
+# Check mode (dry-run)
+ansible-playbook site.yml -e @ansible_vars.yml --check
+```
+
+## Playbook Maestro (site.yml)
+
+El playbook `site.yml` es el punto de entrada para Ansible. Lee `ansible_vars.yml` y ejecuta roles condicionalmente según `ansible_enabled_roles`.
+
+## Notas de Seguridad
+
+1. **Nunca commitar `ansible_vars.yml`** - contiene secretos
+2. **Nunca commitar `credenciales/`** - gitignored pero verificar
+3. **Permisos de archivos**: `chmod 600` para archivos .env y vars
+4. **Logging seguro**: Usar `mask_secret()` en logs
+
+## Glosario
+
+| Término | Significado |
+|---------|-------------|
+| TUI | Terminal User Interface (interfaz de terminal) |
+| IaC | Infrastructure as Code |
+| Swarm | Docker Swarm (orquestación de contenedores) |
+| Traefik | Proxy reverso con routing dinámico |
+| Vars.yml | Archivo de variables generadas por la TUI |

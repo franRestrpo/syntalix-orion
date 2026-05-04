@@ -2,32 +2,50 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+SCRIPT_DIR = Path(__file__).parent.parent.absolute()
+PROJECT_ROOT = SCRIPT_DIR.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.containers import Vertical, VerticalScroll
-from textual.widgets import Header, Footer, Static, Button
+from textual.containers import Vertical, VerticalScroll, Horizontal
+from textual.widgets import Header, Footer, Static, Button, Input
 from textual.message import Message
 
 from core.dependency_graph import DependencyGraph
 from core.security import validate_domain, validate_email
 from core.state import load_env_file
-from ui.widgets.forms import DynamicFormInput
 from ui.managers.state_store import DeploymentPlan
+from ui.components import StatusIndicator
 
 class ConfigScreen(Screen):
-    """Pantalla Gatekeeper para solicitar variables y confirmar el plan."""
-    
+    CSS = """
+    Screen { background: #0D1117; }
+    #config-container { height: 100%; }
+    #forms-container { height: auto; padding-bottom: 2; }
+    .section-title { text-style: bold; color: #00D9FF; margin-top: 1; }
+    .app-block { border: solid #21262D; padding: 1; margin: 1 0; background: #161B22; }
+    .app-title { text-style: bold; color: #F472B6; margin-bottom: 1; }
+    .form-label { color: #00D9FF; margin-top: 1; }
+    .form-desc { color: #6E7681; margin-bottom: 1; }
+    .input-row { height: auto; margin-bottom: 1; }
+    .secure-toggle { color: #8B949E; }
+    .ram-warning { color: #F59E0B; }
+    .btn-success { background: #10B981; color: #0D1117; }
+    .btn-back { color: #8B949E; }
+    #action-container { height: auto; align: center bottom; margin-top: 2; padding-bottom: 2; }
+    """
+
     BINDINGS = [
         ("ctrl+d", "deploy", "Siguiente (Desplegar)"),
         ("ctrl+b", "back", "Atrás"),
     ]
 
     class ConfigComplete(Message):
-        """Mensaje emitido cuando se aprueba la configuración."""
         pass
-        
+
     class ConfigBack(Message):
-        """Mensaje para volver a la pantalla anterior."""
         pass
 
     def __init__(self, **kwargs):
@@ -36,39 +54,46 @@ class ConfigScreen(Screen):
         from core.models import load_app_catalog
         self.catalog = load_app_catalog(APP_METADATA)
         self.raw_metadata = APP_METADATA
-        
+
         catalog_dict = {app_id: app.model_dump() for app_id, app in self.catalog.items()}
         self.dependency_graph = DependencyGraph(catalog=catalog_dict)
-        self.required_vars: List[Tuple[str, str, str]] = [] # list of (var_name, description, type)
+        self.required_vars: List[Tuple[str, str, str]] = []
         self.user_inputs: Dict[str, str] = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(id="config-container", classes="p-2"):
-            yield Static("## [GATEKEEPER] Configuración del Despliegue", markup=True)
+            yield Static("⚙️ CONFIGURACIÓN DE SERVICIOS", id="config-title", classes="section-title")
             yield Static(id="plan-summary", markup=True)
-            
-            yield Static("### Variables Requeridas", id="vars-title", markup=True)
+
+            yield Static("### Variables Requeridas", id="vars-title", classes="section-title")
             yield Static("", id="validation-error", classes="ram-warning")
             yield Vertical(id="forms-container")
-            
-            with Vertical(id="action-container", classes="mt-2"):
-                yield Button("[🚀] Confirmar y Continuar al Despliegue", id="confirm-button", variant="success")
-                yield Button("Volver", id="back-button", variant="default")
-                
+
+            with Vertical(id="action-container"):
+                yield Static("─" * 60)
+                yield Button("⚡ CONFIRMAR Y CONTINUAR  [Ctrl+Enter]", id="confirm-button", variant="success")
+                yield Button("← Volver", id="back-button", variant="default")
+
         yield Footer()
 
     def on_mount(self) -> None:
         self.query_one("#validation-error", Static).update("")
         self._calculate_plan()
 
+    def on_screen_resume(self, event=None) -> None:
+        self.query_one("#validation-error", Static).update("")
+        self._calculate_plan()
+        
+    def on_show(self, event=None) -> None:
+        self.query_one("#validation-error", Static).update("")
+        self._calculate_plan()
+
     def _calculate_plan(self) -> None:
         selected = list(self.app.state_store.selected_apps)
-        
-        # Load existing .env variables to ensure idempotency across runs
         env_file_path = str(Path.cwd() / ".env")
         existing_vars = load_env_file(env_file_path)
-        
+
         try:
             result = self.dependency_graph.plan_with_vars_multi(selected, existing_vars=existing_vars)
             plan = DeploymentPlan(
@@ -78,24 +103,22 @@ class ConfigScreen(Screen):
                 dependencies=result.get("dependencies", [])
             )
             self.app.state_store.deployment_plan = plan
-            
-            # Mostrar resumen
+
             summary = self.query_one("#plan-summary", Static)
             lines = [
                 f"- **Apps seleccionadas:** {len(selected)}",
-                f"- **Total a instalar (con dependencias):** {len(plan.plan)}",
+                f"- **Total a instalar:** {len(plan.plan)}",
                 f"- **RAM Estimada:** {plan.ram_total_mb} MB",
             ]
             summary.update("\n".join(lines))
-            
-            # Identificar variables manuales requeridas por aplicación
+
             self.required_vars.clear()
             app_vars_map = {}
             for app_id in plan.plan:
                 app_meta = self.raw_metadata.get(app_id, {})
                 app_name = app_meta.get("name", app_id)
                 variables = app_meta.get("variables", {})
-                
+
                 app_specific_vars = []
                 for var_name, var_info in variables.items():
                     is_auto = var_info.get("auto_generate", False)
@@ -110,29 +133,48 @@ class ConfigScreen(Screen):
                         full_key = f"{app_id.upper()}__{clean_var_name}"
                         app_specific_vars.append((full_key, desc, v_type))
                         self.required_vars.append((full_key, desc, v_type))
-                
+
                 if app_specific_vars:
                     app_vars_map[app_name] = app_specific_vars
-            
+
             forms_container = self.query_one("#forms-container", Vertical)
-            forms_container.remove_children()
+            # Eliminar hijos anteriores de forma segura
+            for child in forms_container.children:
+                child.remove()
+                
             self.user_inputs.clear()
-            
+
+            widgets_to_mount = []
             for app_name, vars_list in app_vars_map.items():
-                forms_container.mount(Static(f"\n[📦] **{app_name}**", markup=True))
+                widgets_to_mount.append(Static(f"\n[📦] **{app_name}**", classes="app-title"))
                 for full_key, desc, v_type in vars_list:
-                    # Pre-llenar si ya estaba en el store o en las vars generadas (.env)
                     default_val = self.app.state_store.user_variables.get(full_key, plan.vars_generated.get(full_key, ""))
                     is_pwd = v_type == "secret"
-                    form_input = DynamicFormInput(var_name=full_key, description=desc, default_value=default_val, is_password=is_pwd)
-                    forms_container.mount(form_input)
+                    widgets_to_mount.append(self._create_form_field(full_key, desc, default_val, is_pwd))
                     self.user_inputs[full_key] = default_val
-                    
+
+            if widgets_to_mount:
+                forms_container.mount(*widgets_to_mount)
+
         except Exception as e:
             self.notify(f"Error calculando plan: {e}", severity="error")
 
-    def on_dynamic_form_input_value_changed(self, event: DynamicFormInput.ValueChanged) -> None:
-        self.user_inputs[event.key] = event.value
+    def _create_form_field(self, full_key: str, desc: str, default_val: str, is_pwd: bool) -> Vertical:
+        label = Static(f"{full_key}", classes="form-label")
+        if is_pwd:
+            desc_widget = Static(f"[🔒] {desc}", classes="form-desc")
+            input_widget = Input(value=default_val, placeholder=full_key, password=True, id=f"input-{full_key}")
+        else:
+            desc_widget = Static(desc, classes="form-desc")
+            input_widget = Input(value=default_val, placeholder=full_key, id=f"input-{full_key}")
+        
+        return Vertical(label, desc_widget, input_widget, classes="input-row")
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        input_id = event.input.id
+        if input_id.startswith("input-"):
+            key = input_id[len("input-"):]
+            self.user_inputs[key] = event.value
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "confirm-button":
@@ -141,12 +183,11 @@ class ConfigScreen(Screen):
             self.action_back()
 
     def _validate_inputs(self) -> Tuple[bool, str]:
-        """Aplica Fail-Fast validando las entradas obligatorias."""
         for var_name, desc, v_type in self.required_vars:
             val = self.user_inputs.get(var_name, "").strip()
             if not val or val in ("None", "null"):
                 return False, f"El campo '{desc}' ({var_name}) es obligatorio."
-            
+
             if v_type == "domain":
                 if not validate_domain(val):
                     return False, f"El valor '{val}' para '{desc}' no es un dominio válido."
@@ -158,21 +199,18 @@ class ConfigScreen(Screen):
     def action_deploy(self) -> None:
         is_valid, error_msg = self._validate_inputs()
         error_widget = self.query_one("#validation-error", Static)
-        
+
         if not is_valid:
             error_widget.update(f"**[ERROR]** {error_msg}")
             self.notify(error_msg, severity="error")
             return
-            
+
         error_widget.update("")
-        # Guardar en el store
         self.app.state_store.user_variables.update(self.user_inputs)
-        # Actualizar las vars generadas con las del usuario
         if self.app.state_store.deployment_plan:
             self.app.state_store.deployment_plan.vars_generated.update(self.user_inputs)
-            
+
         self.post_message(self.ConfigComplete())
 
     def action_back(self) -> None:
         self.post_message(self.ConfigBack())
-

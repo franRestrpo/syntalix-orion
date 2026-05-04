@@ -2,18 +2,20 @@
 """
 Punto de entrada para la Interfaz de Usuario de Terminal (TUI) de Syntalix-Orion V2.
 
-Este script ahora delega la inicialización y el ciclo de vida a la aplicación
+Este script delega la inicialización y el ciclo de vida a la aplicación
 estructurada en el paquete `ui`.
 """
 
 import sys
 from pathlib import Path
 
-# Configurar el PATH para incluir la raíz del proyecto
 SCRIPT_DIR = Path(__file__).parent.absolute()
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, str(SCRIPT_DIR))
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 from core.logging_config import setup_logging, get_logger
 from ui.app import OrionTUI

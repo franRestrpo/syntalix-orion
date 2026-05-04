@@ -217,23 +217,22 @@ class TestSanitizeInput:
 
 class TestMaskSecret:
     """Tests para enmascaramiento de secretos."""
-    
+
     def test_basic_masking(self):
         """Test enmascaramiento básico."""
         result = mask_secret("my_secret_value")
-        assert result == "************value"
-    
+        assert result == "***********alue"
+
     def test_short_value(self):
         """Test valor corto."""
         result = mask_secret("abc")
         assert result == "****"
-    
+
     def test_custom_visible_chars(self):
         """Test caracteres visibles personalizados."""
         result = mask_secret("very_long_secret_key", visible_chars=8)
-        assert result.endswith("_secret_key")
-        assert result.startswith("*")
-    
+        assert result == "************cret_key"
+
     def test_empty_value(self):
         """Test valor vacío."""
         assert mask_secret("") == "****"

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Configuración de Colores
+set -e
+
 VERDE="\e[32m"
 AZUL="\e[34m"
 ROJO="\e[91m"
@@ -12,8 +13,7 @@ success() { echo -e "${VERDE}[OK]${RESET} $1" | tee -a setup.log; }
 warn() { echo -e "${AMARILLO}[WARN]${RESET} $1" | tee -a setup.log; }
 error() { echo -e "${ROJO}[ERROR]${RESET} $1" | tee -a setup.log; exit 1; }
 
-# Inicializar log
-echo "=== Inicio de Instalación Syntalix-Orion $(date) ===" > setup.log
+echo "=== Syntalix-Orion V2 Setup $(date) ===" > setup.log
 
 # 1. Validación de Root
 if [ "$EUID" -ne 0 ]; then
@@ -45,9 +45,8 @@ fi
 
 log "Iniciando y habilitando servicio Docker..."
 systemctl enable --now docker >> setup.log 2>&1 || warn "No se pudo habilitar Docker (¿Estás en un entorno sin systemd?)"
-success "Dependencias del sistema y Docker instalados correctamente."
+success "Sistema y Docker configurados."
 
-# 3. Creación del Entorno Virtual
 VENV_DIR="$(pwd)/.venv"
 
 if [ ! -d "$VENV_DIR" ]; then
