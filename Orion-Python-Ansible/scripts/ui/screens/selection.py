@@ -150,10 +150,16 @@ class SelectionScreen(Screen):
 
     def _update_all_checkboxes(self) -> None:
         for checkbox in self.query(ModernCheckbox):
-            app_id = checkbox.app_id
-            should_be_checked = app_id in self.app.state_store.selected_apps
-            if checkbox.value != should_be_checked:
-                checkbox.value = should_be_checked
+            checkbox._suppress_events = True
+        try:
+            for checkbox in self.query(ModernCheckbox):
+                app_id = checkbox.app_id
+                should_be_checked = app_id in self.app.state_store.selected_apps
+                if checkbox.value != should_be_checked:
+                    checkbox.set_value_without_event(should_be_checked)
+        finally:
+            for checkbox in self.query(ModernCheckbox):
+                checkbox._suppress_events = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "next-button":

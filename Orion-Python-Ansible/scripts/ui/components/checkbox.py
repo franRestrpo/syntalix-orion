@@ -21,6 +21,7 @@ class ModernCheckbox(Static):
         self._value = value
         self._tooltip = tooltip
         self.category = category
+        self._suppress_events = False
         super().__init__(id=f"checkbox-{app_id}", **kwargs)
         self.label = label
 
@@ -32,9 +33,18 @@ class ModernCheckbox(Static):
     def value(self, new_value: bool) -> None:
         if self.is_mandatory and not new_value:
             return
+        if self._value == new_value:
+            return
         self._value = new_value
         self.refresh()
-        self.post_message(self.Changed(self, new_value))
+        if not self._suppress_events:
+            self.post_message(self.Changed(self, new_value))
+
+    def set_value_without_event(self, new_value: bool) -> None:
+        if self._value == new_value:
+            return
+        self._value = new_value
+        self.refresh()
 
     def _get_state_key(self) -> str:
         if self.is_mandatory:
