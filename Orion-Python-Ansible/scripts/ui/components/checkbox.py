@@ -21,7 +21,7 @@ class ModernCheckbox(Checkbox):
         self._value = value
         self._tooltip = tooltip
         self.category = category
-        super().__init__(label=f"[{category}] {label}", checked=value, id=f"checkbox-{app_id}", disabled=is_mandatory, **kwargs)
+        super().__init__(label=f"[{category}] {label}", value=value, id=f"checkbox-{app_id}", disabled=is_mandatory, **kwargs)
 
     def _get_category_color(self) -> str:
         colors = {
