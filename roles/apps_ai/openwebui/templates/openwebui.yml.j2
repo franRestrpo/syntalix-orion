@@ -24,7 +24,6 @@ services:
         - "traefik.http.routers.openwebui.entrypoints=websecure"
         - "traefik.http.routers.openwebui.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
-        - "traefik.http.routers.openwebui.service=openwebui"
 
 volumes:
   openwebui_data:
