@@ -20,7 +20,7 @@ class ModernCheckbox(Static):
         self.app_id = app_id
         self.is_mandatory = is_mandatory
         self._value = value
-        self.tooltip = tooltip
+        self._tooltip = tooltip
         self.category = category
         super().__init__(**kwargs)
 
