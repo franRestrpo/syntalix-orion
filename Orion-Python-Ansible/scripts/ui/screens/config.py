@@ -23,7 +23,7 @@ class ConfigScreen(Screen):
     CSS = """
     Screen { background: #0D1117; }
     #config-container { height: 100%; }
-    .section-title { text-style: bold; color: #00D9FF; font-size: 110%; margin-top: 1; }
+    .section-title { text-style: bold; color: #00D9FF; margin-top: 1; }
     .app-block { border: solid #21262D; padding: 1; margin: 1 0; background: #161B22; }
     .app-title { text-style: bold; color: #F472B6; margin-bottom: 1; }
     .form-label { color: #00D9FF; margin-top: 1; }

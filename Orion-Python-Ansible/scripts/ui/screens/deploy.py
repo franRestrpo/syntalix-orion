@@ -20,7 +20,7 @@ class DeployScreen(Screen):
     CSS = """
     Screen { background: #0D1117; }
     #deploy-layout { height: 100%; padding: 1; }
-    #deploy-title { text-style: bold; color: #00D9FF; font-size: 120%; margin-bottom: 1; }
+    #deploy-title { text-style: bold; color: #00D9FF; margin-bottom: 1; }
     #deploy-status { color: #8B949E; margin-bottom: 1; }
     #ansible-log { height: 1fr; border: solid #00D9FF; margin: 1 0; background: #161B22; }
     #button-container { height: auto; align: center middle; margin-top: 1; }

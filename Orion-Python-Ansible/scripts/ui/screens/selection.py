@@ -121,16 +121,11 @@ class SelectionScreen(Screen):
                     for dep_id in app_meta.dependencies:
                         if dep_id not in self.app.state_store.selected_apps:
                             self.app.state_store.add_app(dep_id)
-                            try:
-                                dep_checkbox = self.query_one(f"#checkbox-{dep_id}", ModernCheckbox)
-                                if dep_checkbox:
-                                    dep_checkbox.value = True
-                            except Exception:
-                                pass
             else:
                 if not getattr(event.checkbox, 'is_mandatory', False):
                     self.app.state_store.remove_app(app_id)
             self._update_status_display()
+            self._update_all_checkboxes()
 
     def _update_status_display(self) -> None:
         status = self.query_one("#status-content", Static)
@@ -151,6 +146,14 @@ class SelectionScreen(Screen):
         max_ram_gb = 4.0
         progress = ProgressBar(label="RAM", current=total_ram / 1024, maximum=max_ram_gb)
         ram_summary.update(f"\n{progress._render()}\n\n**Apps:** {len(selected)} | **RAM Total:** ~{total_ram}MB")
+
+    def _update_all_checkboxes(self) -> None:
+        for checkbox in self.query("ModernCheckbox"):
+            app_id = checkbox.app_id
+            should_be_checked = app_id in self.app.state_store.selected_apps
+            if checkbox._value != should_be_checked:
+                checkbox._value = should_be_checked
+                checkbox.refresh()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "next-button":
