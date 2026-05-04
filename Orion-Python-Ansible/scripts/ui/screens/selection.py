@@ -7,7 +7,6 @@ from textual.screen import Screen
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Header, Footer, Static, Button, Checkbox
 from textual.message import Message
-
 SCRIPT_DIR = Path(__file__).parent.parent.absolute()
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -112,10 +111,11 @@ class SelectionScreen(Screen):
         self._update_status_display()
         self._update_all_checkboxes()
 
-    def on_checkbox_changed(self, event: ModernCheckbox.Changed) -> None:
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         if isinstance(event.checkbox, ModernCheckbox):
-            app_id = event.checkbox.app_id
-            if event.checkbox.value:
+            checkbox = event.checkbox
+            app_id = checkbox.app_id
+            if checkbox.value:
                 self.app.state_store.add_app(app_id)
                 app_meta = self.catalog.get(app_id)
                 if app_meta and app_meta.dependencies:
@@ -123,7 +123,7 @@ class SelectionScreen(Screen):
                         if dep_id not in self.app.state_store.selected_apps:
                             self.app.state_store.add_app(dep_id)
             else:
-                if not getattr(event.checkbox, 'is_mandatory', False):
+                if not getattr(checkbox, 'is_mandatory', False):
                     self.app.state_store.remove_app(app_id)
             self._update_status_display()
             self._update_all_checkboxes()

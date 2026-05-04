@@ -1,4 +1,4 @@
-from textual.widgets import Static
+from textual.widgets import Static, Checkbox
 from textual.message import Message
 
 class ModernCheckbox(Static):
@@ -9,10 +9,8 @@ class ModernCheckbox(Static):
         "disabled": {"box": "○", "color": "#374151"}
     }
 
-    class Changed(Message):
-        def __init__(self, checkbox: "ModernCheckbox", value: bool) -> None:
-            self.value = value
-            super().__init__()
+    class Changed(Checkbox.Changed):
+        pass
 
     def __init__(self, label: str, app_id: str, is_mandatory: bool, value: bool = False,
                  tooltip: str = "", category: str = "core", **kwargs):
@@ -24,6 +22,10 @@ class ModernCheckbox(Static):
         self._suppress_events = False
         super().__init__(id=f"checkbox-{app_id}", **kwargs)
         self.label = label
+
+    @property
+    def checkbox(self) -> "ModernCheckbox":
+        return self
 
     @property
     def value(self) -> bool:
