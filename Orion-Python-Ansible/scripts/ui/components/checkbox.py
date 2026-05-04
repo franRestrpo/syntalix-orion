@@ -9,7 +9,7 @@ class ModernCheckbox(Static):
         "disabled": {"box": "○", "color": "#374151"}
     }
 
-    class Changed(Checkbox.Changed):
+    class Changed(Message):
         pass
 
     def __init__(self, label: str, app_id: str, is_mandatory: bool, value: bool = False,
@@ -40,7 +40,7 @@ class ModernCheckbox(Static):
         self._value = new_value
         self.refresh()
         if not self._suppress_events:
-            self.post_message(self.Changed(self, new_value))
+            self.post_message(self.Changed())
 
     def set_value_without_event(self, new_value: bool) -> None:
         if self._value == new_value:
@@ -71,4 +71,6 @@ class ModernCheckbox(Static):
         return colors.get(self.category, '#00D9FF')
 
     def on_click(self) -> None:
+        if self.is_mandatory:
+            return
         self.value = not self._value

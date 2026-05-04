@@ -139,25 +139,26 @@ class SelectionScreen(Screen):
         self._update_all_checkboxes()
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
-        if isinstance(event.checkbox, ModernCheckbox):
-            checkbox = event.checkbox
-            app_id = checkbox.app_id
-            if checkbox.value:
-                self.app.state_store.add_app(app_id)
-                self.user_selected.add(app_id)
-                app_meta = self.catalog.get(app_id)
-                if app_meta and app_meta.dependencies:
-                    for dep_id in app_meta.dependencies:
-                        if dep_id not in self.app.state_store.selected_apps:
-                            self.app.state_store.add_app(dep_id)
-                            self.auto_dependencies.add(dep_id)
-            else:
-                if not getattr(checkbox, 'is_mandatory', False):
-                    self.app.state_store.remove_app(app_id)
-                    self.user_selected.discard(app_id)
-                    self._remove_transitive_dependencies(app_id)
-            self._update_status_display()
-            self._update_all_checkboxes()
+        checkbox = event.checkbox
+        if not hasattr(checkbox, 'app_id'):
+            return
+        app_id = checkbox.app_id
+        if checkbox.value:
+            self.app.state_store.add_app(app_id)
+            self.user_selected.add(app_id)
+            app_meta = self.catalog.get(app_id)
+            if app_meta and app_meta.dependencies:
+                for dep_id in app_meta.dependencies:
+                    if dep_id not in self.app.state_store.selected_apps:
+                        self.app.state_store.add_app(dep_id)
+                        self.auto_dependencies.add(dep_id)
+        else:
+            if not getattr(checkbox, 'is_mandatory', False):
+                self.app.state_store.remove_app(app_id)
+                self.user_selected.discard(app_id)
+                self._remove_transitive_dependencies(app_id)
+        self._update_status_display()
+        self._update_all_checkboxes()
 
     def _remove_transitive_dependencies(self, app_id: str) -> None:
         dependents_to_check = [app_id]
@@ -224,16 +225,17 @@ class SelectionScreen(Screen):
         app_count.update(f"[b]Apps:[/b] {len(user_apps)} seleccionadas + {len(dep_apps)} dependencias = [bold]{len(selected)}[/] total | [b]RAM Total:[/b] [{ram_color}]{total_ram}MB[/]")
 
     def _update_all_checkboxes(self) -> None:
-        for checkbox in self.query(ModernCheckbox):
+        checkboxes = list(self.query(ModernCheckbox))
+        for checkbox in checkboxes:
             checkbox._suppress_events = True
         try:
-            for checkbox in self.query(ModernCheckbox):
+            for checkbox in checkboxes:
                 app_id = checkbox.app_id
                 should_be_checked = app_id in self.app.state_store.selected_apps
                 if checkbox.value != should_be_checked:
                     checkbox.set_value_without_event(should_be_checked)
         finally:
-            for checkbox in self.query(ModernCheckbox):
+            for checkbox in checkboxes:
                 checkbox._suppress_events = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
