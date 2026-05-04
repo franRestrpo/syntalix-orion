@@ -80,6 +80,14 @@ class ConfigScreen(Screen):
         self.query_one("#validation-error", Static).update("")
         self._calculate_plan()
 
+    def on_screen_resume(self, event=None) -> None:
+        self.query_one("#validation-error", Static).update("")
+        self._calculate_plan()
+        
+    def on_show(self, event=None) -> None:
+        self.query_one("#validation-error", Static).update("")
+        self._calculate_plan()
+
     def _calculate_plan(self) -> None:
         selected = list(self.app.state_store.selected_apps)
         env_file_path = str(Path.cwd() / ".env")
