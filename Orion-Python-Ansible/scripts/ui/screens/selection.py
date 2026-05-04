@@ -145,7 +145,7 @@ class SelectionScreen(Screen):
         self._update_status_display()
         self._update_all_checkboxes()
 
-    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+    def on_modern_checkbox_changed(self, event: ModernCheckbox.Changed) -> None:
         checkbox = event.checkbox
         if not hasattr(checkbox, 'app_id'):
             return

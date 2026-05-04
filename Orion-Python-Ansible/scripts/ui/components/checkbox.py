@@ -1,4 +1,4 @@
-from textual.widgets import Static, Checkbox
+from textual.widgets import Static
 from textual.message import Message
 
 class ModernCheckbox(Static):
@@ -10,7 +10,10 @@ class ModernCheckbox(Static):
     }
 
     class Changed(Message):
-        pass
+        def __init__(self, checkbox: "ModernCheckbox", value: bool) -> None:
+            super().__init__()
+            self.checkbox = checkbox
+            self.value = value
 
     def __init__(self, label: str, app_id: str, is_mandatory: bool, value: bool = False,
                  tooltip: str = "", category: str = "core", **kwargs):
@@ -40,7 +43,7 @@ class ModernCheckbox(Static):
         self._value = new_value
         self.refresh()
         if not self._suppress_events:
-            self.post_message(self.Changed())
+            self.post_message(self.Changed(self, new_value))
 
     def set_value_without_event(self, new_value: bool) -> None:
         if self._value == new_value:
