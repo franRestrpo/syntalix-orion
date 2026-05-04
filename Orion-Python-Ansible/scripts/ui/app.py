@@ -4,12 +4,18 @@ from pathlib import Path
 from textual.app import App
 from textual.binding import Binding
 
+SCRIPT_DIR = Path(__file__).parent.absolute()
+PROJECT_ROOT = SCRIPT_DIR.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
 from core.logging_config import get_logger
 from ui.managers.state_store import StateStore
 from ui.screens.selection import SelectionScreen
 from ui.screens.config import ConfigScreen
 from ui.screens.deploy import DeployScreen
-from ui.styles.theme import THEME
 
 logger = get_logger(__name__)
 
