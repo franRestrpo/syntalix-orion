@@ -22,7 +22,7 @@ class ModernCheckbox(Static):
         self._value = value
         self._tooltip = tooltip
         self.category = category
-        super().__init__(**kwargs)
+        super().__init__(id=f"checkbox-{app_id}", **kwargs)
 
     @property
     def value(self) -> bool:
