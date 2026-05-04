@@ -17,61 +17,54 @@ logger = get_logger(__name__)
 from textual import work
 
 class DeployScreen(Screen):
-    """Pantalla final que ejecuta y muestra el despliegue con Ansible."""
-    
+    CSS = """
+    Screen { background: #0D1117; }
+    #deploy-layout { height: 100%; padding: 1; }
+    #deploy-title { text-style: bold; color: #00D9FF; font-size: 120%; margin-bottom: 1; }
+    #deploy-status { color: #8B949E; margin-bottom: 1; }
+    #ansible-log { height: 1fr; border: solid #00D9FF; margin: 1 0; background: #161B22; }
+    #button-container { height: auto; align: center middle; margin-top: 1; }
+    .log-success { color: #10B981; }
+    .log-error { color: #EF4444; }
+    .log-info { color: #00D9FF; }
+    .log-warning { color: #F59E0B; }
+    """
+
     BINDINGS = [
         ("ctrl+q", "quit", "Salir"),
     ]
 
-    CSS = """
-    #deploy-layout {
-        height: 100%;
-    }
-    #ansible-log {
-        height: 1fr;
-        border: solid $primary;
-        margin: 1 0;
-    }
-    #button-container {
-        height: auto;
-        align: center middle;
-    }
-    """
-
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="p-2", id="deploy-layout"):
-            yield Static("## [🚀] Despliegue de Infraestructura", id="deploy-title", markup=True)
-            yield Static("", id="deploy-status", markup=True)
-            
+            yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", id="deploy-title")
+            yield Static("", id="deploy-status")
+
             yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
-            
+
             with Vertical(id="button-container"):
                 yield Button("Salir", id="quit-button", variant="error", disabled=True)
-                
+
         yield Footer()
 
     def on_mount(self) -> None:
-        # Recuperar el plan del estado
         plan = self.app.state_store.deployment_plan
         if not plan:
             self.notify("No hay un plan de despliegue configurado", severity="error")
             return
-            
+
         status = self.query_one("#deploy-status", Static)
         status.update(f"Desplegando {len(plan.plan)} componentes (RAM estimada: {plan.ram_total_mb}MB)...")
-        
+
         self.call_after_refresh(self._start_deployment)
 
     def _start_deployment(self) -> None:
         plan = self.app.state_store.deployment_plan
         log_widget = self.query_one("#ansible-log", RichLog)
         log_widget.write("[INFO] Iniciando orquestación con Ansible...")
-        
-        # Preparar variables
+
         vars_to_inject = plan.vars_generated.copy()
-        
-        # Inyección Criptográfica y Persistencia Segura (Zero Trust)
+
         env_file_path = str(Path.cwd() / ".env")
         if save_env_file(env_file_path, vars_to_inject):
             try:
@@ -89,20 +82,24 @@ class DeployScreen(Screen):
     @work(thread=True)
     def run_ansible_thread(self, vars_to_inject: dict, modules: list) -> None:
         log_widget = self.query_one("#ansible-log", RichLog)
-        
+
         def on_event(event: dict) -> None:
-            # Safely write to UI thread
             msg = event.get("message", str(event))
             if event.get("type") == "done":
                 success = event.get("success", False)
                 final_msg = "[OK] Despliegue Exitoso" if success else "[ERROR] Despliegue Fallido"
+                log_class = "log-success" if success else "log-error"
                 self.call_from_thread(log_widget.write, f"\n{final_msg}")
                 self.call_from_thread(self._enable_quit)
             else:
+                log_class = "log-info"
+                if "[ERROR]" in msg:
+                    log_class = "log-error"
+                elif "[WARNING]" in msg or "[WARN]" in msg:
+                    log_class = "log-warning"
                 self.call_from_thread(log_widget.write, msg)
 
         runner = RealAnsibleRunner(on_event=on_event, debug=True)
-        # Como runner.run es una corrutina (async), y estamos en un hilo, creamos un nuevo loop:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
@@ -117,7 +114,7 @@ class DeployScreen(Screen):
         quit_btn = self.query_one("#quit-button", Button)
         quit_btn.disabled = False
         status = self.query_one("#deploy-status", Static)
-        status.update("Despliegue finalizado.")
+        status.update("✓ Despliegue finalizado.")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "quit-button":
@@ -125,4 +122,3 @@ class DeployScreen(Screen):
 
     def action_quit(self) -> None:
         self.app.exit()
-
