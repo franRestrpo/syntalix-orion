@@ -27,8 +27,8 @@ class ConfigScreen(Screen):
     .app-block { border: solid #21262D; padding: 1; margin: 1 0; background: #161B22; }
     .app-title { text-style: bold; color: #F472B6; margin-bottom: 1; }
     .form-label { color: #00D9FF; margin-top: 1; }
-    .form-desc { color: #6E7681; }
-    .input-row { height: auto; }
+    .form-desc { color: #6E7681; margin-bottom: 1; }
+    .input-row { height: auto; margin-bottom: 1; }
     .secure-toggle { color: #8B949E; }
     .ram-warning { color: #F59E0B; }
     .btn-success { background: #10B981; color: #0D1117; }
@@ -137,34 +137,37 @@ class ConfigScreen(Screen):
                     app_vars_map[app_name] = app_specific_vars
 
             forms_container = self.query_one("#forms-container", Vertical)
-            forms_container.remove_children()
+            # Eliminar hijos anteriores de forma segura
+            for child in forms_container.children:
+                child.remove()
+                
             self.user_inputs.clear()
 
+            widgets_to_mount = []
             for app_name, vars_list in app_vars_map.items():
-                forms_container.mount(Static(f"\n[📦] **{app_name}**", classes="app-title"))
+                widgets_to_mount.append(Static(f"\n[📦] **{app_name}**", classes="app-title"))
                 for full_key, desc, v_type in vars_list:
                     default_val = self.app.state_store.user_variables.get(full_key, plan.vars_generated.get(full_key, ""))
                     is_pwd = v_type == "secret"
-                    forms_container.mount(self._create_form_field(full_key, desc, default_val, is_pwd))
+                    widgets_to_mount.append(self._create_form_field(full_key, desc, default_val, is_pwd))
                     self.user_inputs[full_key] = default_val
+
+            if widgets_to_mount:
+                forms_container.mount(*widgets_to_mount)
 
         except Exception as e:
             self.notify(f"Error calculando plan: {e}", severity="error")
 
-    def _create_form_field(self, full_key: str, desc: str, default_val: str, is_pwd: bool) -> Horizontal:
-        field = Horizontal(classes="input-row")
+    def _create_form_field(self, full_key: str, desc: str, default_val: str, is_pwd: bool) -> Vertical:
         label = Static(f"{full_key}", classes="form-label")
-        toggle = None
         if is_pwd:
             desc_widget = Static(f"[🔒] {desc}", classes="form-desc")
             input_widget = Input(value=default_val, placeholder=full_key, password=True, id=f"input-{full_key}")
         else:
             desc_widget = Static(desc, classes="form-desc")
             input_widget = Input(value=default_val, placeholder=full_key, id=f"input-{full_key}")
-        field.mount(label)
-        field.mount(desc_widget)
-        field.mount(input_widget)
-        return field
+        
+        return Vertical(label, desc_widget, input_widget, classes="input-row")
 
     def on_input_changed(self, event: Input.Changed) -> None:
         input_id = event.input.id
