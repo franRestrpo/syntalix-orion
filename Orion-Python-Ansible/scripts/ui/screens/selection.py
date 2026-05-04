@@ -5,7 +5,7 @@ from typing import Dict, List
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.widgets import Header, Footer, Static, Button
+from textual.widgets import Header, Footer, Static, Button, Checkbox
 from textual.message import Message
 
 SCRIPT_DIR = Path(__file__).parent.parent.absolute()
@@ -110,11 +110,12 @@ class SelectionScreen(Screen):
             if app.category in CORE_CATEGORIES:
                 self.app.state_store.add_app(app.id)
         self._update_status_display()
+        self._update_all_checkboxes()
 
-    def on_checkbox_changed(self, event: ModernCheckbox.Changed) -> None:
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         if isinstance(event.checkbox, ModernCheckbox):
             app_id = event.checkbox.app_id
-            if event.checkbox.value:
+            if event.checkbox.checked:
                 self.app.state_store.add_app(app_id)
                 app_meta = self.catalog.get(app_id)
                 if app_meta and app_meta.dependencies:
@@ -148,12 +149,11 @@ class SelectionScreen(Screen):
         ram_summary.update(f"\n{progress._render()}\n\n**Apps:** {len(selected)} | **RAM Total:** ~{total_ram}MB")
 
     def _update_all_checkboxes(self) -> None:
-        for checkbox in self.query("ModernCheckbox"):
+        for checkbox in self.query(ModernCheckbox):
             app_id = checkbox.app_id
             should_be_checked = app_id in self.app.state_store.selected_apps
-            if checkbox._value != should_be_checked:
-                checkbox._value = should_be_checked
-                checkbox.refresh()
+            if checkbox.checked != should_be_checked:
+                checkbox.checked = should_be_checked
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "next-button":
