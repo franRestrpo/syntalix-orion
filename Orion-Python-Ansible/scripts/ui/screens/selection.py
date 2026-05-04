@@ -115,7 +115,7 @@ class SelectionScreen(Screen):
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         if isinstance(event.checkbox, ModernCheckbox):
             app_id = event.checkbox.app_id
-            if event.checkbox.checked:
+            if event.checkbox.value:
                 self.app.state_store.add_app(app_id)
                 app_meta = self.catalog.get(app_id)
                 if app_meta and app_meta.dependencies:
@@ -152,8 +152,8 @@ class SelectionScreen(Screen):
         for checkbox in self.query(ModernCheckbox):
             app_id = checkbox.app_id
             should_be_checked = app_id in self.app.state_store.selected_apps
-            if checkbox.checked != should_be_checked:
-                checkbox.checked = should_be_checked
+            if checkbox.value != should_be_checked:
+                checkbox.value = should_be_checked
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "next-button":
