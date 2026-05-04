@@ -53,8 +53,8 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "required": True
             },
             "TRAEFIK_PASSWORD": {
-                "type": "secret",
-                "description": "Traefik Dashboard Password",
+                "type": "string",
+                "description": "Traefik Dashboard Password (texto plano)",
                 "required": True,
                 "auto_generate": False
             }
