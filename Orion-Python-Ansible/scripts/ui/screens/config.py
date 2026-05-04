@@ -10,7 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.containers import Vertical, VerticalScroll, Horizontal
-from textual.widgets import Header, Footer, Static, Button
+from textual.widgets import Header, Footer, Static, Button, Input
 from textual.message import Message
 
 from core.dependency_graph import DependencyGraph
@@ -144,7 +144,6 @@ class ConfigScreen(Screen):
             self.notify(f"Error calculando plan: {e}", severity="error")
 
     def _create_form_field(self, full_key: str, desc: str, default_val: str, is_pwd: bool) -> Horizontal:
-        from textual.widgets import Input
         field = Horizontal(classes="input-row")
         label = Static(f"{full_key}", classes="form-label")
         toggle = None
