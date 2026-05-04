@@ -107,12 +107,19 @@ class SelectionScreen(Screen):
                             is_selected = app.id in self.app.state_store.selected_apps
                             if is_mandatory:
                                 is_selected = True
+                                
+                            # Construir tooltip informativo con dependencias
+                            deps_tooltip = ""
+                            if app.dependencies:
+                                dep_names = [self.catalog.get(d).name for d in app.dependencies if self.catalog.get(d)]
+                                deps_tooltip = f"\nDependencias:\n- {chr(10) + '- '.join(dep_names)}"
+                                
                             checkbox = ModernCheckbox(
                                 label=f"{app.name} (v{app.version}) - {app.ram_mb}MB",
                                 app_id=app.id,
                                 is_mandatory=is_mandatory,
                                 value=is_selected,
-                                tooltip=f"ID: {app.id}\nRAM: {app.ram_mb}MB",
+                                tooltip=f"ID: {app.id}\nRAM: {app.ram_mb}MB{deps_tooltip}",
                                 category=category.lower()
                             )
                             yield checkbox
@@ -143,7 +150,9 @@ class SelectionScreen(Screen):
         if not hasattr(checkbox, 'app_id'):
             return
         app_id = checkbox.app_id
+        
         if checkbox.value:
+            # Flujo de selección: Añadir app y sus dependencias
             self.app.state_store.add_app(app_id)
             self.user_selected.add(app_id)
             app_meta = self.catalog.get(app_id)
@@ -153,10 +162,29 @@ class SelectionScreen(Screen):
                         self.app.state_store.add_app(dep_id)
                         self.auto_dependencies.add(dep_id)
         else:
+            # Flujo de deselección: Verificar si otras apps seleccionadas dependen de esta
+            dependents = []
+            for selected_id in self.app.state_store.selected_apps:
+                # No compararse consigo mismo
+                if selected_id == app_id:
+                    continue
+                sel_meta = self.catalog.get(selected_id)
+                if sel_meta and app_id in sel_meta.dependencies:
+                    dependents.append(sel_meta.name)
+            
+            if dependents:
+                # Bloquear deselección: hay apps que dependen de esta
+                deps_str = ", ".join(dependents)
+                self.notify(f"Requiere: {deps_str}", title="Dependencia Activa", severity="warning")
+                # Revertir visualmente el checkbox al estado seleccionado
+                self._update_all_checkboxes()
+                return
+
             if not getattr(checkbox, 'is_mandatory', False):
                 self.app.state_store.remove_app(app_id)
                 self.user_selected.discard(app_id)
                 self._remove_transitive_dependencies(app_id)
+                
         self._update_status_display()
         self._update_all_checkboxes()
 
