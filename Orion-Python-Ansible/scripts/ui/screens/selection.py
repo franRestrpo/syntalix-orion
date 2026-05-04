@@ -1,12 +1,14 @@
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll, Container
 from textual.widgets import Header, Footer, Static, Button, Checkbox
 from textual.message import Message
+from textual.reactive import reactive
+
 SCRIPT_DIR = Path(__file__).parent.parent.absolute()
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -14,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from apps_metadata import APP_METADATA
 from core.models import load_app_catalog
+from core.dependency_graph import DependencyGraph
 from ui.components import ModernCheckbox, ProgressBar
 
 CATEGORY_ORDER = ["Core", "Data", "Monitoring", "AI", "Automation", "Communication", "Management"]
@@ -23,6 +26,19 @@ CATEGORY_COLORS = {
     "Core": "#F472B6", "Data": "#60A5FA", "Monitoring": "#34D399",
     "AI": "#A78BFA", "Automation": "#FB923C", "Communication": "#38BDF8", "Management": "#94A3B8"
 }
+
+APP_ICONS = {
+    "traefik": "🌐", "crowdsec": "🛡️", "authentik": "🔐", "portainer": "📦",
+    "postgres_pgvector": "🐘", "mariadb": "🗄️", "mongodb": "🍃", "rabbitmq": "🐰",
+    "redis": "💾", "qdrant": "🔍", "minio": "☁️",
+    "prometheus": "📊", "grafana": "📈", "loki": "📋", "uptime_kuma": "⏱️",
+    "dify": "🤖", "openwebui": "💬", "flowise": "🌊",
+    "n8n": "⚡", "activepieces": "🔧", "evolution_api": "📱",
+    "chatwoot": "💬", "odoo": "🏢"
+}
+
+def get_app_icon(app_id: str) -> str:
+    return APP_ICONS.get(app_id, "📦")
 
 class SelectionScreen(Screen):
     CSS = """
@@ -41,12 +57,18 @@ class SelectionScreen(Screen):
     .category-communication { color: #38BDF8; }
     .category-management { color: #94A3B8; }
     #monitor-title { text-style: bold; color: #00D9FF; }
-    #status-display { height: 60%; padding: 1; margin-bottom: 1; }
-    .selected-item { color: #10B981; }
+    #status-display { height: 75%; padding: 1; margin-bottom: 1; }
+    #summary-container { height: auto; }
     #action-container { height: auto; align: center bottom; padding: 1; }
     .btn-primary { background: #00D9FF; color: #0D1117; }
     .btn-back { color: #8B949E; }
     #footer-hint { color: #6E7681; }
+    .app-selected { color: #10B981; }
+    .app-dependency { color: #60A5FA; }
+    .app-dependency-label { color: #38BDF8; }
+    .ram-warning { color: #F59E0B; }
+    .ram-critical { color: #EF4444; }
+    .divider { color: #21262D; }
     """
 
     BINDINGS = [
@@ -60,6 +82,9 @@ class SelectionScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.catalog = load_app_catalog(APP_METADATA)
+        self.dep_graph = DependencyGraph(self.catalog)
+        self.user_selected: Set[str] = set()
+        self.auto_dependencies: Set[str] = set()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -96,8 +121,9 @@ class SelectionScreen(Screen):
                 yield Static("◉ RESUMEN DE SELECCIÓN", id="monitor-title")
                 with VerticalScroll(id="status-display"):
                     yield Static(id="status-content", markup=True)
-                with Vertical(id="summary-container"):
+                with Container(id="summary-container"):
                     yield Static(id="ram-summary", markup=True)
+                    yield Static(id="app-count", markup=True)
                 with Vertical(id="action-container"):
                     yield Static("─" * 50, id="divider")
                     yield Button("⚡ CONTINUAR →  [Ctrl+N]", id="next-button", variant="primary")
@@ -108,6 +134,7 @@ class SelectionScreen(Screen):
         for app in self.catalog.values():
             if app.category in CORE_CATEGORIES:
                 self.app.state_store.add_app(app.id)
+                self.auto_dependencies.add(app.id)
         self._update_status_display()
         self._update_all_checkboxes()
 
@@ -117,36 +144,84 @@ class SelectionScreen(Screen):
             app_id = checkbox.app_id
             if checkbox.value:
                 self.app.state_store.add_app(app_id)
+                self.user_selected.add(app_id)
                 app_meta = self.catalog.get(app_id)
                 if app_meta and app_meta.dependencies:
                     for dep_id in app_meta.dependencies:
                         if dep_id not in self.app.state_store.selected_apps:
                             self.app.state_store.add_app(dep_id)
+                            self.auto_dependencies.add(dep_id)
             else:
                 if not getattr(checkbox, 'is_mandatory', False):
                     self.app.state_store.remove_app(app_id)
+                    self.user_selected.discard(app_id)
+                    self._remove_transitive_dependencies(app_id)
             self._update_status_display()
             self._update_all_checkboxes()
+
+    def _remove_transitive_dependencies(self, app_id: str) -> None:
+        dependents_to_check = [app_id]
+        while dependents_to_check:
+            current = dependents_to_check.pop()
+            for aid, app in self.catalog.items():
+                if current in app.dependencies and aid in self.app.state_store.selected_apps:
+                    if aid not in self.user_selected:
+                        self.app.state_store.remove_app(aid)
+                        self.auto_dependencies.discard(aid)
+                        dependents_to_check.append(aid)
 
     def _update_status_display(self) -> None:
         status = self.query_one("#status-content", Static)
         ram_summary = self.query_one("#ram-summary", Static)
+        app_count = self.query_one("#app-count", Static)
         selected = self.app.state_store.selected_apps
 
-        lines = ["```"]
+        lines = []
         total_ram = 0
-        for app_id in selected:
+        user_apps = []
+        dep_apps = []
+
+        for app_id in sorted(selected):
             app = self.catalog.get(app_id)
             if app:
-                lines.append(f"✓ {app.name}")
+                if app_id in self.user_selected:
+                    user_apps.append((app_id, app))
+                else:
+                    dep_apps.append((app_id, app))
+
+        if user_apps:
+            lines.append("[b]★ Seleccionadas:[/b]")
+            for app_id, app in user_apps:
+                icon = get_app_icon(app_id)
+                cat_color = CATEGORY_COLORS.get(app.category, "#00D9FF")
+                deps_info = ""
+                if app.dependencies:
+                    dep_names = [self.catalog.get(d).name for d in app.dependencies if self.catalog.get(d)]
+                    deps_info = f" → [dim][i]{', '.join(dep_names)}[/][/]"
+                lines.append(f"  {icon} [bold][{cat_color}]{app.name}[/][/] ([b]{app.ram_mb}MB[/])[dim]{deps_info}[/]")
                 total_ram += app.ram_mb
-        lines.append("```")
 
-        status.update("\n".join(lines) if lines else "Ninguna aplicación seleccionada.")
+        if dep_apps:
+            lines.append("")
+            lines.append("[b]⚙ Dependencias auto-añadidas:[/b]")
+            for app_id, app in dep_apps:
+                icon = get_app_icon(app_id)
+                cat_color = CATEGORY_COLORS.get(app.category, "#00D9FF")
+                lines.append(f"  {icon} [{cat_color}]{app.name}[/] ([b]{app.ram_mb}MB[/])")
+                total_ram += app.ram_mb
 
-        max_ram_gb = 4.0
+        if not lines:
+            lines.append("[dim]Ninguna aplicación seleccionada.[/]")
+
+        status.update("\n".join(lines) if lines else "")
+
+        max_ram_gb = 8.0
+        ram_ratio = (total_ram / 1024) / max_ram_gb
+        ram_color = "#10B981" if ram_ratio < 0.5 else "#F59E0B" if ram_ratio < 0.8 else "#EF4444"
+
         progress = ProgressBar(label="RAM", current=total_ram / 1024, maximum=max_ram_gb)
-        ram_summary.update(f"\n{progress._render()}\n\n**Apps:** {len(selected)} | **RAM Total:** ~{total_ram}MB")
+        ram_summary.update(f"[b]{progress._render()}[/]\n")
+        app_count.update(f"[b]Apps:[/b] {len(user_apps)} seleccionadas + {len(dep_apps)} dependencias = [bold]{len(selected)}[/] total | [b]RAM Total:[/b] [{ram_color}]{total_ram}MB[/]")
 
     def _update_all_checkboxes(self) -> None:
         for checkbox in self.query(ModernCheckbox):
