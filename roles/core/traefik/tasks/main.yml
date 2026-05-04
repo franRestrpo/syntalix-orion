@@ -5,6 +5,12 @@
     state: directory
     mode: "0755"
 
+- name: "Generar hash bcrypt para la contraseña de Traefik"
+  ansible.builtin.shell:
+    cmd: "python -c \"import sys, bcrypt; p=sys.argv[1]; print(p if p.startswith(('$2a$', '$2b$', '$2y$')) else bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode())\" \"{{ TRAEFIK__TRAEFIK_PASSWORD | default('admin', true) }}\""
+  register: traefik_pwd_hash
+  changed_when: false
+
 - name: "Configurar app_actual para traefik"
   ansible.builtin.set_fact:
     app_actual:
@@ -12,7 +18,7 @@
       dominio: "{{ TRAEFIK__TRAEFIK_DASHBOARD_URL | default('traefik.localhost', true) }}"
       usuario_admin: "{{ TRAEFIK__TRAEFIK_USER | default('admin', true) }}"
       acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ TRAEFIK__TRAEFIK_PASSWORD | default('securepass', true) }}"
+      password_db: "{{ traefik_pwd_hash.stdout }}"
 
 - name: "🌐 Asegurar que existen los volúmenes externos necesarios"
   ansible.builtin.shell:

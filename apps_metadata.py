@@ -49,13 +49,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "TRAEFIK_USER": {
                 "type": "string",
                 "description": "Traefik Dashboard Username",
-                "default": "traefik-admin"
+                "default": "traefik-admin",
+                "required": True
             },
             "TRAEFIK_PASSWORD": {
                 "type": "secret",
                 "description": "Traefik Dashboard Password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "required": True,
+                "auto_generate": False
             }
         }
     },
