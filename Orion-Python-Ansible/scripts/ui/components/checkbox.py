@@ -31,7 +31,7 @@ class ModernCheckbox(Checkbox):
         }
         return colors.get(self.category, '#00D9FF')
 
-    def watch_checked(self, value: bool) -> None:
+    def watch_value(self, value: bool) -> None:
         if self.is_mandatory and not value:
             return
         self._value = value
