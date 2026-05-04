@@ -112,7 +112,7 @@ class SelectionScreen(Screen):
         self._update_status_display()
         self._update_all_checkboxes()
 
-    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+    def on_checkbox_changed(self, event: ModernCheckbox.Changed) -> None:
         if isinstance(event.checkbox, ModernCheckbox):
             app_id = event.checkbox.app_id
             if event.checkbox.value:
