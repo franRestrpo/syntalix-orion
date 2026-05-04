@@ -152,28 +152,25 @@ class SelectionScreen(Screen):
         app_id = checkbox.app_id
         
         if checkbox.value:
-            # Flujo de selección: Añadir app y sus dependencias
-            self.app.state_store.add_app(app_id)
+            # Flujo de selección
             self.user_selected.add(app_id)
-            app_meta = self.catalog.get(app_id)
-            if app_meta and app_meta.dependencies:
-                for dep_id in app_meta.dependencies:
-                    if dep_id not in self.app.state_store.selected_apps:
-                        self.app.state_store.add_app(dep_id)
-                        self.auto_dependencies.add(dep_id)
+            self._rebuild_dependencies()
         else:
-            # Flujo de deselección: Verificar si otras apps seleccionadas dependen de esta
+            # Flujo de deselección: Verificar si otras apps en user_selected dependen de esta
             dependents = []
-            for selected_id in self.app.state_store.selected_apps:
-                # No compararse consigo mismo
-                if selected_id == app_id:
+            for uid in self.user_selected:
+                if uid == app_id:
                     continue
-                sel_meta = self.catalog.get(selected_id)
-                if sel_meta and app_id in sel_meta.dependencies:
-                    dependents.append(sel_meta.name)
+                
+                try:
+                    plan = self.dep_graph.resolve_dependencies(uid)
+                    if app_id in plan:
+                        dependents.append(self.catalog.get(uid).name)
+                except Exception:
+                    pass
             
             if dependents:
-                # Bloquear deselección: hay apps que dependen de esta
+                # Bloquear deselección: hay apps seleccionadas que dependen de esta
                 deps_str = ", ".join(dependents)
                 self.notify(f"Requiere: {deps_str}", title="Dependencia Activa", severity="warning")
                 # Revertir visualmente el checkbox al estado seleccionado
@@ -181,23 +178,49 @@ class SelectionScreen(Screen):
                 return
 
             if not getattr(checkbox, 'is_mandatory', False):
-                self.app.state_store.remove_app(app_id)
                 self.user_selected.discard(app_id)
-                self._remove_transitive_dependencies(app_id)
+                self._rebuild_dependencies()
                 
         self._update_status_display()
         self._update_all_checkboxes()
 
-    def _remove_transitive_dependencies(self, app_id: str) -> None:
-        dependents_to_check = [app_id]
-        while dependents_to_check:
-            current = dependents_to_check.pop()
-            for aid, app in self.catalog.items():
-                if current in app.dependencies and aid in self.app.state_store.selected_apps:
-                    if aid not in self.user_selected:
-                        self.app.state_store.remove_app(aid)
-                        self.auto_dependencies.discard(aid)
-                        dependents_to_check.append(aid)
+    def _rebuild_dependencies(self) -> None:
+        """
+        Reconstruye el estado de apps seleccionadas desde cero, basado únicamente en 
+        las aplicaciones Core y las seleccionadas por el usuario (user_selected).
+        Esto asegura que cuando se deselecciona una app, sus dependencias huérfanas
+        se eliminen automáticamente.
+        """
+        new_selected = set()
+        new_auto_deps = set()
+        
+        # 1. Apps Core son obligatorias
+        for app in self.catalog.values():
+            if app.category in CORE_CATEGORIES:
+                new_selected.add(app.id)
+                new_auto_deps.add(app.id)
+                
+        # 2. Resolver dependencias para todas las apps seleccionadas por el usuario
+        for uid in self.user_selected:
+            new_selected.add(uid)
+            try:
+                plan = self.dep_graph.resolve_dependencies(uid)
+                for dep_id in plan:
+                    new_selected.add(dep_id)
+                    if dep_id != uid:
+                        new_auto_deps.add(dep_id)
+            except Exception as e:
+                # Ignoramos errores de grafo aquí, se manejan en validación
+                pass
+                
+        # 3. Si una app es user_selected y no es Core, no debe estar en auto_deps
+        for uid in self.user_selected:
+            if uid in new_auto_deps and self.catalog.get(uid).category not in CORE_CATEGORIES:
+                new_auto_deps.discard(uid)
+                
+        # 4. Actualizar estado
+        self.app.state_store.selected_apps = new_selected
+        self.auto_dependencies = new_auto_deps
 
     def _update_status_display(self) -> None:
         status = self.query_one("#status-content", Static)
