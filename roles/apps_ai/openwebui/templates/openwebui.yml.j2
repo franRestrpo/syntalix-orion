@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    environment:
+      - "TZ=America/Bogota"
+      - "OLLAMA_BASE_URL=http://host.docker.internal:11434"
+      - "WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}"
+      - "GLOBAL_LOG_LEVEL=${GLOBAL_LOG_LEVEL}"
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.openwebui.rule=Host(`{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.openwebui.entrypoints=websecure"
+        - "traefik.http.routers.openwebui.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
+        - "traefik.http.routers.openwebui.service=openwebui"
+
+volumes:
+  openwebui_data:
+    name: openwebui_data
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
+    external: true
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}
