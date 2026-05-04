@@ -5,7 +5,7 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     environment:
       - "TZ=America/Bogota"
-      - "OLLAMA_BASE_URL=http://host.docker.internal:11434"
+      - "ENABLE_OLLAMA_API=${ENABLE_OLLAMA_API:-False}"
       - "WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}"
       - "GLOBAL_LOG_LEVEL=${GLOBAL_LOG_LEVEL}"
     volumes:
