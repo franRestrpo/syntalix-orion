@@ -16,7 +16,6 @@ class ModernCheckbox(Checkbox):
 
     def __init__(self, label: str, app_id: str, is_mandatory: bool, value: bool = False,
                  tooltip: str = "", category: str = "core", **kwargs):
-        self.label = label
         self.app_id = app_id
         self.is_mandatory = is_mandatory
         self._value = value
