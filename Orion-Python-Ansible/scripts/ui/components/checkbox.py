@@ -1,5 +1,6 @@
 from textual.widgets import Static
 from textual.message import Message
+from rich.text import Text
 
 class ModernCheckbox(Static):
     states = {
@@ -43,12 +44,12 @@ class ModernCheckbox(Static):
             return "checked"
         return "unchecked"
 
-    def _render(self) -> str:
+    def _render(self) -> Text:
         state = self.states[self._get_state_key()]
         checkbox = state["box"]
         color = state["color"]
         category_color = self._get_category_color()
-        return f"[{color}]{checkbox}[/] {category_color}{self.label}[/{color}]"
+        return Text.from_markup(f"[{color}]{checkbox}[/] {category_color}{self.label}")
 
     def _get_category_color(self) -> str:
         colors = {
@@ -56,7 +57,7 @@ class ModernCheckbox(Static):
             "networking": "#FBBF24", "ai": "#A78BFA", "automation": "#FB923C",
             "communication": "#38BDF8", "management": "#94A3B8"
         }
-        return f"[{colors.get(self.category, '#00D9FF')}]"
+        return colors.get(self.category, '#00D9FF')
 
     def on_click(self) -> None:
         self.value = not self._value
