@@ -31,7 +31,7 @@ class SelectionScreen(Screen):
     #main-container { height: 100%; layout: horizontal; }
     #left-panel { width: 50%; height: 100%; border-right: solid #00D9FF; padding: 1 2; }
     #right-panel { width: 50%; height: 100%; padding: 1 2; }
-    #catalog-title { text-style: bold; color: #00D9FF; font-size: 120%; }
+    #catalog-title { text-style: bold; color: #00D9FF; }
     #catalog-subtitle { color: #8B949E; margin-bottom: 1; }
     .category-header { text-style: bold; margin-top: 1; padding: 0 1; }
     .category-core { color: #F472B6; }
@@ -41,7 +41,7 @@ class SelectionScreen(Screen):
     .category-automation { color: #FB923C; }
     .category-communication { color: #38BDF8; }
     .category-management { color: #94A3B8; }
-    #monitor-title { text-style: bold; color: #00D9FF; font-size: 120%; }
+    #monitor-title { text-style: bold; color: #00D9FF; }
     #status-display { height: 60%; padding: 1; margin-bottom: 1; }
     .selected-item { color: #10B981; }
     #action-container { height: auto; align: center bottom; padding: 1; }
