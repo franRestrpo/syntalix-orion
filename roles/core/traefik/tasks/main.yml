@@ -7,7 +7,7 @@
 
 - name: "Generar hash bcrypt para la contraseña de Traefik"
   ansible.builtin.shell:
-    cmd: "python -c \"import sys, bcrypt; p=sys.argv[1]; print(p if p.startswith(('$2a$', '$2b$', '$2y$')) else bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode())\" \"{{ TRAEFIK__TRAEFIK_PASSWORD | default('admin', true) }}\""
+    cmd: "python3 -c \"import sys, bcrypt; p=sys.argv[1]; print(p if p.startswith(('$2a$', '$2b$', '$2y$')) else bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode())\" \"{{ TRAEFIK__TRAEFIK_PASSWORD | default('admin', true) }}\""
   register: traefik_pwd_hash
   changed_when: false
 
