@@ -20,7 +20,7 @@ from typing import Dict, List, Set, Optional, Any
 
 # Imports de módulos internos
 from core.logging_config import get_logger
-from core.security import generate_secure_password
+from core.security import generate_secure_password, generate_and_transform_secret
 
 # Logger
 logger = get_logger(__name__)
@@ -207,30 +207,18 @@ class DependencyGraph:
 
     def _generate_secret_value(self, var_def: Dict[str, Any]) -> str:
         """
-        Genera un valor secreto criptográficamente seguro basado en su definición.
+        Delega la generación de valores secretos al módulo de seguridad.
         
         Args:
-            var_def (Dict[str, Any]): Definición técnica de la variable (longitud, transformaciones).
+            var_def (Dict[str, Any]): Definición técnica de la variable.
             
         Returns:
-            str: Valor generado, potencialmente transformado (ej: hash bcrypt).
+            str: Valor secreto generado y procesado.
         """
-        length = int(var_def.get("length", 32))
-        
-        # Generar token seguro
-        value = generate_secure_password(length=length)
-        
-        # Aplicar transformación si se especifica
-        transform = var_def.get("transform")
-        if transform == "bcrypt":
-            try:
-                from core.security import hash_password_bcrypt
-                value = hash_password_bcrypt(value)
-                logger.debug("Secret transformado con bcrypt")
-            except ImportError:
-                logger.warning("bcrypt no disponible, usando token plano")
-        
-        return value
+        return generate_and_transform_secret(
+            length=int(var_def.get("length", 32)),
+            transform=var_def.get("transform")
+        )
 
     def generate_vars_for_plan(self, app_id: str) -> Dict[str, Any]:
         """

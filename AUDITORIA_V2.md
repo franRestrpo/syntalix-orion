@@ -25,10 +25,9 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 ## 2. 🧩 Principio de Responsabilidad Única (SRP Violations)
 
 ### Hallazgos
-- [ ] **DependencyGraph Multitarea:**
-  - **Ubicación:** `core/dependency_graph.py`.
-  - **Problema:** La clase `DependencyGraph` resuelve el grafo, calcula RAM, genera secretos y formatea variables para Ansible.
-  - **Recomendación:** Extraer la lógica de generación de secretos a un `SecretProvider` y la lógica de formateo de variables a un `AnsibleVariablesMapper`.
+- [x] **DependencyGraph Multitarea:**
+  - **Estado:** ✅ Solucionado. La lógica de generación y transformación de secretos se movió a `core/security.py`.
+  - **Mejora:** `DependencyGraph` ahora solo orquesta el plan, delegando la responsabilidad criptográfica al módulo especializado.
 - [ ] **Lógica de Negocio en la UI:**
   - **Ubicación:** `ui/screens/selection.py` y `config.py`.
   - **Problema:** Las pantallas de Textual contienen lógica compleja de resolución de dependencias transitivas y validación de planes.

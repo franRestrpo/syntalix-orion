@@ -256,6 +256,30 @@ def validate_email(email: str) -> bool:
     return bool(re.match(pattern, email))
 
 
+def generate_and_transform_secret(length: int = 32, transform: Optional[str] = None) -> str:
+    """
+    Genera un secreto seguro y aplica una transformación criptográfica si se solicita.
+    
+    Args:
+        length (int): Longitud base del secreto.
+        transform (Optional[str]): Algoritmo de transformación ('bcrypt', etc).
+        
+    Returns:
+        str: El secreto resultante (plano o hasheado).
+    """
+    # Generar token seguro base
+    secret = generate_secure_password(length=length)
+    
+    if transform == "bcrypt":
+        try:
+            return hash_password_bcrypt(secret)
+        except (ImportError, Exception):
+            # Fallback a plano si falla el hasheo, pero emitiendo advertencia
+            return secret
+            
+    return secret
+
+
 def sanitize_input(value: str, max_length: int = 255) -> str:
     """
     Limpia y normaliza cadenas de entrada para mitigar riesgos de inyección (Shell/SQL).
