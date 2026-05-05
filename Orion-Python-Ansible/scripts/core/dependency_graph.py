@@ -21,6 +21,7 @@ from typing import Dict, List, Set, Optional, Any
 # Imports de módulos internos
 from core.logging_config import get_logger
 from core.security import generate_secure_password, generate_and_transform_secret
+from utils import map_app_variable
 
 # Logger
 logger = get_logger(__name__)
@@ -241,12 +242,7 @@ class DependencyGraph:
             vars_def = meta.get("variables", {}) or {}
             
             for var_name, var_def in vars_def.items():
-                # Generar nombre de variable con prefijo de app (evitando doble prefijo)
-                clean_var_name = var_name.upper()
-                app_prefix = aid.upper() + "_"
-                if clean_var_name.startswith(app_prefix):
-                    clean_var_name = clean_var_name[len(app_prefix):]
-                key = f"{aid.upper()}__{clean_var_name}"
+                key = map_app_variable(aid, var_name)
                 
                 if var_def.get("type") == "secret":
                     # Generar secreto automáticamente
@@ -443,11 +439,7 @@ class DependencyGraph:
             vars_def = meta.get("variables", {}) or {}
 
             for var_name, var_def in vars_def.items():
-                clean_var_name = var_name.upper()
-                app_prefix = aid.upper() + "_"
-                if clean_var_name.startswith(app_prefix):
-                    clean_var_name = clean_var_name[len(app_prefix):]
-                key = f"{aid.upper()}__{clean_var_name}"
+                key = map_app_variable(aid, var_name)
 
                 if var_def.get("type") == "secret":
                     value = self._generate_secret_value(var_def)
@@ -473,11 +465,7 @@ class DependencyGraph:
             vars_def = meta.get("variables", {}) or {}
 
             for var_name, var_def in vars_def.items():
-                clean_var_name = var_name.upper()
-                app_prefix = aid.upper() + "_"
-                if clean_var_name.startswith(app_prefix):
-                    clean_var_name = clean_var_name[len(app_prefix):]
-                key = f"{aid.upper()}__{clean_var_name}"
+                key = map_app_variable(aid, var_name)
                 
                 # Preservar variable si ya existe y tiene un valor válido
                 if key in existing_vars and existing_vars[key]:

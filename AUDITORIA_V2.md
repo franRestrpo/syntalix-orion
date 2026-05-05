@@ -11,6 +11,7 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
   - **Ubicación:** `Orion-Python-Ansible/scripts/core/preflight.py`.
   - **Estado:** ✅ Solucionado. Se reemplazó la lógica de `subprocess` con `shutil.which`.
   - **Recomendación:** Mantener el uso de utilidades nativas de Python para evitar la exposición a inyecciones de shell.
+
 - [ ] **Almacenamiento de Secretos (`.env`):**
   - **Ubicación:** Raíz del proyecto.
   - **Riesgo:** Aunque se aplica `chmod 600`, si un servicio (como Traefik) se configura mal y expone la raíz del proyecto, el archivo `.env` (que contiene todas las claves de base de datos) podría ser accesible.
@@ -26,8 +27,9 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 
 ### Hallazgos
 - [x] **DependencyGraph Multitarea:**
-  - **Estado:** ✅ Solucionado. La lógica de generación y transformación de secretos se movió a `core/security.py`.
-  - **Mejora:** `DependencyGraph` ahora solo orquesta el plan, delegando la responsabilidad criptográfica al módulo especializado.
+  - **Estado:** ✅ Solucionado. 
+  - **Mejora:** La lógica criptográfica se delegó a `core/security.py` y el formateo de variables a `utils.map_app_variable`. `DependencyGraph` ahora es puramente un orquestador del grafo.
+
 - [ ] **Lógica de Negocio en la UI:**
   - **Ubicación:** `ui/screens/selection.py` y `config.py`.
   - **Problema:** Las pantallas de Textual contienen lógica compleja de resolución de dependencias transitivas y validación de planes.
