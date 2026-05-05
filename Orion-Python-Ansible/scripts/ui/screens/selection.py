@@ -156,7 +156,11 @@ class SelectionScreen(Screen):
         for app in self.catalog.values():
             if app.category in CORE_CATEGORIES:
                 self.app.state_store.add_app(app.id)
-                self.auto_dependencies.add(app.id)
+                self.user_selected.add(app.id)
+                for dep_id in app.dependencies:
+                    if dep_id in self.catalog:
+                        self.app.state_store.add_app(dep_id)
+                        self.auto_dependencies.add(dep_id)
         self._update_status_display()
         self._update_all_checkboxes()
 
