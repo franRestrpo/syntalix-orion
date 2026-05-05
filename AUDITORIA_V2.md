@@ -73,10 +73,9 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 ## 5. 🧹 Deuda Técnica y Limpieza (Legacy Proxmox)
 
 ### Hallazgos
-- [ ] **Código Muerto (Dead Code) en `main.py`:**
-  - **Problema:** El script de arranque todavía ofrece la opción "2) REMOTE - Proxmox VE" y contiene la función `run_remote_mode`, a pesar de que el archivo `main_proxmox.py` ha sido eliminado o movido.
-  - **Riesgo:** Confusión del usuario y errores de importación en tiempo de ejecución (`ImportError`) si se selecciona dicha opción.
-  - **Recomendación:** Eliminar las referencias a Proxmox en `main.py` o moverlas a una rama de desarrollo/módulo experimental si no son parte de la V2 actual orientada a Docker Swarm.
+- [x] **Código Muerto (Dead Code) en `main.py`:**
+  - **Estado:** ✅ Solucionado. Se eliminaron las referencias a Proxmox y la función `run_remote_mode`.
+  - **Mejora:** La interfaz ahora es coherente con las capacidades reales del sistema, evitando errores de importación.
 - [ ] **Importaciones Condicionales Frágiles:**
   - **Ubicación:** `main.py` (dentro de `run_remote_mode`).
   - **Problema:** Intento de importación local de `SyntalixApp` que fallará inevitablemente en el estado actual.
