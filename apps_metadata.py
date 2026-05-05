@@ -452,14 +452,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         }
     },
 
-    # Evolution API (requires MongoDB)
+    # Evolution API (requires MariaDB)
     "evolution_api": {
         "id": "evolution_api",
         "name": "Evolution API",
         "category": "Automation",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["mongodb", "traefik"],
+        "dependencies": ["mariadb", "redis", "traefik"],
         "variables": {
             "EVOLUTION_API_DOMAIN": {
                 "type": "domain",

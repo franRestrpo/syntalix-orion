@@ -13,7 +13,8 @@
       acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
       api_key: "{{ lookup('vars', 'EVOLUTION_API__EV_API_KEY', default='securekey') }}"
       password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='securepass') }}"
-      mongo_pass: "{{ lookup('vars', 'MONGODB__MONGODB_ROOT_PASSWORD', default='securepass') }}"
+      maria_user: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_USERNAME', default='admin') }}"
+      maria_pass: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_PASSWORD', default='securepass') }}"
 
 - name: "Generar archivo .env para evolution_api"
   ansible.builtin.template:
