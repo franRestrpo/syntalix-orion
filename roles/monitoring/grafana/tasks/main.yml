@@ -9,26 +9,21 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "grafana"
-      dominio: "{{ lookup('vars', 'GRAFANA__DOMAIN', default=lookup('vars', 'GRAFANA_DOMAIN', default=GRAFANA__TRAEFIK_DASHBOARD_URL | default('grafana.localhost', true))) }}"
-      usuario_admin: "{{ lookup('vars', 'GRAFANA__ADMIN_EMAIL', default=GRAFANA__TRAEFIK_USER | default('admin', true)) }}"
-      acme_email: "{{ GRAFANA__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=GRAFANA__DB_PASSWORD | default('securepass', true)) }}"
-      chatwoot_db_host: "postgres_pgvector"
-      chatwoot_redis_host: "redis"
+      dominio: "{{ lookup('vars', 'GRAFANA__DOMAIN', default=lookup('vars', 'GRAFANA_DOMAIN', default='grafana.localhost')) }}"
+      usuario_admin: "{{ lookup('vars', 'GRAFANA__USER', default=lookup('vars', 'GRAFANA_USER', default='admin')) }}"
+      acme_email: "{{ lookup('vars', 'GRAFANA__ACME_EMAIL', default='admin@localhost') }}"
 
 - name: "Generar archivo .env para grafana"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/grafana.env.j2"
     dest: "{{ playbook_dir }}/deploy/grafana.env"
   register: config_env
-  ignore_errors: true
 
 - name: "Generar docker-compose para grafana"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/grafana.yml.j2"
     dest: "{{ playbook_dir }}/deploy/grafana_stack.yml"
   register: config_stack
-  ignore_errors: true
 
 - name: "Desplegar Stack grafana"
   ansible.builtin.command:

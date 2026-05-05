@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - "GF_SECURITY_ADMIN_USER={{ GRAFANA_USER }}"
+      - "GF_SECURITY_ADMIN_PASSWORD={{ GRAFANA_PASSWORD }}"
+      - "GF_SECURITY_ADMIN_EMAIL={{ app_actual.usuario_admin }}"
+      - "GF_SERVER_ROOT_URL=https://{{ app_actual.dominio }}"
+      - "GF_SERVER_SERVE_FROM_SUB_PATH=false"
+      - "GF_ALERTING_ENABLED=true"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+      - "GF_USERS_ALLOW_GUEST=false"
+      - "GF_AUTH_BASIC_ENABLED=true"
+      - "GF_AUTH_ANONYMOUS_ENABLED=false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.grafana.rule=Host(`{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.grafana.entrypoints=websecure"
+        - "traefik.http.routers.grafana.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+        - "traefik.http.middlewares.grafana-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+volumes:
+  grafana_data:
+    name: grafana_data
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
+    external: true
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}

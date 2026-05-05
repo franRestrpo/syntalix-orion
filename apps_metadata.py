@@ -261,7 +261,25 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": [],
-        "variables": {}
+        "variables": {
+            "PROMETHEUS_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Prometheus",
+                "required": True,
+                "auto_generate": False
+            },
+            "PROMETHEUS_USER": {
+                "type": "string",
+                "description": "Admin user for Prometheus",
+                "default": "admin"
+            },
+            "PROMETHEUS_PASSWORD": {
+                "type": "secret",
+                "description": "Admin password for Prometheus",
+                "auto_generate": True,
+                "length": 16
+            }
+        }
     },
     "grafana": {
         "id": "grafana",
@@ -270,7 +288,25 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": ["prometheus"],
-        "variables": {}
+        "variables": {
+            "GRAFANA_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Grafana",
+                "required": True,
+                "auto_generate": False
+            },
+            "GRAFANA_USER": {
+                "type": "string",
+                "description": "Admin user for Grafana",
+                "default": "admin"
+            },
+            "GRAFANA_PASSWORD": {
+                "type": "secret",
+                "description": "Admin password for Grafana",
+                "auto_generate": True,
+                "length": 16
+            }
+        }
     },
     "loki": {
         "id": "loki",
