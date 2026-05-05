@@ -164,7 +164,7 @@ class TestCategoryOrder:
         from pathlib import Path
 
         selection_file = Path(__file__).parent.parent / "ui" / "screens" / "selection.py"
-        content = selection_file.read_text()
+        content = selection_file.read_text(encoding='utf-8')
 
         assert "CATEGORY_ORDER" in content
         assert '"Core"' in content or "'Core'" in content

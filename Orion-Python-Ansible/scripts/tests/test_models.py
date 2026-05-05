@@ -13,12 +13,8 @@ Validaciones auditadas:
 """
 
 import pytest
-import sys
 from pathlib import Path
 from pydantic import ValidationError
-
-# Agregar el directorio padre al path para imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.models import (
     AppVariable,

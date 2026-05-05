@@ -1,10 +1,7 @@
 """Tests para el módulo de preflight (verificaciones del sistema)."""
 
 import pytest
-import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.preflight import (
     get_platform,
