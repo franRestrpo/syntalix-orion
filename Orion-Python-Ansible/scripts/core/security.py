@@ -212,6 +212,50 @@ def verify_password_bcrypt(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 
+def generate_api_key(length: int = 32) -> str:
+    """
+    Genera una clave de API (API Key) criptográficamente segura.
+    
+    Args:
+        length (int): Longitud de la clave generada.
+        
+    Returns:
+        str: Clave API en formato URL-safe.
+    """
+    return secrets.token_urlsafe(length)
+
+
+def validate_domain(domain: str) -> bool:
+    """
+    Valida si una cadena de texto sigue el formato estándar de un dominio (FQDN).
+    
+    Args:
+        domain (str): Cadena a validar.
+        
+    Returns:
+        bool: True si el formato es correcto.
+    """
+    import re
+    # Patrón robusto para validación de dominios
+    pattern = r'^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, domain))
+
+
+def validate_email(email: str) -> bool:
+    """
+    Valida si una cadena de texto tiene un formato de correo electrónico válido.
+    
+    Args:
+        email (str): Cadena a validar.
+        
+    Returns:
+        bool: True si el formato es correcto.
+    """
+    import re
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+
 def sanitize_input(value: str, max_length: int = 255) -> str:
     """
     Limpia y normaliza cadenas de entrada para mitigar riesgos de inyección (Shell/SQL).
