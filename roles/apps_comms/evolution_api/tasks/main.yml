@@ -9,7 +9,7 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "evolution_api"
-      dominio: "{{ lookup('vars', 'EVOLUTION_API__EVOLUTION_API_DOMAIN', default=EVOLUTION_API_DOMAIN | default('evolution.localhost', true)) }}"
+      dominio: "{{ lookup('vars', 'EVOLUTION_API__DOMAIN', default=EVOLUTION_API_DOMAIN | default('evolution.localhost', true)) }}"
       acme_email: "{{ vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost') }}"
       api_key: "{{ vars.get('EVOLUTION_API__EV_API_KEY', 'securekey') }}"
       mongo_pass: "{{ vars.get('MONGODB__MONGODB_ROOT_PASSWORD', 'securepass') }}"

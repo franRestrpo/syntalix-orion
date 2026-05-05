@@ -9,7 +9,7 @@
   ansible.builtin.set_fact:
     app_actual:
       nombre: "authentik"
-      dominio: "{{ AUTHENTIK__AUTHENTIK_DOMAIN | default('auth.localhost', true) }}"
+      dominio: "{{ AUTHENTIK__DOMAIN | default('auth.localhost', true) }}"
       usuario_admin: "{{ lookup('vars', 'AUTHENTIK__ADMIN_EMAIL', default=AUTHENTIK__TRAEFIK_USER | default('admin', true)) }}"
       acme_email: "{{ AUTHENTIK__ACME_EMAIL | default('admin@localhost', true) }}"
       password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=AUTHENTIK__DB_PASSWORD | default('securepass', true)) }}"
