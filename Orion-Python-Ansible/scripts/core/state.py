@@ -17,6 +17,10 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 
+from core.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 STATE_FILE = "state.json"
 
 
@@ -35,7 +39,8 @@ def save_state(state: Dict[str, Any], path: str = STATE_FILE) -> bool:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2, default=str)
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error al guardar el estado en {path}: {e}")
         return False
 
 
@@ -54,7 +59,8 @@ def load_state(path: str = STATE_FILE) -> Dict[str, Any]:
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error al cargar el estado desde {path}: {e}")
         return {}
 
 
@@ -85,8 +91,8 @@ def load_env_file(env_path: str) -> Dict[str, str]:
                         if value in ("None", "null", ""):
                             continue
                         env_vars[key] = value
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Error al leer el archivo .env en {env_path}: {e}")
     return env_vars
 
 
@@ -113,11 +119,12 @@ def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
         # Establecer permisos restrictivos (solo propietario puede leer/escribir)
         try:
             os.chmod(env_path, 0o600)
-        except Exception:
-            pass  # Ignorar en Windows
+        except Exception as e:
+            logger.warning(f"No se pudieron establecer permisos restrictivos en {env_path}: {e}")
         
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error al guardar el archivo .env en {env_path}: {e}")
         return False
 
 

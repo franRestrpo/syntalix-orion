@@ -48,10 +48,10 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
   - **Ubicación:** `core/dependency_graph.py` (función `_load_app_metadata`).
   - **Problema:** Algoritmo de búsqueda de archivos manual con múltiples fallbacks. 
   - **Recomendación:** Centralizar la carga del catálogo en un solo punto (Registry) que sea inyectado en las clases que lo necesiten.
-- [ ] **Manejo de Errores Silencioso:**
-  - **Ubicación:** `core/state.py` (funciones `save_state` y `load_state`).
-  - **Problema:** Bloques `except Exception: return False` o `return {}` que ocultan errores de E/S o permisos.
-  - **Recomendación:** Capturar excepciones específicas y utilizar el sistema de logging para registrar el error antes de retornar un valor por defecto.
+- [x] **Manejo de Errores Silencioso:**
+  - **Ubicación:** `core/state.py`.
+  - **Estado:** ✅ Solucionado. Se integró el sistema de logging para capturar excepciones en la persistencia de estado y archivos .env.
+  - **Mejora:** Facilita el diagnóstico de problemas de permisos o errores de E/S en entornos de producción.
 
 ---
 
@@ -77,9 +77,8 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 - [x] **Código Muerto (Dead Code) en `main.py`:**
   - **Estado:** ✅ Solucionado. Se eliminaron las referencias a Proxmox y la función `run_remote_mode`.
   - **Mejora:** La interfaz ahora es coherente con las capacidades reales del sistema, evitando errores de importación.
-- [ ] **Importaciones Condicionales Frágiles:**
-  - **Ubicación:** `main.py` (dentro de `run_remote_mode`).
-  - **Problema:** Intento de importación local de `SyntalixApp` que fallará inevitablemente en el estado actual.
+- [x] **Importaciones Condicionales Frágiles:**
+  - **Estado:** ✅ Solucionado. Se eliminaron junto con la lógica de Proxmox.
 
 ---
 
