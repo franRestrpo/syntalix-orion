@@ -22,7 +22,7 @@ services:
       - DB_POSTGRESDB_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secretpass', true) }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
+      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__PASSWORD | default('secret', true) }}
       - QUEUE_BULL_REDIS_DB=1
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_AUTH_TOKEN={{ N8N__N8N_RUNNERS_AUTH_TOKEN | default("changeme", true) }}
@@ -67,7 +67,7 @@ services:
       - DB_POSTGRESDB_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secretpass', true) }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
+      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__PASSWORD | default('secret', true) }}
       - QUEUE_BULL_REDIS_DB=1
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_AUTH_TOKEN={{ N8N__N8N_RUNNERS_AUTH_TOKEN | default("changeme", true) }}
@@ -112,7 +112,7 @@ services:
       - DB_POSTGRESDB_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secretpass', true) }}
       - QUEUE_BULL_REDIS_HOST=redis-cache
       - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
+      - QUEUE_BULL_REDIS_PASSWORD={{ REDIS__PASSWORD | default('secret', true) }}
       - QUEUE_BULL_REDIS_DB=1
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_AUTH_TOKEN={{ N8N__N8N_RUNNERS_AUTH_TOKEN | default("changeme", true) }}

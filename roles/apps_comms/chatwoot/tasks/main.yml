@@ -13,7 +13,7 @@
       acme_email: "{{ vars.get('CHATWOOT__ACME_EMAIL', vars.get('TRAEFIK__ACME_EMAIL', 'admin@localhost')) }}"
       password_db: "{{ vars.get('POSTGRES_PGVECTOR__POSTGRES_PASSWORD', 'securepass') }}"
       secret_key_base: "{{ vars.get('CHATWOOT__SECRET_KEY_BASE', 'securekey') }}"
-      redis_pass: "{{ vars.get('REDIS__REDIS_PASSWORD', 'securepass') }}"
+      redis_pass: "{{ vars.get('REDIS__PASSWORD', 'securepass') }}"
 
 - name: "Generar archivo .env para chatwoot"
   ansible.builtin.template:
