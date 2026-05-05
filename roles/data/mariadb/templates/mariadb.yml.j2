@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    command: ["mysqld", "--auth-rmi", "--skip-ssl", "--ssl-cert=/etc/mysql/certs/server.crt", "--ssl-key=/etc/mysql/certs/server.key"]
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.mariadb.rule=Host(`{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.mariadb.entrypoints=websecure"
+        - "traefik.http.routers.mariadb.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.mariadb.loadbalancer.server.port=3306"
+    environment:
+      - "MARIADB_ROOT_PASSWORD={{ app_actual.password_db | default('securepass') }}"
+      - "MARIADB_DATABASE={{ app_actual.database | default('evolutionapi') }}"
+
+volumes:
+  mariadb_data:
+    name: mariadb_data
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
+    external: true
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}
