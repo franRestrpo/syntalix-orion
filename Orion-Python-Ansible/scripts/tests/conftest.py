@@ -1,8 +1,8 @@
 """
 Configuración de Fixtures y Plugins para Pytest en Syntalix-Orion.
 
-Este módulo define la infraestructura compartida necesaria para la ejecución 
-de pruebas unitarias e integración. Proporciona metadatos de ejemplo, 
+Este módulo define la infraestructura compartida necesaria para la ejecución
+de pruebas unitarias e integración. Proporciona metadatos de ejemplo,
 entornos temporales y mecanismos de limpieza automática.
 
 Fixtures incluidas:
@@ -14,17 +14,14 @@ Fixtures incluidas:
 """
 
 import sys
-import os
 from pathlib import Path
 
 import pytest
 
-# Agregar el directorio scripts al path
 scripts_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(scripts_dir))
-
-# Agregar el directorio raíz del proyecto
 project_root = scripts_dir.parent
+
+sys.path.insert(0, str(scripts_dir))
 sys.path.insert(0, str(project_root))
 
 
@@ -82,7 +79,6 @@ DOMAIN=example.com
 def reset_logging():
     """Reset logging antes de cada test."""
     import logging
-    # Limpiar handlers de los loggers
     for logger_name in list(logging.Logger.manager.loggerDict.keys()):
         logger = logging.getLogger(logger_name)
         logger.handlers = []
@@ -95,11 +91,10 @@ def security_config():
     """Fixture con configuración de seguridad."""
     from core.security import SecurityConfig
     config = SecurityConfig()
-    config._initialized = False  # Reset para tests
+    config._initialized = False
     return config
 
 
-# Configuración de pytest
 def pytest_configure(config):
     """Configuración global de pytest."""
     config.addinivalue_line(
@@ -116,10 +111,8 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(config, items):
     """Modificar items de test automáticamente."""
     for item in items:
-        # Añadir marker de integración si el test requiere network
         if "network" in item.name or "http" in item.name.lower():
             item.add_marker(pytest.mark.integration)
-        
-        # Marker de seguridad para tests de security
+
         if "security" in str(item.fspath):
             item.add_marker(pytest.mark.security)

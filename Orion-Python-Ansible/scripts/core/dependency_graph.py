@@ -1,11 +1,17 @@
 """
-Módulo del Grafo de Dependencias para el Orquestador Syntalix-Orion.
+Motor de Resolución de Dependencias para el Ecosistema Syntalix-Orion.
 
-Este módulo se encarga de gestionar la complejidad de las relaciones entre aplicaciones:
-- Resolver el orden de ejecución basado en las dependencias transitivas.
-- Detectar ciclos de dependencias que podrían causar fallos infinitos.
-- Calcular el consumo total de memoria RAM proyectado para un despliegue.
-- Generar dinámicamente variables de entorno y secretos criptográficos.
+Este módulo constituye el núcleo de inteligencia del orquestador, responsable de 
+gestionar las interrelaciones complejas entre aplicaciones. Su objetivo es 
+garantizar que cualquier despliegue sea técnicamente viable, ordenado y 
+optimizado en términos de recursos.
+
+Responsabilidades:
+    - Resolución Topológica: Determina el orden exacto de despliegue (DFS).
+    - Análisis de Ciclos: Previene bloqueos por dependencias circulares.
+    - Proyección de Recursos: Calcula el consumo teórico de memoria RAM.
+    - Gestión de Secretos: Orquesta la generación de credenciales seguras para todo el plan.
+    - Validación de Integridad: Asegura que todas las dependencias declaradas existan.
 """
 
 import os
@@ -14,7 +20,8 @@ from typing import Dict, List, Set, Optional, Any
 
 # Imports de módulos internos
 from core.logging_config import get_logger
-from core.security import generate_secure_password
+from core.security import generate_secure_password, generate_and_transform_secret
+from utils import map_app_variable
 
 # Logger
 logger = get_logger(__name__)
@@ -79,19 +86,20 @@ def _load_app_metadata() -> Dict[str, Dict[str, Any]]:
 
 class DependencyGraph:
     """
-    Clase para la construcción y análisis del grafo de dependencias.
+    Abstracción de Grafo para el Análisis de Despliegues.
     
-    Proporciona los algoritmos necesarios para transformar una selección de 
-    aplicaciones en un plan de despliegue ordenado, seguro y validado.
+    Proporciona los algoritmos y la lógica de negocio necesarios para transformar 
+    una selección arbitraria de aplicaciones en un plan de ejecución determinista, 
+    seguro y optimizado.
     """
 
     def __init__(self, catalog: Optional[Dict[str, Dict[str, Any]]] = None) -> None:
         """
-        Inicializa una nueva instancia del grafo de dependencias.
+        Inicializa una nueva instancia del motor de dependencias.
         
         Args:
             catalog (Optional[Dict[str, Dict[str, Any]]]): Catálogo de aplicaciones. 
-                Si es None, se cargará automáticamente utilizando la función _load_app_metadata.
+                Si se omite, se realizará una carga automática desde la fuente de verdad.
         """
         if catalog is not None:
             self.catalog: Dict[str, Dict[str, Any]] = catalog
@@ -102,33 +110,33 @@ class DependencyGraph:
 
     def get_metadata(self, app_id: str) -> Optional[Dict[str, Any]]:
         """
-        Obtiene los metadatos de una aplicación.
+        Recupera la ficha técnica (metadatos) de una aplicación específica.
         
         Args:
-            app_id: ID de la aplicación
+            app_id (str): Identificador único de la aplicación en el catálogo.
             
         Returns:
-            Metadatos de la app o None si no existe
+            Optional[Dict[str, Any]]: Metadatos de la aplicación o None si no existe.
         """
         return self.catalog.get(app_id)
 
     def resolve_dependencies(self, app_id: str) -> List[str]:
         """
-        Resuelve recursivamente todas las dependencias transitivas de una aplicación.
+        Resuelve de forma recursiva la jerarquía completa de dependencias de una aplicación.
         
-        Utiliza un algoritmo de búsqueda en profundidad (DFS) para determinar el 
-        orden topológico correcto de instalación.
+        Aplica un algoritmo de búsqueda en profundidad (DFS) para obtener el orden 
+        topológico correcto, garantizando que los servicios base se desplieguen 
+        antes que sus consumidores.
 
         Args:
-            app_id (str): Identificador único de la aplicación raíz para el plan.
+            app_id (str): ID de la aplicación raíz para iniciar la resolución.
             
         Returns:
-            List[str]: Lista ordenada de IDs de aplicaciones donde cada aplicación 
-                aparece después de todas sus dependencias.
+            List[str]: Secuencia ordenada de IDs de aplicaciones para el despliegue.
             
         Raises:
-            KeyError: Si el app_id o alguna de sus dependencias no existe en el catálogo.
-            ValueError: Si se detecta un ciclo de dependencias (A -> B -> A).
+            KeyError: Si se referencia una aplicación inexistente en la cadena.
+            ValueError: Si se identifica una recursión infinita (dependencia circular).
         """
         if app_id not in self.catalog:
             logger.error("App desconocida", extra={"app_id": app_id})
@@ -174,13 +182,13 @@ class DependencyGraph:
 
     def total_ram_for_plan(self, app_id: str) -> int:
         """
-        Calcula la RAM total necesaria para el plan de despliegue.
+        Calcula la demanda total de memoria RAM para un plan de despliegue dado.
         
         Args:
-            app_id: ID de la aplicación
+            app_id (str): ID de la aplicación principal.
             
         Returns:
-            RAM total en MB
+            int: Consumo total proyectado de RAM expresado en Megabytes (MB).
         """
         plan = self.resolve_dependencies(app_id)
         total = 0
@@ -200,40 +208,31 @@ class DependencyGraph:
 
     def _generate_secret_value(self, var_def: Dict[str, Any]) -> str:
         """
-        Genera un valor secreto seguro.
+        Delega la generación de valores secretos al módulo de seguridad.
         
         Args:
-            var_def: Definición de la variable
+            var_def (Dict[str, Any]): Definición técnica de la variable.
             
         Returns:
-            Valor generado (o hasheado si se especifica transform)
+            str: Valor secreto generado y procesado.
         """
-        length = int(var_def.get("length", 32))
-        
-        # Generar token seguro
-        value = generate_secure_password(length=length)
-        
-        # Aplicar transformación si se especifica
-        transform = var_def.get("transform")
-        if transform == "bcrypt":
-            try:
-                from core.security import hash_password_bcrypt
-                value = hash_password_bcrypt(value)
-                logger.debug("Secret transformado con bcrypt")
-            except ImportError:
-                logger.warning("bcrypt no disponible, usando token plano")
-        
-        return value
+        return generate_and_transform_secret(
+            length=int(var_def.get("length", 32)),
+            transform=var_def.get("transform")
+        )
 
     def generate_vars_for_plan(self, app_id: str) -> Dict[str, Any]:
         """
-        Genera variables de entorno para el plan de despliegue.
+        Genera el conjunto de variables de entorno necesarias para la ejecución del plan.
         
+        Automatiza la creación de secretos y la asignación de valores por defecto para 
+        toda la pila tecnológica requerida por la aplicación principal.
+
         Args:
-            app_id: ID de la aplicación
+            app_id (str): ID de la aplicación principal.
             
         Returns:
-            Diccionario de variables en formato APPID__VARNAME: value
+            Dict[str, Any]: Diccionario de variables mapeadas como APPID__VARNAME.
         """
         plan = self.resolve_dependencies(app_id)
         vars_out: Dict[str, Any] = {}
@@ -243,12 +242,7 @@ class DependencyGraph:
             vars_def = meta.get("variables", {}) or {}
             
             for var_name, var_def in vars_def.items():
-                # Generar nombre de variable con prefijo de app (evitando doble prefijo)
-                clean_var_name = var_name.upper()
-                app_prefix = aid.upper() + "_"
-                if clean_var_name.startswith(app_prefix):
-                    clean_var_name = clean_var_name[len(app_prefix):]
-                key = f"{aid.upper()}__{clean_var_name}"
+                key = map_app_variable(aid, var_name)
                 
                 if var_def.get("type") == "secret":
                     # Generar secreto automáticamente
@@ -272,16 +266,16 @@ class DependencyGraph:
 
     def plan_with_vars(self, app_id: str) -> Dict[str, Any]:
         """
-        Genera un plan completo con dependencias, RAM y variables.
+        Orquesta la creación de un plan de despliegue integral (E2E).
+        
+        Consolida la resolución de dependencias, el cálculo de recursos y la 
+        generación de variables en una única estructura de datos atómica.
         
         Args:
-            app_id: ID de la aplicación
+            app_id (str): ID de la aplicación solicitada.
             
         Returns:
-            Diccionario con:
-            - plan: Lista ordenada de apps
-            - ram_mb_total: RAM total requerida
-            - vars: Variables generadas
+            Dict[str, Any]: Estructura que incluye el orden de despliegue, RAM y variables.
         """
         logger.debug("Generando plan completo", extra={"app_id": app_id})
         
@@ -305,14 +299,17 @@ class DependencyGraph:
 
     def validate_plan(self, app_id: str, max_ram_mb: int = None) -> Dict[str, Any]:
         """
-        Valida un plan de despliegue.
+        Realiza una auditoría técnica de un plan de despliegue potencial.
+        
+        Verifica la viabilidad del plan contra restricciones de recursos del sistema 
+        y valida la coherencia de las categorías de aplicaciones seleccionadas.
         
         Args:
-            app_id: ID de la aplicación
-            max_ram_mb: RAM máxima disponible (opcional)
+            app_id (str): ID de la aplicación a validar.
+            max_ram_mb (int, optional): Límite superior de RAM disponible en el host.
             
         Returns:
-            Diccionario con validaciones y advertencias
+            Dict[str, Any]: Resultados de la validación, incluyendo advertencias y errores.
         """
         warnings = []
         errors = []
@@ -359,28 +356,24 @@ class DependencyGraph:
 
     def plan_with_vars_multi(self, app_ids: List[str], existing_vars: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
-        Genera un plan completo para múltiples aplicaciones seleccionadas.
+        Genera un plan de despliegue unificado para múltiples aplicaciones de primer nivel.
 
-        Este método:
-        1. Calcula el grafo de dependencias unificado para todas las apps
-        2. Genera variables seguras para todo el plan (reutilizando existing_vars si existen)
-        3. Calcula la RAM total
+        Este método avanzado:
+        1. Resuelve el grafo de dependencias conjunto evitando duplicidades.
+        2. Preserva variables existentes (stateful) para asegurar la idempotencia.
+        3. Genera dinámicamente nuevos secretos solo cuando es estrictamente necesario.
+        4. Agrupa las aplicaciones en 'seleccionadas' y 'dependencias automáticas'.
 
         Args:
-            app_ids: Lista de IDs de aplicaciones seleccionadas por el usuario
-            existing_vars: Diccionario opcional de variables pre-existentes (ej. desde un .env)
+            app_ids (List[str]): Lista de aplicaciones elegidas por el usuario.
+            existing_vars (Optional[Dict[str, str]]): Diccionario de variables de estado previas.
 
         Returns:
-            Diccionario con:
-            - plan: Lista ordenada de apps (incluye dependencias transitivas)
-            - ram_mb_total: RAM total requerida
-            - vars: Variables generadas para todas las apps
-            - selected_apps: Lista de apps originalmente seleccionadas
-            - dependencies: Lista de dependencias auto-añadidas
+            Dict[str, Any]: Plan consolidado con metadatos de recursos y variables seguras.
 
         Raises:
-            KeyError: Si alguna app o dependencia no existe
-            ValueError: Si hay dependencias circulares
+            KeyError: Si se detecta una inconsistencia en el catálogo de metadatos.
+            ValueError: Si existe una circularidad técnica en el grafo conjunto.
         """
         if not app_ids:
             logger.warning("plan_with_vars_multi llamado con lista vacía")
@@ -446,11 +439,7 @@ class DependencyGraph:
             vars_def = meta.get("variables", {}) or {}
 
             for var_name, var_def in vars_def.items():
-                clean_var_name = var_name.upper()
-                app_prefix = aid.upper() + "_"
-                if clean_var_name.startswith(app_prefix):
-                    clean_var_name = clean_var_name[len(app_prefix):]
-                key = f"{aid.upper()}__{clean_var_name}"
+                key = map_app_variable(aid, var_name)
 
                 if var_def.get("type") == "secret":
                     value = self._generate_secret_value(var_def)
@@ -476,11 +465,7 @@ class DependencyGraph:
             vars_def = meta.get("variables", {}) or {}
 
             for var_name, var_def in vars_def.items():
-                clean_var_name = var_name.upper()
-                app_prefix = aid.upper() + "_"
-                if clean_var_name.startswith(app_prefix):
-                    clean_var_name = clean_var_name[len(app_prefix):]
-                key = f"{aid.upper()}__{clean_var_name}"
+                key = map_app_variable(aid, var_name)
                 
                 # Preservar variable si ya existe y tiene un valor válido
                 if key in existing_vars and existing_vars[key]:

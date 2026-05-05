@@ -1,10 +1,7 @@
 """Tests para el módulo de estado (state.py)."""
 
 import pytest
-import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.state import save_state, load_state, save_env_file, load_env_file
 

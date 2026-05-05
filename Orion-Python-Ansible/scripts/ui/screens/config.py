@@ -1,3 +1,11 @@
+"""
+Pantalla de Configuración de Variables - Syntalix-Orion.
+
+Maneja la recolección de parámetros requeridos por las aplicaciones seleccionadas, 
+tales como dominios, correos electrónicos y secretos. Implementa lógica de 
+validación en tiempo de entrada para asegurar la coherencia de los datos.
+"""
+
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -20,6 +28,13 @@ from ui.managers.state_store import DeploymentPlan
 from ui.components import StatusIndicator
 
 class ConfigScreen(Screen):
+    """
+    Gestor de Formulario de Configuración Dinámica.
+    
+    Genera automáticamente campos de entrada basados en los metadatos de las 
+    aplicaciones del plan. Realiza validaciones de formato (dominios, email) 
+    antes de permitir el paso a la fase de despliegue.
+    """
     CSS = """
     Screen { background: #0D1117; }
     #config-container { height: 100%; }

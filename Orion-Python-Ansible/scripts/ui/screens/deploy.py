@@ -1,3 +1,11 @@
+"""
+Pantalla de Ejecución de Despliegue - Syntalix-Orion.
+
+Orquesta la fase final del proceso, comunicándose con el motor de Ansible para 
+aplicar la configuración en el clúster. Proporciona retroalimentación en 
+tiempo real a través de un log enriquecido y gestiona la persistencia del estado.
+"""
+
 import sys
 import os
 import asyncio
@@ -17,12 +25,26 @@ logger = get_logger(__name__)
 from textual import work
 
 class DeployScreen(Screen):
+    """
+    Monitor de Ejecución y Orquestación.
+    
+    Responsable de:
+    1. Persistir las variables finales en el archivo de entorno seguro.
+    2. Lanzar el proceso de Ansible en un hilo dedicado.
+    3. Capturar y visualizar los eventos de la ejecución para el usuario.
+    """
     CSS = """
     Screen { background: #0D1117; }
     #deploy-layout { height: 100%; padding: 1; }
     #deploy-title { text-style: bold; color: #00D9FF; margin-bottom: 1; }
     #deploy-status { color: #8B949E; margin-bottom: 1; }
-    #ansible-log { height: 1fr; border: solid #00D9FF; margin: 1 0; background: #161B22; }
+    #ansible-log {
+        height: 100%;
+        border: solid #00D9FF;
+        margin: 1 0;
+        background: #161B22;
+        overflow-y: auto;
+    }
     #button-container { height: auto; align: center middle; margin-top: 1; }
     .log-success { color: #10B981; }
     .log-error { color: #EF4444; }
@@ -88,16 +110,16 @@ class DeployScreen(Screen):
             if event.get("type") == "done":
                 success = event.get("success", False)
                 final_msg = "[OK] Despliegue Exitoso" if success else "[ERROR] Despliegue Fallido"
-                log_class = "log-success" if success else "log-error"
-                self.call_from_thread(log_widget.write, f"\n{final_msg}")
+                style = "log-success" if success else "log-error"
+                self.call_from_thread(log_widget.write, f"\n{final_msg}", style=style)
                 self.call_from_thread(self._enable_quit)
             else:
-                log_class = "log-info"
-                if "[ERROR]" in msg:
-                    log_class = "log-error"
-                elif "[WARNING]" in msg or "[WARN]" in msg:
-                    log_class = "log-warning"
-                self.call_from_thread(log_widget.write, msg)
+                style = "log-info"
+                if "[ERROR]" in msg or "[FATAL]" in msg:
+                    style = "log-error"
+                elif "[WARNING]" in msg or "[WARN]" in msg or "WARNING" in msg:
+                    style = "log-warning"
+                self.call_from_thread(log_widget.write, msg, style=style)
 
         runner = RealAnsibleRunner(on_event=on_event, debug=True)
         loop = asyncio.new_event_loop()

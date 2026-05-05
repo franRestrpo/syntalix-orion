@@ -233,6 +233,30 @@ def save_env_file(env_path: Path, variables: dict) -> bool:
     return core_save_env(str(env_path), variables)
 
 
+def map_app_variable(app_id: str, var_name: str) -> str:
+    """
+    Normaliza el nombre de una variable para su uso en Ansible/Docker.
+    
+    Transforma un nombre de variable al formato estandarizado APPID__VARIABLE, 
+    asegurando que no haya duplicidad de prefijos y que sea todo en mayúsculas.
+
+    Args:
+        app_id (str): Identificador de la aplicación.
+        var_name (str): Nombre original de la variable.
+        
+    Returns:
+        str: Nombre de la variable mapeado (ej: TRAEFIK__DASHBOARD_URL).
+    """
+    app_prefix = app_id.upper() + "_"
+    clean_var_name = var_name.upper()
+    
+    # Evitar doble prefijo si la variable ya empieza por el ID de la app
+    if clean_var_name.startswith(app_prefix):
+        clean_var_name = clean_var_name[len(app_prefix):]
+        
+    return f"{app_id.upper()}__{clean_var_name}"
+
+
 # Re-exportar desde módulos core (compatibilidad)
 __all__ = [
     "cmd_exists",
@@ -253,4 +277,5 @@ __all__ = [
     "run_preflight_checks",
     "save_state",
     "load_state",
+    "map_app_variable",
 ]

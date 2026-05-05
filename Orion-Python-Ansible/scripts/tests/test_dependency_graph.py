@@ -12,11 +12,7 @@ Funcionalidades auditadas:
 """
 
 import pytest
-import sys
 from pathlib import Path
-
-# Agregar el directorio padre al path para imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.dependency_graph import DependencyGraph
 

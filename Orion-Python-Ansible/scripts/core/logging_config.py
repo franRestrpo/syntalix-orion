@@ -32,10 +32,11 @@ BACKUP_COUNT = 5
 
 class JSONFormatter(logging.Formatter):
     """
-    Formateador para la generación de logs en formato JSON estructurado.
+    Formateador para la Generación de Registros en Formato Estructurado (JSON).
     
-    Ideal para su uso en entornos de producción donde los logs son consumidos 
-    por sistemas externos como ELK Stack, Loki o CloudWatch.
+    Optimizado para la ingesta de datos por parte de sistemas de agregación de logs 
+    (ej: Grafana Loki, ELK Stack). Garantiza que cada entrada sea un objeto 
+    JSON válido con metadatos técnicos completos.
     """
     
     def format(self, record: logging.LogRecord) -> str:
@@ -61,15 +62,21 @@ class JSONFormatter(logging.Formatter):
 
 
 class StructuredFormatter(logging.Formatter):
-    """Formateador legible con información estructurada."""
+    """
+    Formateador de Alta Legibilidad para Terminales Interactivas.
     
-    # Colores para terminal
+    Proporciona una salida visualmente organizada con soporte para códigos de 
+    colores ANSI, facilitando la identificación inmediata de niveles críticos 
+    durante la operación manual del sistema.
+    """
+    
+    # Paleta de colores ANSI
     COLORS = {
         'DEBUG': '\033[36m',      # Cyan
-        'INFO': '\033[92m',       # Green
-        'WARNING': '\033[93m',    # Yellow
-        'ERROR': '\033[91m',      # Red
-        'CRITICAL': '\033[1;91m', # Bold Red
+        'INFO': '\033[92m',       # Verde
+        'WARNING': '\033[93m',    # Amarillo
+        'ERROR': '\033[91m',      # Rojo
+        'CRITICAL': '\033[1;91m', # Rojo Negrita
         'RESET': '\033[0m',
     }
     
@@ -117,11 +124,11 @@ class StructuredFormatter(logging.Formatter):
 
 class OrionLogger:
     """
-    Motor de gestión de registros (Logger) para Syntalix-Orion.
+    Factoría de Gestión de Registros (Logging Engine).
     
-    Esta clase implementa el patrón factoría para proporcionar instancias de 
-    logging pre-configuradas con handlers de archivo, consola y formateadores 
-    según la configuración global definida.
+    Implementa un modelo de configuración centralizada que orquestra múltiples 
+    manejadores (handlers) de salida. Garantiza la persistencia de eventos en 
+    disco y su visualización en tiempo real.
     """
     
     _instances: Dict[str, logging.Logger] = {}
@@ -139,15 +146,15 @@ class OrionLogger:
         use_colors: bool = True,
     ) -> None:
         """
-        Configura el sistema de logging global.
+        Establece la configuración global para el subsistema de logging.
         
         Args:
-            log_level: Nivel de logging (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-            log_dir: Directorio para archivos de log
-            max_size: Tamaño máximo de cada archivo de log
-            backup_count: Número de backups a mantener
-            json_format: Usar formato JSON en lugar de texto legible
-            use_colors: Usar colores en la salida de terminal
+            log_level (str): Nivel de severidad mínimo para capturar.
+            log_dir (Path, optional): Directorio raíz para archivos físicos.
+            max_size (int): Límite de bytes antes de realizar rotación de archivo.
+            backup_count (int): Cantidad de archivos históricos a conservar.
+            json_format (bool): Habilita la salida estructurada para ingesta de datos.
+            use_colors (bool): Activa la paleta ANSI en la salida de consola.
         """
         cls._config = {
             "log_level": getattr(logging, log_level.upper(), logging.INFO),
@@ -158,7 +165,7 @@ class OrionLogger:
             "use_colors": use_colors,
         }
         
-        # Crear directorio de logs si existe
+        # Crear directorio de logs si no existe
         if cls._config["log_dir"]:
             try:
                 cls._config["log_dir"].mkdir(parents=True, exist_ok=True)
@@ -171,15 +178,15 @@ class OrionLogger:
         root_logger = logging.getLogger()
         root_logger.setLevel(cls._config["log_level"])
         
-        # Limpiar handlers previos si los hay
+        # Limpiar handlers previos para evitar duplicidad de registros
         root_logger.handlers = []
         
-        # 1. Handler de Consola
+        # 1. Manejador de Consola (Tiempo Real)
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(StructuredFormatter(use_colors=cls._config["use_colors"]))
         root_logger.addHandler(console_handler)
         
-        # 2. Handler de Archivo (Concentrador de Logs)
+        # 2. Manejador de Archivo (Persistencia)
         if cls._config["log_dir"]:
             log_file_path = cls._config["log_dir"] / "orion.log"
             try:
@@ -197,27 +204,26 @@ class OrionLogger:
                     
                 root_logger.addHandler(file_handler)
             except Exception as e:
-                print(f"WARNING: No se pudo configurar el archivo de log central ({log_file_path}): {e}", file=sys.stderr)
+                print(f"WARNING: No se pudo configurar la persistencia de logs en ({log_file_path}): {e}", file=sys.stderr)
     
     @classmethod
     def get_logger(cls, name: str) -> logging.Logger:
         """
-        Obtiene un logger configurado. Utiliza el logger raíz como concentrador.
+        Recupera una instancia de logger configurada por nombre.
         
         Args:
-            name: Nombre del logger (generalmente __name__)
+            name (str): Nombre único del logger (generalmente __name__).
             
         Returns:
-            Logger configurado
+            logging.Logger: Instancia lista para emitir registros.
         """
         if not cls._initialized:
             try:
                 cls.configure()
             except Exception as e:
                 import sys
-                print(f"WARNING: Error configurando logger central: {e}", file=sys.stderr)
+                print(f"WARNING: Error en la inicialización tardía del logger: {e}", file=sys.stderr)
                 
-        # Al retornar un logger con este nombre, heredará los handlers del root logger
         return logging.getLogger(name)
 
     @classmethod
@@ -228,15 +234,15 @@ class OrionLogger:
         level: int = logging.DEBUG,
     ) -> logging.FileHandler:
         """
-        Añade un handler de archivo adicional a un logger.
+        Vincula un manejador de archivo adicional a un logger existente.
         
         Args:
-            logger: Logger al que añadir el handler
-            filename: Nombre del archivo de log
-            level: Nivel mínimo de log
+            logger (logging.Logger): Instancia a la que se le añade la persistencia.
+            filename (str): Nombre del archivo de log secundario.
+            level (int): Nivel de filtrado para este manejador específico.
             
         Returns:
-            Handler añadido
+            logging.FileHandler: El manejador creado y vinculado.
         """
         handler = logging.FileHandler(
             cls._config.get("log_dir", LOG_DIR) / filename,

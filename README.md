@@ -5,9 +5,9 @@
 [![Ansible](https://img.shields.io/badge/Automation-Ansible-red.svg)](https://www.ansible.com/)
 [![Python](https://img.shields.io/badge/Language-Python-yellow.svg)](https://www.python.org/)
 
-## Infraestructura como Código para despliegue automatizado y seguro de Docker Swarm con Ansible
+## Plataforma de Infraestructura como Código (IaC) para el Despliegue Automatizado y Seguro de Clústeres Docker Swarm con Ansible.
 
-**Syntalix-Orion** es una plataforma de **Infraestructura como Código (IaC)** diseñada para transformar un servidor Linux limpio en un entorno productivo basado en contenedores, utilizando automatización declarativa, interfaces de terminal guiadas (TUI) y principios de seguridad por diseño.
+**Syntalix-Orion** es una solución avanzada de **Infraestructura como Código** diseñada para transformar servidores Linux "bare-metal" o virtualizados en entornos productivos de alta disponibilidad. Utiliza automatización declarativa, interfaces de terminal (TUI) interactivas y un modelo de seguridad por capas para garantizar despliegues reproducibles y soberanía digital.
 
 Permite instalar, configurar y desplegar automáticamente:
 

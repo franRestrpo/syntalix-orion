@@ -1,3 +1,11 @@
+"""
+Pantalla de Selección de Catálogo - Syntalix-Orion.
+
+Esta interfaz permite al usuario navegar por las categorías de aplicaciones y 
+seleccionar los componentes que desea desplegar. Gestiona en tiempo real el 
+cálculo de dependencias transitivas y la proyección de consumo de RAM.
+"""
+
 import sys
 from pathlib import Path
 from typing import Dict, List, Set
@@ -41,6 +49,13 @@ def get_app_icon(app_id: str) -> str:
     return APP_ICONS.get(app_id, "📦")
 
 class SelectionScreen(Screen):
+    """
+    Controlador Visual para la Selección de Aplicaciones.
+    
+    Implementa una interfaz dividida en dos paneles:
+    - Izquierdo: Catálogo categorizado con checkboxes de selección.
+    - Derecho: Resumen dinámico del plan, RAM y dependencias auto-añadidas.
+    """
     CSS = """
     Screen { background: #0D1117; }
     #main-container { height: 100%; layout: horizontal; }
@@ -141,7 +156,11 @@ class SelectionScreen(Screen):
         for app in self.catalog.values():
             if app.category in CORE_CATEGORIES:
                 self.app.state_store.add_app(app.id)
-                self.auto_dependencies.add(app.id)
+                self.user_selected.add(app.id)
+                for dep_id in app.dependencies:
+                    if dep_id in self.catalog:
+                        self.app.state_store.add_app(dep_id)
+                        self.auto_dependencies.add(dep_id)
         self._update_status_display()
         self._update_all_checkboxes()
 

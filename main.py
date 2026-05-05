@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 """
-Selector de Arranque (Bootstrap) de Syntalix-Orion.
+Orquestador de Arranque (Bootstrap) - Syntalix-Orion V2.
 
-Este archivo constituye el punto de entrada unificado para todo el ecosistema 
-Syntalix-Orion V2. Su función principal es actuar como orquestador de inicio, 
-permitiendo al usuario seleccionar entre los dos modos principales de operación:
+Punto de entrada unificado para la gestión de infraestructura. Este script 
+actúa como el controlador principal para el inicio de la plataforma.
 
-    1. Modo Local (Docker): Diseñado para el despliegue rápido de la pila de 
-       aplicaciones en un servidor Docker ya existente o en la máquina local.
-       Es el modo recomendado para soberanía digital personal.
+Modos de Operación:
+    - Modo Local (Docker): Optimizado para despliegues rápidos y soberanía 
+      digital en servidores Linux estándar o máquinas locales.
 
-    2. Modo Remoto (Proxmox): Orientado a entornos de infraestructura como 
-       código (IaC) avanzados, permitiendo la gestión de VMs y contenedores 
-       en nodos Proxmox VE.
-
-El script maneja la inyección de rutas de sistema para los módulos internos y 
-proporciona una interfaz de línea de comandos amigable.
+Características:
+    - Inyección dinámica de dependencias en el sistema de rutas de Python.
+    - Interfaz de línea de comandos (CLI) con soporte para argumentos.
+    - Validación de prerrequisitos de entorno antes de la ejecución.
 """
 
 import sys
@@ -51,32 +48,27 @@ def ask_installation_mode() -> str:
     Presenta una interfaz interactiva para la selección del modo de instalación.
     
     Captura la entrada del usuario y valida que la opción seleccionada sea 
-    legal ('local' o 'remote'). Implementa manejo de interrupciones de teclado 
+    legal ('local'). Implementa manejo de interrupciones de teclado 
     para una salida limpia.
 
     Returns:
-        str: 'local' para despliegue Docker, 'remote' para despliegue Proxmox.
+        str: 'local' para despliegue Docker.
     """
     print("Selecciona el modo de instalación:")
     print()
     print("  1) LOCAL   - Docker local (recomendado)")
     print("             Despliega apps en tu servidor Docker")
     print()
-    print("  2) REMOTE - Proxmox VE (avanzado)")
-    print("             Conecta a un servidor Proxmox remoto")
-    print()
     
     while True:
         try:
-            choice = input("Opción [1-2]: ").strip()
-            if choice in ('1', 'local'):
+            choice = input("Opción [1]: ").strip()
+            if choice in ('1', 'local', ''):
                 return 'local'
-            elif choice in ('2', 'remote'):
-                return 'remote'
             else:
-                print("Por favor, ingresa 1 o 2")
+                print("Por favor, ingresa 1 o pulsa Enter para LOCAL")
         except (EOFError, KeyboardInterrupt):
-            print("\n操作 cancelada.")
+            print("\nOperación cancelada.")
             sys.exit(0)
 
 
@@ -115,42 +107,6 @@ def run_local_mode():
         sys.exit(1)
 
 
-def run_remote_mode():
-    """Ejecuta el modo remoto (Proxmox)."""
-    print()
-    print("[INFO] Iniciando modo REMOTO...")
-    print()
-    print("El modo Proxmox requiere:")
-    print("  - Dirección IP del servidor Proxmox")
-    print("  - Token API de acceso")
-    print("  - Usuario con permisos")
-    print()
-    print("Ejecutando configuración de Proxmox...")
-    print()
-    
-    try:
-        from textual.app import App, Screen, ComposeResult
-        from textual.containers import Vertical
-        from textual.widgets import Button, Input, Static, Header, Footer
-        from rich.text import Text
-        
-        # Importar la app SyntalixApp original
-        from main_proxmox import SyntalixApp
-        
-        # Ejecutar la app de Proxmox
-        app = SyntalixApp()
-        app.title = "SyntalixApp - Proxmox Mode"
-        app.run()
-        
-    except ImportError as e:
-        print(f"[ERROR] No se encontró el módulo Proxmox: {e}")
-        sys.exit(1)
-    
-    except Exception as e:
-        print(f"[ERROR] Error: {e}")
-        sys.exit(1)
-
-
 def main():
     """
     Función principal que orquesta el flujo de arranque del sistema.
@@ -167,14 +123,11 @@ def main():
         arg = sys.argv[1].lower()
         if arg in ('local', '-l', '--local'):
             mode = 'local'
-        elif arg in ('remote', '-r', '--remote', 'proxmox'):
-            mode = 'remote'
         elif arg in ('--help', '-h'):
-            print("Uso: python main.py [local|remote]")
+            print("Uso: python main.py [local]")
             print()
             print("Opciones:")
             print("  local, -l, --local   Modo Docker local (defecto)")
-            print("  remote, -r, --remote Modo Proxmox VE")
             print("  --help, -h           Mostrar esta ayuda")
             sys.exit(0)
     
@@ -182,11 +135,8 @@ def main():
     if mode is None:
         mode = ask_installation_mode()
     
-    # Ejecutar según el modo
-    if mode == 'local':
-        run_local_mode()
-    else:
-        run_remote_mode()
+    # Ejecutar modo local (único soportado en V2)
+    run_local_mode()
 
 
 if __name__ == "__main__":

@@ -1,18 +1,17 @@
 """
-Módulo de Metadatos de Aplicaciones (Fuente de Verdad).
+Fuente de Verdad de Aplicaciones (App Metadata).
 
-Este archivo contiene la definición centralizada de todas las aplicaciones disponibles 
-en el ecosistema Syntalix-Orion V2. Es la única fuente de verdad para el catálogo 
-de aplicaciones, sus dependencias, requerimientos de RAM y variables de configuración.
+Este módulo centraliza la definición técnica de todos los componentes del 
+ecosistema Syntalix-Orion V2. Actúa como el inventario canónico para el 
+catálogo de aplicaciones, sus dependencias críticas, requerimientos de 
+recursos y variables de configuración dinámica.
 
-Estructura del Catálogo:
-    - Core: Infraestructura base (Traefik, CrowdSec, Authentik).
-    - Data: Bases de datos y brokers (Postgres, MariaDB, Redis, RabbitMQ).
-    - AI: Aplicaciones de inteligencia artificial (Dify, Flowise, OpenWebUI).
-    - Automation: Automatización de flujos (n8n, ActivePieces).
-    - Communication: Plataformas de comunicación (Chatwoot, Evolution API).
-    - Management: Gestión empresarial (Odoo).
-    - Monitoring: Observabilidad (Prometheus, Grafana, Loki).
+Estructura de la Infraestructura:
+    - Core: Base operativa (Traefik, CrowdSec, Authentik).
+    - Data: Persistencia y Mensajería (Postgres, MariaDB, Redis, RabbitMQ).
+    - AI/Automation: Inteligencia artificial y flujos de trabajo (Dify, n8n).
+    - Management/Comms: Gestión empresarial y comunicación (Odoo, Chatwoot).
+    - Monitoring: Observabilidad y salud del sistema (Prometheus, Grafana).
 """
 
 from typing import Dict, Any, List, Optional
@@ -86,7 +85,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "category": "Core",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["crowdsec", "traefik"],
+        "dependencies": ["crowdsec", "traefik", "postgres_pgvector"],
         "variables": {
             "AUTHENTIK_DOMAIN": {
                 "type": "domain",
@@ -262,7 +261,25 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": [],
-        "variables": {}
+        "variables": {
+            "PROMETHEUS_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Prometheus",
+                "required": True,
+                "auto_generate": False
+            },
+            "PROMETHEUS_USER": {
+                "type": "string",
+                "description": "Admin user for Prometheus",
+                "default": "admin"
+            },
+            "PROMETHEUS_PASSWORD": {
+                "type": "secret",
+                "description": "Admin password for Prometheus",
+                "auto_generate": True,
+                "length": 16
+            }
+        }
     },
     "grafana": {
         "id": "grafana",
@@ -271,7 +288,25 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "version": "latest",
         "ram_mb": 512,
         "dependencies": ["prometheus"],
-        "variables": {}
+        "variables": {
+            "GRAFANA_DOMAIN": {
+                "type": "domain",
+                "description": "Domain for Grafana",
+                "required": True,
+                "auto_generate": False
+            },
+            "GRAFANA_USER": {
+                "type": "string",
+                "description": "Admin user for Grafana",
+                "default": "admin"
+            },
+            "GRAFANA_PASSWORD": {
+                "type": "secret",
+                "description": "Admin password for Grafana",
+                "auto_generate": True,
+                "length": 16
+            }
+        }
     },
     "loki": {
         "id": "loki",
@@ -363,8 +398,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "N8N_BASIC_AUTH": {
                 "type": "secret",
                 "description": "n8n basic auth password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "auto_generate": True
             },
             "N8N_ENCRYPTION_KEY": {
                 "type": "secret",
@@ -418,14 +452,14 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         }
     },
 
-    # Evolution API (requires MongoDB)
+    # Evolution API (requires MariaDB)
     "evolution_api": {
         "id": "evolution_api",
         "name": "Evolution API",
         "category": "Automation",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["mongodb", "traefik"],
+        "dependencies": ["mariadb", "redis", "traefik"],
         "variables": {
             "EVOLUTION_API_DOMAIN": {
                 "type": "domain",

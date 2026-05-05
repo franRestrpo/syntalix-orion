@@ -18,6 +18,7 @@ import os
 import sys
 import subprocess
 import platform
+import shutil
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -50,7 +51,7 @@ def is_macos() -> bool:
 
 def cmd_exists(cmd: str) -> bool:
     """
-    Verifica si un comando existe en el PATH.
+    Verifica si un comando existe en el PATH utilizando utilidades nativas.
     
     Args:
         cmd: Nombre del comando
@@ -58,21 +59,7 @@ def cmd_exists(cmd: str) -> bool:
     Returns:
         True si el comando existe
     """
-    if is_windows():
-        result = subprocess.run(
-            f"where {cmd}",
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-    else:
-        result = subprocess.run(
-            f"which {cmd}",
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-    return result.returncode == 0
+    return shutil.which(cmd) is not None
 
 
 def require(cmd: str) -> None:

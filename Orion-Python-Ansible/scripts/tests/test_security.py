@@ -63,11 +63,12 @@ class TestGenerateSecurePassword:
     def test_entropy(self):
         """Test que las contraseñas tienen alta entropía."""
         password = generate_secure_password(length=64)
-        import secrets
-        # Comparar con token aleatorio del mismo tamaño
-        random_token = secrets.token_urlsafe(64)
-        # No deberían ser iguales (probabilidad muy baja)
-        assert password != random_token or True  # Esta es una verificación básica
+        # Verificar que la longitud es correcta
+        assert len(password) >= 64
+        # Verificar que contiene solo caracteres válidos de token_urlsafe (A-Z, a-z, 0-9, -, _)
+        import re
+        pattern = r'^[A-Za-z0-9_-]+$'
+        assert re.match(pattern, password), f"Password contains invalid characters: {password}"
 
 
 class TestHashPasswordBcrypt:
