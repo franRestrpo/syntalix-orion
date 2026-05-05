@@ -44,10 +44,11 @@ class SSLContext:
 
 class SecurityConfig:
     """
-    Gestor de configuración de seguridad (Singleton).
+    Gestión Centralizada de la Configuración de Seguridad (Singleton).
     
-    Centraliza la configuración de certificados CA y la lógica de verificación SSL 
-    para todas las conexiones salientes del sistema.
+    Proporciona un punto único de control para la infraestructura de seguridad 
+    del sistema, incluyendo la gestión de bundles de CA para validación SSL y 
+    las políticas de robustez de contraseñas.
     """
     
     DEFAULT_PASSWORD_LENGTH = 32
@@ -56,12 +57,14 @@ class SecurityConfig:
     _instance = None
     
     def __new__(cls):
+        """Implementación del patrón Singleton."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
     
     def __init__(self):
+        """Inicializa los parámetros de seguridad por defecto."""
         if self._initialized:
             return
         self._initialized = True
@@ -69,11 +72,19 @@ class SecurityConfig:
         self._ca_bundle_path: Optional[str] = None
     
     def configure_ca_bundle(self, path: Optional[str] = None) -> None:
-        """Configura la ruta al bundle de CA."""
+        """
+        Configura la ubicación del bundle de certificados de Autoridades de Certificación (CA).
+        
+        Si no se proporciona una ruta, el sistema intentará localizar automáticamente 
+        los bundles estándar en sistemas operativos tipo Unix.
+
+        Args:
+            path (Optional[str]): Ruta absoluta al archivo .crt o .pem del CA bundle.
+        """
         if path and os.path.exists(path):
             self._ca_bundle_path = path
         else:
-            # Intentar rutas comunes
+            # Intentar rutas comunes en Linux
             common_paths = [
                 '/etc/ssl/certs/ca-certificates.crt',
                 '/etc/pki/tls/certs/ca-bundle.crt',
@@ -86,26 +97,26 @@ class SecurityConfig:
     
     def get_ssl_context(self, verify: bool = True) -> ssl.SSLContext:
         """
-        Obtiene un contexto SSL configurado.
+        Genera un contexto SSL (TLS) configurado según las políticas de seguridad.
         
         Args:
-            verify: Si True, verifica certificados SSL
+            verify (bool): Determina si se debe realizar la verificación de certificados.
             
         Returns:
-            ssl.SSLContext configurado
+            ssl.SSLContext: Contexto configurado listo para su uso en sockets o clientes HTTP.
         """
         if verify:
             context = ssl.create_default_context()
             
-            # Añadir CA bundle si está configurado
+            # Inyectar bundle de CA personalizado si existe
             if self._ca_bundle_path:
                 context.load_verify_locations(self._ca_bundle_path)
             else:
-                # Usar los CA del sistema
+                # Fallback a los certificados raíz del sistema
                 context.load_default_certs()
                 
         else:
-            # Contexto sin verificación (solo para desarrollo)
+            # Contexto inseguro (USAR SOLO EN DESARROLLO/TESTING LOCAL)
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
@@ -138,15 +149,18 @@ def generate_secure_password(
     use_bcrypt: bool = False
 ) -> str:
     """
-    Genera una contraseña segura utilizando entropía del sistema operativo.
+    Genera una contraseña de alta entropía apta para entornos productivos.
+    
+    Utiliza el generador de números aleatorios seguro del sistema (os.urandom) 
+    para garantizar que los secretos generados sean resistentes a ataques de fuerza bruta.
     
     Args:
-        length (int): Longitud deseada para la contraseña (mínimo 16).
-        use_bcrypt (bool): Si es True, retorna directamente el hash bcrypt 
-            de la contraseña generada en lugar del texto plano.
+        length (int): Cantidad de caracteres del secreto (mínimo 16).
+        use_bcrypt (bool): Si es True, retorna el hash bcrypt del secreto en lugar 
+            de su valor en texto plano. Recomendado para contraseñas de UI.
             
     Returns:
-        str: Contraseña generada en formato URL-safe o hash bcrypt resultante.
+        str: Secreto generado en formato URL-safe o su representación hasheada.
     """
     if length < SecurityConfig.MIN_PASSWORD_LENGTH:
         length = SecurityConfig.MIN_PASSWORD_LENGTH
@@ -162,16 +176,19 @@ def generate_secure_password(
 
 def hash_password_bcrypt(password: str) -> str:
     """
-    Genera hash bcrypt de una contraseña.
+    Realiza un hasheo irreversible utilizando el algoritmo bcrypt.
+    
+    Este método es el estándar para almacenar credenciales de usuario de forma segura, 
+    añadiendo un 'salt' aleatorio de forma transparente.
     
     Args:
-        password: Contraseña en texto plano
+        password (str): Contraseña en texto plano que se desea proteger.
         
     Returns:
-        Hash bcrypt codificado en UTF-8
+        str: Hash bcrypt resultante codificado en UTF-8.
     """
     if not BCRYPT_AVAILABLE:
-        raise ImportError("bcrypt no está instalado. Instala con: pip install bcrypt")
+        raise ImportError("bcrypt no está instalado. Ejecute: pip install bcrypt")
     
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
@@ -180,93 +197,47 @@ def hash_password_bcrypt(password: str) -> str:
 
 def verify_password_bcrypt(password: str, hashed: str) -> bool:
     """
-    Verifica una contraseña contra su hash bcrypt.
+    Valida si una contraseña en texto plano coincide con un hash bcrypt previo.
     
     Args:
-        password: Contraseña en texto plano
-        hashed: Hash bcrypt a verificar
+        password (str): Credencial proporcionada por el usuario.
+        hashed (str): Hash almacenado en el sistema para la validación.
         
     Returns:
-        True si la contraseña coincide
+        bool: True si la verificación es exitosa.
     """
     if not BCRYPT_AVAILABLE:
-        raise ImportError("bcrypt no está instalado. Instala con: pip install bcrypt")
+        raise ImportError("bcrypt no está instalado. Ejecute: pip install bcrypt")
     
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 
-def generate_api_key(length: int = 32) -> str:
-    """
-    Genera una clave API segura.
-    
-    Args:
-        length: Longitud de la clave
-        
-    Returns:
-        Clave API en formato URL-safe
-    """
-    return secrets.token_urlsafe(length)
-
-
-def validate_domain(domain: str) -> bool:
-    """
-    Valida formato de dominio.
-    
-    Args:
-        domain: Dominio a validar
-        
-    Returns:
-        True si el dominio tiene formato válido
-    """
-    import re
-    
-    # Patrón básico de dominio
-    pattern = r'^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$'
-    return bool(re.match(pattern, domain))
-
-
-def validate_email(email: str) -> bool:
-    """
-    Valida formato de email.
-    
-    Args:
-        email: Email a validar
-        
-    Returns:
-        True si el email tiene formato válido
-    """
-    import re
-    
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(pattern, email))
-
-
 def sanitize_input(value: str, max_length: int = 255) -> str:
     """
-    Limpia y normaliza entradas de texto para prevenir ataques de inyección.
+    Limpia y normaliza cadenas de entrada para mitigar riesgos de inyección (Shell/SQL).
     
-    Elimina caracteres de control de shell y limita la longitud del texto 
-    para evitar desbordamientos o procesamientos maliciosos.
+    Filtra caracteres especiales potencialmente peligrosos y restringe la longitud 
+    del texto para prevenir ataques de denegación de servicio por agotamiento de memoria.
 
     Args:
-        value (str): Cadena de texto a sanitizar.
-        max_length (int): Longitud máxima permitida para la cadena resultante.
+        value (str): Cadena de texto a procesar.
+        max_length (int): Límite superior de caracteres permitidos.
         
     Returns:
-        str: Cadena sanitizada y truncada.
+        str: Cadena sanitizada, libre de operadores de control y espacios innecesarios.
     """
     if not value:
         return ""
     
-    # Eliminar caracteres potencialmente peligrosos
+    # Eliminar operadores de control de shell y caracteres de escape
     dangerous_chars = [';', '&', '|', '`', '$', '(', ')', '<', '>', '\n', '\r']
     result = value
     
     for char in dangerous_chars:
         result = result.replace(char, '')
     
-    # Limitar longitud
     return result[:max_length].strip()
+
 
 
 def mask_secret(value: str, visible_chars: int = 4) -> str:

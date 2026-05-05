@@ -33,6 +33,13 @@ runner_logger.addHandler(fh)
 EventCallback = Callable[[Dict[str, Any]], None]
 
 class RealAnsibleRunner:
+    """
+    Ejecutor Programático de Playbooks de Ansible.
+    
+    Esta clase abstrae la complejidad de interactuar con el binario de Ansible, 
+    gestionando la inyección segura de variables, el control del ciclo de vida 
+    del proceso y la captura de logs en tiempo real.
+    """
     def __init__(self, on_event: Optional[EventCallback] = None, debug: bool = False) -> None:
         self._on_event = on_event or (lambda e: None)
         self._debug = bool(debug)

@@ -1,3 +1,11 @@
+"""
+Interfaz de Usuario de Terminal (TUI) - Núcleo de la Aplicación.
+
+Este módulo define la clase principal OrionTUI, construida sobre el framework 
+Textual. Gestiona el flujo de navegación entre pantallas, el estado global 
+de la selección de aplicaciones y la orquestación del despliegue visual.
+"""
+
 import sys
 from pathlib import Path
 
@@ -20,6 +28,14 @@ from ui.screens.deploy import DeployScreen
 logger = get_logger(__name__)
 
 class OrionTUI(App):
+    """
+    Aplicación Principal de la TUI de Syntalix-Orion.
+    
+    Orquestador visual que guía al usuario a través del proceso de:
+    1. Selección de aplicaciones y módulos de infraestructura.
+    2. Configuración de parámetros y variables de entorno.
+    3. Ejecución y monitoreo en tiempo real del despliegue mediante Ansible.
+    """
     CSS = """
     Screen { background: #0D1117; }
 

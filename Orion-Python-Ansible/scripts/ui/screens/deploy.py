@@ -1,3 +1,11 @@
+"""
+Pantalla de Ejecución de Despliegue - Syntalix-Orion.
+
+Orquesta la fase final del proceso, comunicándose con el motor de Ansible para 
+aplicar la configuración en el clúster. Proporciona retroalimentación en 
+tiempo real a través de un log enriquecido y gestiona la persistencia del estado.
+"""
+
 import sys
 import os
 import asyncio
@@ -17,6 +25,14 @@ logger = get_logger(__name__)
 from textual import work
 
 class DeployScreen(Screen):
+    """
+    Monitor de Ejecución y Orquestación.
+    
+    Responsable de:
+    1. Persistir las variables finales en el archivo de entorno seguro.
+    2. Lanzar el proceso de Ansible en un hilo dedicado.
+    3. Capturar y visualizar los eventos de la ejecución para el usuario.
+    """
     CSS = """
     Screen { background: #0D1117; }
     #deploy-layout { height: 100%; padding: 1; }

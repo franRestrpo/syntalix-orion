@@ -22,14 +22,14 @@ STATE_FILE = "state.json"
 
 def save_state(state: Dict[str, Any], path: str = STATE_FILE) -> bool:
     """
-    Guarda el estado en un archivo JSON.
+    Persiste el estado actual del sistema en un archivo de datos estructurado.
     
     Args:
-        state: Diccionario con el estado a guardar
-        path: Ruta del archivo (por defecto: state.json)
+        state (Dict[str, Any]): Mapa de claves y valores que representan el estado.
+        path (str): Ruta absoluta o relativa al archivo de destino.
         
     Returns:
-        True si se guardó exitosamente
+        bool: True si la persistencia en disco se completó correctamente.
     """
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -41,13 +41,13 @@ def save_state(state: Dict[str, Any], path: str = STATE_FILE) -> bool:
 
 def load_state(path: str = STATE_FILE) -> Dict[str, Any]:
     """
-    Carga el estado desde un archivo JSON.
+    Recupera el estado persistido previamente desde el almacenamiento.
     
     Args:
-        path: Ruta del archivo (por defecto: state.json)
+        path (str): Ruta al archivo de estado JSON.
         
     Returns:
-        Diccionario con el estado, o dict vacío si no existe
+        Dict[str, Any]: El estado recuperado o un diccionario vacío si el archivo no existe.
     """
     if not Path(path).exists():
         return {}
@@ -60,9 +60,16 @@ def load_state(path: str = STATE_FILE) -> Dict[str, Any]:
 
 def load_env_file(env_path: str) -> Dict[str, str]:
     """
-    Lee un archivo .env y devuelve un diccionario de variables.
-    Ignora los valores 'None', 'null' o vacíos que puedan haber quedado
-    cacheados por despliegues fallidos.
+    Analiza un archivo de entorno (.env) y extrae sus variables activas.
+    
+    Implementa un filtro para omitir valores nulos o cacheados que podrían corromper 
+    la lógica de la interfaz de usuario en re-ejecuciones.
+
+    Args:
+        env_path (str): Ruta al archivo de configuración de entorno.
+        
+    Returns:
+        Dict[str, str]: Mapeo de variables detectadas con valores válidos.
     """
     env_vars: Dict[str, str] = {}
     if os.path.exists(env_path):
@@ -85,17 +92,17 @@ def load_env_file(env_path: str) -> Dict[str, str]:
 
 def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
     """
-    Persiste un conjunto de variables en un archivo de formato .env.
+    Exporta variables de configuración a un archivo compatible con el estándar .env.
     
-    Escribe el archivo siguiendo el estándar KEY=VALUE. En sistemas tipo Unix, 
-    aplica automáticamente permisos restrictivos (600) para proteger secretos.
+    Garantiza la seguridad de los datos sensibles en sistemas Unix mediante la 
+    aplicación de permisos restrictivos (chmod 600) inmediatamente tras la escritura.
 
     Args:
-        env_path (str): Ruta completa donde se creará el archivo .env.
-        variables (Dict[str, str]): Diccionario de pares clave-valor a escribir.
+        env_path (str): Ruta de destino para el archivo .env.
+        variables (Dict[str, str]): Conjunto de variables a exportar.
         
     Returns:
-        bool: True si la operación de escritura y ajuste de permisos fue exitosa.
+        bool: True si la exportación y el hardening de permisos fueron exitosos.
     """
     try:
         with open(env_path, 'w', encoding='utf-8') as f:

@@ -1,18 +1,17 @@
 """
-Módulo de Metadatos de Aplicaciones (Fuente de Verdad).
+Fuente de Verdad de Aplicaciones (App Metadata).
 
-Este archivo contiene la definición centralizada de todas las aplicaciones disponibles 
-en el ecosistema Syntalix-Orion V2. Es la única fuente de verdad para el catálogo 
-de aplicaciones, sus dependencias, requerimientos de RAM y variables de configuración.
+Este módulo centraliza la definición técnica de todos los componentes del 
+ecosistema Syntalix-Orion V2. Actúa como el inventario canónico para el 
+catálogo de aplicaciones, sus dependencias críticas, requerimientos de 
+recursos y variables de configuración dinámica.
 
-Estructura del Catálogo:
-    - Core: Infraestructura base (Traefik, CrowdSec, Authentik).
-    - Data: Bases de datos y brokers (Postgres, MariaDB, Redis, RabbitMQ).
-    - AI: Aplicaciones de inteligencia artificial (Dify, Flowise, OpenWebUI).
-    - Automation: Automatización de flujos (n8n, ActivePieces).
-    - Communication: Plataformas de comunicación (Chatwoot, Evolution API).
-    - Management: Gestión empresarial (Odoo).
-    - Monitoring: Observabilidad (Prometheus, Grafana, Loki).
+Estructura de la Infraestructura:
+    - Core: Base operativa (Traefik, CrowdSec, Authentik).
+    - Data: Persistencia y Mensajería (Postgres, MariaDB, Redis, RabbitMQ).
+    - AI/Automation: Inteligencia artificial y flujos de trabajo (Dify, n8n).
+    - Management/Comms: Gestión empresarial y comunicación (Odoo, Chatwoot).
+    - Monitoring: Observabilidad y salud del sistema (Prometheus, Grafana).
 """
 
 from typing import Dict, Any, List, Optional

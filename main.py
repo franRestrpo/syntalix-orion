@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Selector de Arranque (Bootstrap) de Syntalix-Orion.
+Orquestador de Arranque (Bootstrap) - Syntalix-Orion V2.
 
-Este archivo constituye el punto de entrada unificado para todo el ecosistema 
-Syntalix-Orion V2. Su función principal es actuar como orquestador de inicio, 
-permitiendo al usuario seleccionar entre los dos modos principales de operación:
+Punto de entrada unificado para la gestión de infraestructura. Este script 
+actúa como el controlador principal que permite conmutar entre los distintos 
+modos de despliegue soportados por el ecosistema.
 
-    1. Modo Local (Docker): Diseñado para el despliegue rápido de la pila de 
-       aplicaciones en un servidor Docker ya existente o en la máquina local.
-       Es el modo recomendado para soberanía digital personal.
+Modos de Operación:
+    - Modo Local (Docker): Optimizado para despliegues rápidos y soberanía 
+      digital en servidores Linux estándar o máquinas locales.
+    - Modo Proxmox (IaC): Orientado a la gestión avanzada de virtualización 
+      y contenedores LXC en clústeres Proxmox VE.
 
-    2. Modo Remoto (Proxmox): Orientado a entornos de infraestructura como 
-       código (IaC) avanzados, permitiendo la gestión de VMs y contenedores 
-       en nodos Proxmox VE.
-
-El script maneja la inyección de rutas de sistema para los módulos internos y 
-proporciona una interfaz de línea de comandos amigable.
+Características:
+    - Inyección dinámica de dependencias en el sistema de rutas de Python.
+    - Interfaz de línea de comandos (CLI) con soporte para argumentos.
+    - Validación de prerrequisitos de entorno antes de la ejecución.
 """
 
 import sys

@@ -19,7 +19,7 @@ from enum import Enum
 
 
 class AppCategory(str, Enum):
-    """Categorías válidas de aplicaciones."""
+    """Categorías Técnicas de Aplicaciones."""
     CORE = "Core"
     DATA = "Data"
     MONITORING = "Monitoring"
@@ -31,7 +31,7 @@ class AppCategory(str, Enum):
 
 
 class VariableType(str, Enum):
-    """Tipos de variables válidos."""
+    """Tipos de Datos para Variables de Configuración."""
     STRING = "string"
     SECRET = "secret"
     EMAIL = "email"
@@ -41,21 +41,26 @@ class VariableType(str, Enum):
 
 
 class TransformType(str, Enum):
-    """Tipos de transformación válidos."""
+    """Transformaciones Criptográficas Soportadas."""
     BCRYPT = "bcrypt"
     BASE64 = "base64"
     NONE = "none"
 
 
 class AppVariable(BaseModel):
-    """Definición de una variable de entorno."""
-    type: str = Field(default="string", description="Tipo de variable")
-    description: str = Field(default="", description="Descripción de la variable")
-    required: bool = Field(default=False, description="Si la variable es obligatoria")
-    default: Optional[str] = Field(default=None, description="Valor por defecto")
-    auto_generate: bool = Field(default=False, description="Generar automáticamente")
-    length: int = Field(default=32, ge=16, le=128, description="Longitud para auto-generación")
-    transform: Optional[str] = Field(default=None, description="Transformación a aplicar")
+    """
+    Especificación Técnica de una Variable de Configuración.
+    
+    Define el comportamiento de una variable, incluyendo su validación, 
+    obligatoriedad y si debe ser generada automáticamente por el sistema.
+    """
+    type: str = Field(default="string", description="Tipo de dato de la variable")
+    description: str = Field(default="", description="Propósito de la variable (máx 200 caracteres)")
+    required: bool = Field(default=False, description="Indica si el valor es mandatorio para el despliegue")
+    default: Optional[str] = Field(default=None, description="Valor predeterminado si no se proporciona uno")
+    auto_generate: bool = Field(default=False, description="Activa la generación automática de valores seguros")
+    length: int = Field(default=32, ge=16, le=128, description="Longitud en caracteres para valores auto-generados")
+    transform: Optional[str] = Field(default=None, description="Algoritmo de transformación (ej: bcrypt)")
     
     @field_validator('type')
     @classmethod
@@ -89,25 +94,25 @@ class AppVariable(BaseModel):
 
 class AppMetadata(BaseModel):
     """
-    Representación técnica y validada de los metadatos de una aplicación.
+    Contrato Técnico de una Aplicación (Catálogo).
     
-    Este modelo define todos los atributos necesarios para que una aplicación 
-    sea procesada por el orquestador, incluyendo su identidad, recursos y 
-    relaciones de dependencia.
+    Este modelo actúa como el esquema de validación para cualquier aplicación 
+    declarada en el sistema. Garantiza que la identidad, los recursos (RAM), 
+    las dependencias y la configuración sigan las reglas de negocio.
     """
-    id: str = Field(..., description="ID único de la aplicación")
-    name: str = Field(..., description="Nombre legible de la aplicación")
-    category: str = Field(..., description="Categoría de la aplicación")
-    version: str = Field(..., description="Versión de la aplicación")
-    ram_mb: int = Field(..., ge=0, le=65536, description="RAM requerida en MB")
-    dependencies: List[str] = Field(default_factory=list, description="IDs de dependencias")
-    variables: Dict[str, AppVariable] = Field(default_factory=dict, description="Variables de entorno")
-    init_sql: List[str] = Field(default_factory=list, description="Comandos SQL de inicialización")
-    
+    id: str = Field(..., description="Identificador único (slug) de la aplicación")
+    name: str = Field(..., description="Nombre comercial o descriptivo")
+    category: str = Field(..., description="Categoría funcional en el ecosistema")
+    version: str = Field(..., description="Etiqueta de versión (tag de imagen Docker)")
+    ram_mb: int = Field(..., ge=0, le=65536, description="Memoria RAM mínima recomendada en MB")
+    dependencies: List[str] = Field(default_factory=list, description="Lista de prerrequisitos tecnológicos")
+    variables: Dict[str, AppVariable] = Field(default_factory=dict, description="Diccionario de configuración")
+    init_sql: List[str] = Field(default_factory=list, description="Scripts de inicialización de base de datos")
+
     @field_validator('id')
     @classmethod
     def validate_id(cls, v: str) -> str:
-        # Solo permite IDs alfanuméricos y guiones bajos
+        """Valida que el ID siga el formato de slug alfanumérico."""
         import re
         if not re.match(r'^[a-z][a-z0-9_]*$', v):
             raise ValueError(
@@ -172,22 +177,27 @@ class AppMetadata(BaseModel):
 
 
 class DeploymentPlan(BaseModel):
-    """Plan de despliegue generado por DependencyGraph."""
+    """
+    Representación de un Plan de Despliegue Validado.
+    
+    Encapsula los resultados generados por el motor de dependencias, incluyendo 
+    la secuencia de ejecución, el consumo de recursos y el estado de las variables.
+    """
     app_id: str
-    plan: List[str] = Field(description="Orden de despliegue")
-    ram_mb_total: int = Field(description="RAM total requerida")
-    vars: Dict[str, Any] = Field(default_factory=dict, description="Variables generadas")
-    warnings: List[str] = Field(default_factory=list, description="Advertencias")
-    errors: List[str] = Field(default_factory=list, description="Errores de validación")
+    plan: List[str] = Field(description="Secuencia ordenada de ejecución de roles")
+    ram_mb_total: int = Field(description="Carga de memoria total proyectada")
+    vars: Dict[str, Any] = Field(default_factory=dict, description="Variables de entorno resultantes")
+    warnings: List[str] = Field(default_factory=list, description="Advertencias de salud del plan")
+    errors: List[str] = Field(default_factory=list, description="Errores fatales de validación")
     
     @property
     def is_valid(self) -> bool:
-        """Retorna True si el plan no tiene errores."""
+        """Determina si el plan es apto para ejecución sin errores."""
         return len(self.errors) == 0
     
     @property
     def dependencies_count(self) -> int:
-        """Retorna el número de dependencias en el plan."""
+        """Calcula el número de componentes auxiliares en el plan."""
         return len(self.plan) - 1
     
     model_config = {
@@ -197,35 +207,35 @@ class DeploymentPlan(BaseModel):
 
 def validate_app_metadata(data: Dict[str, Any]) -> AppMetadata:
     """
-    Función helper para validar un diccionario como AppMetadata.
+    Valida un objeto de datos contra el esquema AppMetadata.
     
     Args:
-        data: Diccionario con datos de la aplicación
+        data (Dict[str, Any]): Atributos de la aplicación a validar.
         
     Returns:
-        AppMetadata validado
+        AppMetadata: Instancia validada y tipada.
         
     Raises:
-        ValidationError: Si los datos no son válidos
+        ValidationError: Si los datos no cumplen con las restricciones técnicas.
     """
     return AppMetadata(**data)
 
 
 def load_app_catalog(data: Dict[str, Dict[str, Any]]) -> Dict[str, AppMetadata]:
     """
-    Carga, normaliza y valida un catálogo completo de aplicaciones.
+    Carga y valida un catálogo completo de aplicaciones (Batch Validation).
     
-    Itera sobre el diccionario de metadatos crudos, aplica las reglas de 
-    validación de Pydantic y retorna una estructura de datos segura.
+    Transforma un diccionario crudo de metadatos en un registro tipado y seguro, 
+    detectando inconsistencias en el catálogo de forma temprana.
 
     Args:
-        data (Dict[str, Dict[str, Any]]): Diccionario crudo de metadatos.
+        data (Dict[str, Dict[str, Any]]): Catálogo de metadatos (Fuente de Verdad).
         
     Returns:
-        Dict[str, AppMetadata]: Diccionario de objetos AppMetadata validados.
+        Dict[str, AppMetadata]: Registro validado listo para su uso por el orquestador.
         
     Raises:
-        ValueError: Si se detectan errores de esquema en uno o más componentes.
+        ValueError: Si uno o más componentes del catálogo fallan la validación.
     """
     validated = {}
     errors = []
