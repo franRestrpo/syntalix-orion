@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    command: ["mongod", "--auth", "--replSet", "rs0"]
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - {{ app_actual.internal_network | default('SyntalixNet', true) }}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.mongodb.rule=Host(`{{ app_actual.dominio }}`)"
+        - "traefik.http.routers.mongodb.entrypoints=websecure"
+        - "traefik.http.routers.mongodb.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.mongodb.loadbalancer.server.port=27017"
+    environment:
+      - "MONGO_INITDB_ROOT_USERNAME={{ app_actual.usuario_admin | default('admin') }}"
+      - "MONGO_INITDB_ROOT_PASSWORD={{ app_actual.password_db | default('securepass') }}"
+
+volumes:
+  mongodb_data:
+    name: mongodb_data
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
+    external: true
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}
