@@ -13,7 +13,6 @@ services:
       - '--web.admin.password={{ app_actual.password_db | default("securepass") }}'
     volumes:
       - prometheus_data:/prometheus
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - {{ app_actual.internal_network | default('SyntalixNet', true) }}
     deploy:
