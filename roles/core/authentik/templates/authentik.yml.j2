@@ -9,7 +9,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.swarm.network=SyntalixNet"
-        - "traefik.http.routers.authentik.rule=Host(`auth.{{ app_actual.dominio | default('localhost', true) }}`)"
+        - "traefik.http.routers.authentik.rule=Host(`{{ app_actual.dominio | default('localhost', true) }}`)"
         - "traefik.http.routers.authentik.entrypoints=websecure"
         - "traefik.http.routers.authentik.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.authentik.loadbalancer.server.port=9000"
@@ -20,7 +20,7 @@ services:
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret', true) }}
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ REDIS__PASSWORD | default('secret', true) }}
-      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret', true) }}
+      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__SECRET_KEY | default('mysecret', true) }}
       - CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
     volumes:
       - authentik_media:/media
@@ -41,7 +41,7 @@ services:
       - AUTHENTIK_POSTGRESQL__PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret', true) }}
       - AUTHENTIK_REDIS__HOST=redis-cache
       - AUTHENTIK_REDIS__PASSWORD={{ REDIS__PASSWORD | default('secret', true) }}
-      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__AUTHENTIK_SECRET_KEY | default('mysecret', true) }}
+      - AUTHENTIK_SECRET_KEY={{ AUTHENTIK__SECRET_KEY | default('mysecret', true) }}
       - CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
     volumes:
       - authentik_media:/media
