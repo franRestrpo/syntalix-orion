@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mariadb:
     image: mariadb:10.11
-    command: ["mysqld", "--skip-ssl", "--ssl-cert=/etc/mysql/certs/server.crt", "--ssl-key=/etc/mysql/certs/server.key"]
+    command: ["mysqld", "--skip-grant-tables", "--skip-ssl", "--bind-address=0.0.0.0"]
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
