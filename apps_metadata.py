@@ -363,8 +363,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "N8N_BASIC_AUTH": {
                 "type": "secret",
                 "description": "n8n basic auth password",
-                "auto_generate": True,
-                "transform": "bcrypt"
+                "auto_generate": True
             },
             "N8N_ENCRYPTION_KEY": {
                 "type": "secret",
