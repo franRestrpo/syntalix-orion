@@ -43,35 +43,6 @@ def print_banner():
     print()
 
 
-def ask_installation_mode() -> str:
-    """
-    Presenta una interfaz interactiva para la selección del modo de instalación.
-    
-    Captura la entrada del usuario y valida que la opción seleccionada sea 
-    legal ('local'). Implementa manejo de interrupciones de teclado 
-    para una salida limpia.
-
-    Returns:
-        str: 'local' para despliegue Docker.
-    """
-    print("Selecciona el modo de instalación:")
-    print()
-    print("  1) LOCAL   - Docker local (recomendado)")
-    print("             Despliega apps en tu servidor Docker")
-    print()
-    
-    while True:
-        try:
-            choice = input("Opción [1]: ").strip()
-            if choice in ('1', 'local', ''):
-                return 'local'
-            else:
-                print("Por favor, ingresa 1 o pulsa Enter para LOCAL")
-        except (EOFError, KeyboardInterrupt):
-            print("\nOperación cancelada.")
-            sys.exit(0)
-
-
 def run_local_mode():
     """
     Inicializa y lanza la Terminal User Interface (TUI) para el modo local.
