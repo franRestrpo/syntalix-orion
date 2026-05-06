@@ -22,6 +22,35 @@ from core.logging_config import get_logger
 logger = get_logger(__name__)
 
 STATE_FILE = "state.json"
+SECRETS_DIR = "secrets"
+
+
+def get_secrets_dir() -> Path:
+    """
+    Obtiene la ruta absoluta al directorio de secretos.
+
+    Returns:
+        Path: Ruta al directorio secrets/ en la raíz del proyecto.
+    """
+    return Path(__file__).parent.parent.parent / SECRETS_DIR
+
+
+def ensure_secrets_dir() -> bool:
+    """
+    Asegura que el directorio secrets/ exista con permisos restrictivos (chmod 700).
+
+    Returns:
+        bool: True si el directorio existe o fue creado exitosamente.
+    """
+    secrets_path = get_secrets_dir()
+    try:
+        secrets_path.mkdir(exist_ok=True)
+        os.chmod(secrets_path, 0o700)
+        logger.info("Directorio secrets/ verificado con permisos 700")
+        return True
+    except Exception as e:
+        logger.error(f"No se pudo crear/configurar el directorio secrets/: {e}")
+        return False
 
 
 def save_state(state: Dict[str, Any], path: str = STATE_FILE) -> bool:
@@ -67,13 +96,13 @@ def load_state(path: str = STATE_FILE) -> Dict[str, Any]:
 def load_env_file(env_path: str) -> Dict[str, str]:
     """
     Analiza un archivo de entorno (.env) y extrae sus variables activas.
-    
+
     Implementa un filtro para omitir valores nulos o cacheados que podrían corromper 
     la lógica de la interfaz de usuario en re-ejecuciones.
 
     Args:
         env_path (str): Ruta al archivo de configuración de entorno.
-        
+
     Returns:
         Dict[str, str]: Mapeo de variables detectadas con valores válidos.
     """
@@ -87,7 +116,6 @@ def load_env_file(env_path: str) -> Dict[str, str]:
                         key, value = line.split('=', 1)
                         key = key.strip()
                         value = value.strip()
-                        # Si el valor es el string "None" o "null", lo tratamos como vacío para que la TUI lo pida de nuevo
                         if value in ("None", "null", ""):
                             continue
                         env_vars[key] = value
@@ -96,32 +124,45 @@ def load_env_file(env_path: str) -> Dict[str, str]:
     return env_vars
 
 
+def get_main_env_path() -> str:
+    """
+    Obtiene la ruta al archivo principal de variables de entorno (.env).
+
+    Este archivo ahora se almacena en el directorio secrets/ para proteger
+    la información sensible.
+
+    Returns:
+        str: Ruta completa al archivo .env en secrets/.
+    """
+    return str(get_secrets_dir() / ".env")
+
+
 def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
     """
     Exporta variables de configuración a un archivo compatible con el estándar .env.
-    
+
     Garantiza la seguridad de los datos sensibles en sistemas Unix mediante la 
     aplicación de permisos restrictivos (chmod 600) inmediatamente tras la escritura.
 
     Args:
         env_path (str): Ruta de destino para el archivo .env.
         variables (Dict[str, str]): Conjunto de variables a exportar.
-        
+
     Returns:
         bool: True si la exportación y el hardening de permisos fueron exitosos.
     """
     try:
+        ensure_secrets_dir()
         with open(env_path, 'w', encoding='utf-8') as f:
             for key, value in variables.items():
                 if value not in (None, "None", "null", ""):
                     f.write(f"{key}={value}\n")
-        
-        # Establecer permisos restrictivos (solo propietario puede leer/escribir)
+
         try:
             os.chmod(env_path, 0o600)
         except Exception as e:
             logger.warning(f"No se pudieron establecer permisos restrictivos en {env_path}: {e}")
-        
+
         return True
     except Exception as e:
         logger.error(f"Error al guardar el archivo .env en {env_path}: {e}")
@@ -133,4 +174,7 @@ __all__ = [
     "load_state",
     "load_env_file",
     "save_env_file",
+    "get_secrets_dir",
+    "ensure_secrets_dir",
+    "get_main_env_path",
 ]

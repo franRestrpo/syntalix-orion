@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -29,10 +35,10 @@
   register: vol_creation
   changed_when: false
 
-- name: "Generar archivo .env para traefik"
+- name: "Generar archivo .env para traefik en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/traefik.env.j2"
-    dest: "{{ playbook_dir }}/deploy/traefik.env"
+    dest: "{{ playbook_dir }}/secrets/traefik.env"
   register: config_env
 
 - name: "Generar docker-compose para traefik"

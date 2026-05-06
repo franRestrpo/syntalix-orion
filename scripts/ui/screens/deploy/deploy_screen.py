@@ -36,7 +36,7 @@ from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Header, Footer, Static, Button, RichLog
 
 from engine.ansible_runner_real import RealAnsibleRunner
-from core.state import save_env_file
+from core.state import save_env_file, get_main_env_path
 from core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -125,7 +125,7 @@ class DeployScreen(Screen):
             1. Obtiene el plan de despliegue desde state_store.
             2. Recupera el widget RichLog para escribir logs.
             3. Escribe mensaje de inicio en el log.
-            4. Persiste las variables en archivo .env.
+            4. Persiste las variables en archivo .env dentro del directorio secrets/.
             5. Lanza el hilo de ejecución de Ansible.
 
         Notas:
@@ -138,12 +138,12 @@ class DeployScreen(Screen):
 
         vars_to_inject = plan.vars_generated.copy()
 
-        env_file_path = str(Path.cwd() / ".env")
+        env_file_path = get_main_env_path()
         if save_env_file(env_file_path, vars_to_inject):
             try:
                 os.chmod(env_file_path, 0o600)
                 logger.info("Validación exitosa. Archivo .env guardado de forma segura con permisos 600.")
-                log_widget.write("[SECURE] Archivo .env guardado de forma segura.")
+                log_widget.write("[SECURE] Archivo .env guardado de forma segura en secrets/.")
             except Exception as e:
                 logger.warning(f"No se pudieron establecer los permisos 600: {e}")
         else:

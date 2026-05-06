@@ -39,7 +39,7 @@ from textual.message import Message
 
 from core.dependency_graph import DependencyGraph
 from core.security import validate_domain, validate_email
-from core.state import load_env_file
+from core.state import load_env_file, get_main_env_path
 from ui.managers.state_store import DeploymentPlan
 from ui.components import StatusIndicator
 
@@ -152,7 +152,7 @@ class ConfigScreen(Screen):
 
     def _calculate_plan(self) -> None:
         selected = list(self.app.state_store.selected_apps)
-        env_file_path = str(Path.cwd() / ".env")
+        env_file_path = get_main_env_path()
         existing_vars = load_env_file(env_file_path)
 
         try:

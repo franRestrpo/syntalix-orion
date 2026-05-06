@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -16,10 +22,10 @@
       maria_user: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_USERNAME', default='admin') }}"
       maria_pass: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_PASSWORD', default='securepass') }}"
 
-- name: "Generar archivo .env para evolution_api"
+- name: "Generar archivo .env para evolution_api en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/evolution.env.j2"
-    dest: "{{ playbook_dir }}/deploy/evolution_api.env"
+    dest: "{{ playbook_dir }}/secrets/evolution_api.env"
   register: config_env
 
 - name: "Generar docker-compose para evolution_api"

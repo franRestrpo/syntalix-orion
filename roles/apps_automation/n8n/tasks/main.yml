@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -14,10 +20,10 @@
       password_db: "{{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('securepass', true) }}"
       basic_auth: "{{ N8N__N8N_BASIC_AUTH | default('admin:securepass', true) }}"
 
-- name: "Generar archivo .env para n8n"
+- name: "Generar archivo .env para n8n en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/n8n.env.j2"
-    dest: "{{ playbook_dir }}/deploy/n8n.env"
+    dest: "{{ playbook_dir }}/secrets/n8n.env"
   register: config_env
 
 - name: "Generar docker-compose para n8n"

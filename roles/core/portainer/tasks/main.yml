@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -12,10 +18,10 @@
       dominio: "{{ PORTAINER__DOMAIN | default('portainer.localhost', true) }}"
       acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
 
-- name: "Generar archivo .env para portainer"
+- name: "Generar archivo .env para portainer en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/portainer.env.j2"
-    dest: "{{ playbook_dir }}/deploy/portainer.env"
+    dest: "{{ playbook_dir }}/secrets/portainer.env"
   register: config_env
 
 - name: "Generar docker-compose para portainer"

@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -16,10 +22,10 @@
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 
-- name: "Generar archivo .env para dify"
+- name: "Generar archivo .env para dify en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/dify.env.j2"
-    dest: "{{ playbook_dir }}/deploy/dify.env"
+    dest: "{{ playbook_dir }}/secrets/dify.env"
   register: config_env
   ignore_errors: true
 
