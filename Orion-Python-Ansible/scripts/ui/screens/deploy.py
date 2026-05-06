@@ -66,6 +66,16 @@ class DeployScreen(Screen):
     #ansible-log {
         height: 100%;
         color: #E6EDF3;
+        /* Estilos explícitos para la barra de scroll */
+        scrollbar-size: 1 1;
+    }
+    
+    #ansible-log:scrollbar-vertical {
+        background: #161B22;
+    }
+    
+    #ansible-log:scrollbar-slider-vertical {
+        background: #00D9FF;
     }
     
     #action-container { 
