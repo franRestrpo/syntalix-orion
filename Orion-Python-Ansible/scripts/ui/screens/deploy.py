@@ -37,7 +37,7 @@ class DeployScreen(Screen):
     Screen { background: #0D1117; }
     
     #main-layout { 
-        height: 1fr; 
+        height: 100%; 
         border: tall #00D9FF;
         margin: 1 2;
         padding: 1 2;
@@ -47,7 +47,7 @@ class DeployScreen(Screen):
     .section-title { 
         text-style: bold; 
         color: #00D9FF; 
-        margin: 1 2;
+        margin-bottom: 1;
     }
     
     #deploy-status { 
@@ -56,18 +56,21 @@ class DeployScreen(Screen):
         text-style: italic; 
     }
     
-    #ansible-log {
+    #log-container {
         height: 1fr;
         border: tall #21262D;
         background: #161B22;
+        margin-bottom: 1;
+    }
+    
+    #ansible-log {
+        height: 100%;
         color: #E6EDF3;
-        margin: 1 0;
     }
     
     #action-container { 
         height: auto; 
         align: center middle; 
-        padding: 1 4;
     }
     
     .btn-error { 
@@ -90,11 +93,12 @@ class DeployScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", classes="section-title")
         with Vertical(id="main-layout"):
+            yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", classes="section-title")
             yield Static("", id="deploy-status")
             
-            yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
+            with Vertical(id="log-container"):
+                yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
 
             with Vertical(id="action-container"):
                 yield Button("CERRAR Y SALIR", id="quit-button", variant="error", disabled=True, classes="btn-error")
