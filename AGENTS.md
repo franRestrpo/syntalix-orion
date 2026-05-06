@@ -14,12 +14,12 @@
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │  CAPA 2: PRESENTACIÓN Y LÓGICA (Textual TUI)              │
-│  main.py → TUI → DependencyGraph → .env                   │
+│  main.py → TUI → DependencyGraph → secrets/.env           │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │  CAPA 3: ORQUESTACIÓN (Ansible)                            │
-│  site.yml → engine/runner → Docker Swarm                  │
+│  site.yml → roles/ → secrets/*.env → Docker Swarm         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -35,30 +35,174 @@ syntalix-orion/
 ├── ansible.cfg                       # Configuración Ansible
 ├── AUDITORIA_V2.md                   # Reporte de hallazgos técnicos (Seguridad/SRP/Clean Code)
 │
+├── secrets/                          # Directorio protegido (chmod 700)
+│   ├── .env                         # Variables globales (chmod 600)
+│   ├── traefik.env                  # Variables por rol
+│   ├── grafana.env
+│   └── ...
+│
+├── deploy/                           # YAML manifests (sin datos sensibles)
+│   ├── traefik_stack.yml
+│   ├── grafana_stack.yml
+│   └── ...
+│
 ├── engine/                          # Motor de ejecución Ansible
 │   └── ansible_runner_real.py      # Runner asíncrono basado en subprocess
 │
-├── scripts/                   # Módulos Python (TUI, core, tests)
-│   ├── tui.py               # Punto de entrada de la interfaz
-│   ├── core/                # Lógica de negocio (DependencyGraph, Security, State)
-│   ├── ui/                  # Componentes de la interfaz Textual
-│   │   ├── app.py           # Clase OrionTUI principal
-│   │   ├── screens/         # Pantallas (Selection, Config, Deploy)
-│   │   ├── managers/        # Gestores de estado (StateStore)
-│   │   └── components/      # Widgets personalizados
-│   └── tests/               # Suite de tests pytest
+├── scripts/
+│   ├── tui.py                      # Punto de entrada de la interfaz
+│   ├── core/                       # Lógica de negocio
+│   │   ├── dependency_graph.py     # Resolución de dependencias
+│   │   ├── security.py           # Gestión de contraseñas y validación
+│   │   ├── state.py              # Persistencia con protocolo Write-and-Verify
+│   │   └── preflight.py          # Auditoría de requisitos
+│   └── ui/
+│       ├── app.py                 # Clase OrionTUI principal
+│       ├── theme.tcss            # Estilos globales (colores, botones)
+│       ├── screens/              # Pantallas modulares
+│       │   ├── selection/
+│       │   │   ├── screen.py
+│       │   │   └── style.tcss
+│       │   ├── config/
+│       │   │   ├── screen.py
+│       │   │   └── style.tcss
+│       │   └── deploy/
+│       │       ├── screen.py
+│       │       └── style.tcss
+│       ├── managers/             # Gestores de estado (StateStore)
+│       └── components/           # Widgets personalizados
 │
 ├── roles/                          # Roles Ansible (core, data, monitoring, apps)
 ├── group_vars/all/vars.yml         # Variables centralizadas
-└── docs/                           # Documentación técnica (Hardening, Config, Troubleshooting)
+└── docs/                           # Documentación técnica
 ```
 
-## Estándar de Documentación Profesional
+## Separación Física de Secretos
 
-El proyecto ha sido profesionalizado con docstrings detallados en **español**:
-1.  **Docstrings de Módulos:** Describen responsabilidades, componentes principales y flujo de datos.
-2.  **Docstrings de Clases y Métodos:** Utilizan un estilo técnico profesional, especificando argumentos, tipos de retorno y posibles excepciones.
-3.  **Idioma:** Estrictamente español para la documentación narrativa y técnica (respetando términos de industria en inglés).
+**OBLIGATORIO:** Todos los datos sensibles deben residir exclusivamente en `secrets/`.
+
+### Permisos de Seguridad
+| Recurso | Permiso | Descripción |
+|---------|---------|-------------|
+| `secrets/` | `chmod 700` | Restringido al propietario |
+| `secrets/*.env` | `chmod 600` | Lectura/escritura solo propietario |
+| `deploy/*.yml` | `chmod 644` | Solo lectura pública (sin secretos) |
+
+### Rutas de Orquestación
+- **ANTIGUO:** `deploy/*.env` (PROHIBIDO)
+- **NUEVO:** `secrets/*.env` (OBLIGATORIO)
+- Los roles Ansible deben buscar configuración en `../../secrets/`
+
+## Gobernanza de Contraseñas (Manejo Diferenciado por Categoría)
+
+### Categoría A: Infraestructura (Bases de Datos / Queues)
+- **Origen:** Autogeneradas por el sistema (`secrets.token_urlsafe()`)
+- **Regla:** El usuario NO puede asignarlas manualmente
+- **Entropía mínima:** 64 bits garantizados
+- **Ejemplos:** `POSTGRES_PASSWORD`, `RABBITMQ_PASSWORD`, `REDIS_PASSWORD`
+
+### Categoría B: Tokens Técnicos (API Keys)
+- **Origen:** Generadas automáticamente por módulos internos
+- **Regla:** Generación transparente tras selección de aplicación
+- **Ejemplos:** `N8N_ENCRYPTION_KEY`, `AUTHENTIK_SECRET_KEY`, `CROWDSEC_ENROLL_KEY`
+
+### Categoría C: Aplicaciones con Interfaz (TUI)
+- **Origen:** Entrada directa del usuario en `ConfigScreen`
+- **Regla Crítica:** **PROHIBIDO HASHEAR** - Persistir texto plano fiel al ingreso
+- **Razón:** Compatibilidad con protocolos de autenticación de Docker Swarm y Traefik
+- **Validación obligatoria:** Fortaleza mínima antes de persistir
+- **Ejemplos:** `TRAEFIK_PASSWORD`, `GRAFANA_PASSWORD`, `PORTAINER_PASSWORD`
+
+## Validación de Fortaleza para Categoría C
+
+Toda contraseña de Categoría C debe cumplir estos requisitos **antes de persistir**:
+
+| Criterio | Requisito |
+|----------|-----------|
+| Longitud mínima | 12 caracteres |
+| Mayúsculas | Al menos 1 |
+| Números | Al menos 1 |
+| Símbolos | Al menos 1 |
+| Espacios | PROHIBIDOS al inicio/final |
+| Entropía mínima | 64 bits |
+
+**Si no cumple:** El sistema bloquea el despliegue y emite error crítico.
+
+## Protocolo de Integridad (Write-and-Verify)
+
+Todo proceso que modifique `secrets/*.env` debe:
+
+1. **Sanitizar:** Eliminar espacios en blanco al inicio/final
+2. **Validar:** Verificar fortaleza para Categoría C
+3. **Escribir:** Guardar con `chmod 600`
+4. **Verificar:** Leer desde disco y comparar con memoria
+5. **Abortarr:** Si hay discrepancia, lanzar `PasswordPersistenceError`
+
+```
+Pseudocódigo:
+  write_file(path, vars)
+  disk_content = read_file(path)
+  if disk_content != vars:
+      raise PasswordPersistenceError("Discrepancia detectada")
+```
+
+## Estándar de UI Modular (Separación de Concernss)
+
+### Regla de Oro: CSS Externo Obligatorio
+- **PROHIBIDO:** Usar `CSS = """..."""` dentro de clases Python
+- **OBLIGATORIO:** Usar `CSS_PATH` para vincular archivos `.tcss`
+
+### Jerarquía de Estilos
+```
+theme.tcss (Global)
+├── Colores de marca ($accent, $primary)
+├── Estilos de Header, Footer
+└── Botones globales
+
+screen_name/style.tcss (Local)
+├── Layout específico de pantalla
+├── Bordes y padding
+└── Comportamiento de scroll
+```
+
+### Requisitos CSS para DeployScreen
+```css
+# ansible-log {           /* Contenedor de logs Ansible */
+    height: 1fr;         /* Expansión flexible */
+    border: tall $accent;
+    overflow-y: scroll;  /* Scroll vertical obligatorio */
+}
+```
+
+## Flujo de Ejecución TUI
+
+1. **SelectionScreen:** Navegación por catálogo y resolución de dependencias
+2. **ConfigScreen:**
+   - Recolección de parámetros (dominios, emails, secretos Category C)
+   - Validación de fortaleza en tiempo real
+3. **DeployScreen:**
+   - Persistencia en `secrets/.env` con protocolo Write-and-Verify
+   - Ejecución asíncrona de Ansible
+   - Monitoreo via RichLog con scroll automático
+
+## Reglas de Contraseñas y Secretos
+
+### CONTRASEÑAS DE INFRAESTRUCTURA (Category A - NUNCA HASHEAR)
+- Texto plano seguro (`secrets.token_urlsafe()`)
+- Compatibilidad con protocolos de autenticación de bases de datos
+
+### CONTRASEÑAS DE APLICACIONES UI (Category C - PROHIBIDO HASHEAR)
+- Text plano fiel al ingreso del usuario
+- Validación de fortaleza obligatoria
+- Ejemplo: `TRAEFIK_PASSWORD` se persiste tal cual se ingresa
+
+## Fuente de Verdad
+
+**`apps_metadata.py`** es la ÚNICA fuente de verdad para:
+- Catálogo de aplicaciones, RAM, dependencias y variables de configuración.
+
+**`secrets/`** es la ÚNICA ubicación para:
+- Contraseñas, tokens, dominios y correos de administración.
 
 ## Hallazgos Críticos de Auditoría (V2)
 
@@ -66,20 +210,8 @@ Consultar `AUDITORIA_V2.md` para detalles. Puntos clave:
 - **Seguridad:** Eliminar el uso de `shell=True` en `preflight.py`.
 - **Arquitectura:** Migrar de inyecciones de `sys.path` a una estructura de paquete formal (`pyproject.toml`).
 - **SRP:** Desacoplar la generación de secretos de la clase `DependencyGraph`.
-
-## Fuente de Verdad
-
-**`apps_metadata.py`** es la ÚNICA fuente de verdad para:
-- Catálogo de aplicaciones, RAM, dependencias y variables de configuración.
-
-## Reglas de Contraseñas y Secretos
-
-### CONTRASEÑAS DE BASE DE DATOS (PLAINTEXT - NUNCA HASHEAR)
-- Deben ser texto plano seguro (`secrets.token_urlsafe()`).
-- **Razón:** Compatibilidad con protocolos de autenticación de bases de datos.
-
-### CREDENCIALES DE APLICACIÓN UI (BCRYPT)
-- Deben ser hasheadas con bcrypt (ej: `TRAEFIK_PASSWORD`, `N8N_BASIC_AUTH`).
+- **Persistencia:** Centralizar todos los secretos en `secrets/` con permisos 700/600.
+- **Category C:** PROHIBIDO hashear contraseñas de aplicaciones con UI.
 
 ## Redes y Networking
 
@@ -88,25 +220,23 @@ Consultar `AUDITORIA_V2.md` para detalles. Puntos clave:
 - Red overlay: `SyntalixNet`.
 - Uso de labels dinámicos para TLS y seguridad.
 
-## Flujo de Ejecución TUI
-
-1.  **SelectionScreen:** Navegación por catálogo y resolución de dependencias transitivas.
-2.  **ConfigScreen:** Recolección y validación de parámetros (dominios, emails, secretos).
-3.  **DeployScreen:** Persistencia en `.env` (chmod 600) y ejecución asíncrona de Ansible.
-
 ## Comandos de Ejecución
 
 ```bash
 # Ejecución estándar (Modo Local)
 python main.py
 
-# Despliegue desatendido (requiere .env previo)
+# Despliegue desatendido (requiere secrets/.env previo)
 sudo ./setup.sh --deploy
 ```
 
 ## Workflow de Desarrollo
 
 **IMPORTANTE:** El desarrollo se realiza localmente pero la ejecución y testing se validan en el VPS remoto. **Commit y push inmediatos** tras cada cambio funcional.
+
+## Alineación con Auditoría
+
+Cualquier cambio en la gestión de secretos debe ser validado contra `AUDITORIA_V2.md` para evitar regresiones de seguridad.
 
 ---
 *Este documento sirve como guía para agentes de IA que interactúen con el repositorio.*
