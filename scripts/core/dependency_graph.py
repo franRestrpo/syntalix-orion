@@ -240,12 +240,11 @@ class DependencyGraph:
         for aid in plan:
             meta = self.catalog.get(aid, {})
             vars_def = meta.get("variables", {}) or {}
-            
+
             for var_name, var_def in vars_def.items():
                 key = map_app_variable(aid, var_name)
-                
-                if var_def.get("type") == "secret":
-                    # Generar secreto automáticamente
+
+                if var_def.get("type") == "secret" and var_def.get("auto_generate", True):
                     value = self._generate_secret_value(var_def)
                     vars_out[key] = value
                     logger.debug("Variable secreta generada", extra={
@@ -253,7 +252,6 @@ class DependencyGraph:
                         "length": len(value)
                     })
                 else:
-                    # Usar valor por defecto
                     value = var_def.get("default", "")
                     vars_out[key] = value
         

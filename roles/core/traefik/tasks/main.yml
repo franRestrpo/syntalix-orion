@@ -11,11 +11,22 @@
     state: directory
     mode: "0755"
 
-- name: "Generar hash bcrypt para la contraseña de Traefik"
+- name: "Verificar si TRAEFIK_PASSWORD ya es un hash bcrypt válido"
+  ansible.builtin.set_fact:
+    traefik_password_is_hash: "{{ TRAEFIK__TRAEFIK_PASSWORD | default('') is search('^\\$2[aby]?\\$') }}"
+
+- name: "Generar hash bcrypt para la contraseña de Traefik solo si es texto plano"
   ansible.builtin.shell:
     cmd: "python3 -c \"import sys, bcrypt; p=sys.argv[1]; print(p if p.startswith(('$2a$', '$2b$', '$2y$')) else bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode())\" \"{{ TRAEFIK__TRAEFIK_PASSWORD | default('admin', true) }}\""
   register: traefik_pwd_hash
   changed_when: false
+  when: not traefik_password_is_hash | bool
+
+- name: "Usar password directo si ya es hash bcrypt"
+  ansible.builtin.set_fact:
+    traefik_pwd_hash:
+      stdout: "{{ TRAEFIK__TRAEFIK_PASSWORD }}"
+  when: traefik_password_is_hash | bool
 
 - name: "Configurar app_actual para traefik"
   ansible.builtin.set_fact:
