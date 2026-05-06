@@ -1,14 +1,16 @@
 """
 Módulo de Gestión de Estado y Persistencia para Syntalix-Orion.
 
-Este módulo centraliza la lógica para persistir y recuperar la configuración de la 
-aplicación y el estado del despliegue. Maneja tanto formatos estructurados (JSON) 
+Este módulo centraliza la lógica para persistir y recuperar la configuración de la
+aplicación y el estado del despliegue. Maneja tanto formatos estructurados (JSON)
 como archivos de entorno estándar (.env) utilizados por Ansible y Docker Compose.
 
 Funcionalidades:
     - Guardado y carga del estado global de la sesión.
     - Serialización de variables de entorno a archivos .env.
     - Gestión de permisos de archivos para proteger información sensible.
+    - Protocolo Write-and-Verify para contraseñas de Category C.
+    - Sanitización automática de valores antes de persistir.
 """
 
 import json
@@ -16,13 +18,18 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-
 from core.logging_config import get_logger
+from core.security import validate_password_strength, sanitize_input, get_password_category, PasswordCategory
 
 logger = get_logger(__name__)
 
 STATE_FILE = "state.json"
 SECRETS_DIR = "secrets"
+
+
+class PasswordPersistenceError(Exception):
+    """Excepción crítica cuando la verificación de contraseña falla."""
+    pass
 
 
 def get_secrets_dir() -> Path:
@@ -56,11 +63,11 @@ def ensure_secrets_dir() -> bool:
 def save_state(state: Dict[str, Any], path: str = STATE_FILE) -> bool:
     """
     Persiste el estado actual del sistema en un archivo de datos estructurado.
-    
+
     Args:
-        state (Dict[str, Any]): Mapa de claves y valores que representan el estado.
-        path (str): Ruta absoluta o relativa al archivo de destino.
-        
+        state: Mapa de claves y valores que representan el estado.
+        path: Ruta absoluta o relativa al archivo de destino.
+
     Returns:
         bool: True si la persistencia en disco se completó correctamente.
     """
@@ -76,10 +83,10 @@ def save_state(state: Dict[str, Any], path: str = STATE_FILE) -> bool:
 def load_state(path: str = STATE_FILE) -> Dict[str, Any]:
     """
     Recupera el estado persistido previamente desde el almacenamiento.
-    
+
     Args:
-        path (str): Ruta al archivo de estado JSON.
-        
+        path: Ruta al archivo de estado JSON.
+
     Returns:
         Dict[str, Any]: El estado recuperado o un diccionario vacío si el archivo no existe.
     """
@@ -97,11 +104,11 @@ def load_env_file(env_path: str) -> Dict[str, str]:
     """
     Analiza un archivo de entorno (.env) y extrae sus variables activas.
 
-    Implementa un filtro para omitir valores nulos o cacheados que podrían corromper 
+    Implementa un filtro para omitir valores nulos o cacheados que podrían corromper
     la lógica de la interfaz de usuario en re-ejecuciones.
 
     Args:
-        env_path (str): Ruta al archivo de configuración de entorno.
+        env_path: Ruta al archivo de configuración de entorno.
 
     Returns:
         Dict[str, str]: Mapeo de variables detectadas con valores válidos.
@@ -137,36 +144,122 @@ def get_main_env_path() -> str:
     return str(get_secrets_dir() / ".env")
 
 
-def save_env_file(env_path: str, variables: Dict[str, str]) -> bool:
+def _is_user_facing_var(key: str) -> bool:
+    """
+    Determina si una clave de variable corresponde a una aplicación con UI
+    donde el usuario ingresa la contraseña directamente.
+
+    Args:
+        key: Clave de variable (ej: TRAEFIK__TRAEFIK_PASSWORD)
+
+    Returns:
+        bool: True si es una variable de Category C.
+    """
+    user_facing_patterns = [
+        "TRAEFIK__TRAEFIK_PASSWORD",
+        "GRAFANA__GRAFANA_PASSWORD",
+        "PORTAINER__PORTAINER_PASSWORD",
+        "AUTHENTIK__AUTHENTIK_PASSWORD",
+        "CHATWOOT__CHATWOOT_PASSWORD",
+    ]
+    return key in user_facing_patterns
+
+
+def save_env_file(env_path: str, variables: Dict[str, str], skip_verify: bool = False) -> bool:
     """
     Exporta variables de configuración a un archivo compatible con el estándar .env.
 
-    Garantiza la seguridad de los datos sensibles en sistemas Unix mediante la 
-    aplicación de permisos restrictivos (chmod 600) inmediatamente tras la escritura.
+    Implementa el protocolo Write-and-Verify para contraseñas de Category C:
+        1. Sanitiza valores (trim espacios)
+        2. Para Category C: Valida fortaleza antes de persistir
+        3. Escribe archivo con chmod 600
+        4. Verifica leyendo desde disco y comparando con memoria
 
     Args:
-        env_path (str): Ruta de destino para el archivo .env.
-        variables (Dict[str, str]): Conjunto de variables a exportar.
+        env_path: Ruta de destino para el archivo .env.
+        variables: Conjunto de variables a exportar.
+        skip_verify: Si True, omite la verificación (para testing).
 
     Returns:
-        bool: True si la exportación y el hardening de permisos fueron exitosos.
+        bool: True si la exportación y verificación fueron exitosas.
+
+    Raises:
+        PasswordPersistenceError: Si la verificación falla para Category C.
     """
+    ensure_secrets_dir()
+
+    processed_vars: Dict[str, str] = {}
+
+    for key, value in variables.items():
+        if value in (None, "None", "null", ""):
+            continue
+
+        sanitized = sanitize_input(str(value))
+
+        if _is_user_facing_var(key):
+            is_valid, error_msg = validate_password_strength(sanitized)
+            if not is_valid:
+                logger.error(f"Validación de fortaleza fallida para {key}: {error_msg}")
+                raise PasswordPersistenceError(f"Contraseña inválida para {key}: {error_msg}")
+
+            logger.info(f"Category C password validado para {key}")
+
+        processed_vars[key] = sanitized
+
     try:
-        ensure_secrets_dir()
         with open(env_path, 'w', encoding='utf-8') as f:
-            for key, value in variables.items():
-                if value not in (None, "None", "null", ""):
-                    f.write(f"{key}={value}\n")
+            for key, value in processed_vars.items():
+                f.write(f"{key}={value}\n")
 
         try:
             os.chmod(env_path, 0o600)
         except Exception as e:
             logger.warning(f"No se pudieron establecer permisos restrictivos en {env_path}: {e}")
 
+        if not skip_verify:
+            verified_vars = load_env_file(env_path)
+            for key, value in processed_vars.items():
+                disk_value = verified_vars.get(key)
+                if disk_value != value:
+                    error_msg = f"Verificación fallida para {key}: memoria='{value}' disco='{disk_value}'"
+                    logger.error(error_msg)
+                    raise PasswordPersistenceError(error_msg)
+
+        logger.info(f"Archivo .env verificado exitosamente en {env_path}")
         return True
+
+    except PasswordPersistenceError:
+        raise
     except Exception as e:
         logger.error(f"Error al guardar el archivo .env en {env_path}: {e}")
         return False
+
+
+def save_password_verified(env_path: str, key: str, value: str) -> bool:
+    """
+    Persiste una única contraseña con verificación completa.
+
+   专门para Category C (aplicaciones con UI como Traefik).
+
+    Args:
+        env_path: Ruta al archivo .env.
+        key: Nombre de la variable.
+        value: Valor de la contraseña.
+
+    Returns:
+        bool: True si la persistencia y verificación fueron exitosas.
+
+    Raises:
+        PasswordPersistenceError: Si la validación o verificación falla.
+    """
+    is_valid, error_msg = validate_password_strength(value)
+    if not is_valid:
+        raise PasswordPersistenceError(f"Contraseña inválida para {key}: {error_msg}")
+
+    all_vars = load_env_file(env_path)
+    all_vars[key] = value
+
+    return save_env_file(env_path, all_vars)
 
 
 __all__ = [
@@ -174,7 +267,9 @@ __all__ = [
     "load_state",
     "load_env_file",
     "save_env_file",
+    "save_password_verified",
     "get_secrets_dir",
     "ensure_secrets_dir",
     "get_main_env_path",
+    "PasswordPersistenceError",
 ]

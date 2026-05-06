@@ -36,7 +36,7 @@ from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Header, Footer, Static, Button, RichLog
 
 from engine.ansible_runner_real import RealAnsibleRunner
-from core.state import save_env_file, get_main_env_path
+from core.state import save_env_file, get_main_env_path, PasswordPersistenceError
 from core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -139,16 +139,19 @@ class DeployScreen(Screen):
         vars_to_inject = plan.vars_generated.copy()
 
         env_file_path = get_main_env_path()
-        if save_env_file(env_file_path, vars_to_inject):
-            try:
-                os.chmod(env_file_path, 0o600)
+        try:
+            if save_env_file(env_file_path, vars_to_inject):
                 logger.info("Validación exitosa. Archivo .env guardado de forma segura con permisos 600.")
                 log_widget.write("[SECURE] Archivo .env guardado de forma segura en secrets/.")
-            except Exception as e:
-                logger.warning(f"No se pudieron establecer los permisos 600: {e}")
-        else:
-            logger.error("Fallo al guardar el archivo .env")
-            log_widget.write("[ERROR] Fallo al persistir el archivo .env de forma segura.")
+            else:
+                logger.error("Fallo al guardar el archivo .env")
+                log_widget.write("[ERROR] Fallo al persistir el archivo .env de forma segura.")
+                return
+        except PasswordPersistenceError as e:
+            logger.error(f"Error de validación de contraseña: {e}")
+            log_widget.write(f"[ERROR CRÍTICO] {e}")
+            self.notify(f"Error de seguridad: {e}", severity="error")
+            return
 
         self.run_ansible_thread(vars_to_inject, plan.plan)
 

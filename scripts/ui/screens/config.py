@@ -38,7 +38,7 @@ from textual.widgets import Header, Footer, Static, Button, Input
 from textual.message import Message
 
 from core.dependency_graph import DependencyGraph
-from core.security import validate_domain, validate_email
+from core.security import validate_domain, validate_email, validate_password_strength, _is_user_facing_password
 from core.state import load_env_file, get_main_env_path
 from ui.managers.state_store import DeploymentPlan
 from ui.components import StatusIndicator
@@ -262,6 +262,11 @@ class ConfigScreen(Screen):
             elif v_type == "email":
                 if not validate_email(val):
                     return False, f"El valor '{val}' para '{desc}' no es un correo válido."
+            elif v_type in ("secret", "password"):
+                if _is_user_facing_password(var_name):
+                    is_valid, error_msg = validate_password_strength(val)
+                    if not is_valid:
+                        return False, f"Contraseña débil para '{desc}': {error_msg}"
         return True, ""
 
     def action_deploy(self) -> None:
