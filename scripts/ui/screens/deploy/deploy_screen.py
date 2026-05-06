@@ -34,7 +34,7 @@ class DeployScreen(Screen):
     3. Capturar y visualizar los eventos de la ejecución para el usuario.
     """
 
-    CSS_PATH = "deploy_screen.tcss"
+    CSS_PATH = "screens/deploy/deploy_screen.tcss"
 
     BINDINGS = [
         ("ctrl+q", "quit", "Salir"),
