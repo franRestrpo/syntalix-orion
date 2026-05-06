@@ -1,9 +1,27 @@
 """
 Pantalla de Selección de Catálogo - Syntalix-Orion.
 
-Esta interfaz permite al usuario navegar por las categorías de aplicaciones y 
-seleccionar los componentes que desea desplegar. Gestiona en tiempo real el 
-cálculo de dependencias transitivas y la proyección de consumo de RAM.
+Esta interfaz permite al usuario navegar por las categorías de aplicaciones
+disponibles y seleccionar los componentes que desea desplegar en su
+infraestructura. Gestiona en tiempo real el cálculo de dependencias transitivas
+y la proyección de consumo de RAM del clúster.
+
+Arquitectura de la Pantalla:
+    - Layout horizontal dividido en dos paneles.
+    - Panel izquierdo (50%): Catálogo categorizado con ModernCheckbox.
+    - Panel derecho (50%): Resumen dinámico con barra de RAM y conteo de apps.
+
+Categorías Disponibles:
+    - Core: Componentes fundamentales del sistema.
+    - Data: Bases de datos y almacenamiento.
+    - Monitoring: Sistemas de observación y métricas.
+    - AI: Modelos de lenguaje y procesamiento de datos.
+    - Automation: Herramientas de workflow y automatización.
+    - Communication: Sistemas de mensajería y chat.
+    - Management: Herramientas de gestión e identidad.
+
+Autor: Syntalix-Orion Team
+Versión: 2.0.0
 """
 
 import sys
@@ -51,11 +69,29 @@ def get_app_icon(app_id: str) -> str:
 class SelectionScreen(Screen):
     """
     Controlador Visual para la Selección de Aplicaciones.
-    
-    Implementa una interfaz dividida en dos paneles:
-    - Izquierdo: Catálogo categorizado con checkboxes de selección.
-    - Derecho: Resumen dinámico del plan, RAM y dependencias auto-añadidas.
+
+    Esta pantalla implementa una interfaz de dos paneles que permite al usuario:
+        - Panel Izquierdo: Navegar el catálogo categorizado con checkboxes
+          de selección múltiple. Las categorías Core son obligatorias.
+        - Panel Derecho: Visualizar el resumen dinámico del plan incluyendo
+          lista de apps seleccionadas, dependencias auto-añadidas y barra
+          de consumo de RAM.
+
+    Atributos:
+        catalog (Dict[str, AppMetadata]): Catálogo completo de aplicaciones.
+        dep_graph (DependencyGraph): Grafo de dependencias entre aplicaciones.
+        user_selected (Set[str]): IDs de aplicaciones seleccionadas por el usuario.
+        auto_dependencies (Set[str]): IDs de dependencias añadidas automáticamente.
+
+    Mensajes Emitidos:
+        SelectionComplete: Cuando el usuario confirma la selección y presiona
+            el botón "Continuar". Contiene los IDs de apps seleccionadas.
+
+    Ejemplo:
+        >>> # El flujo maneja automáticamente la selección y navegación
+        >>> self.post_message(self.SelectionComplete())
     """
+
     CSS = """
     Screen { background: #0D1117; }
     #main-container { 
@@ -117,9 +153,15 @@ class SelectionScreen(Screen):
     ]
 
     class SelectionComplete(Message):
-        pass
+        """Mensaje emitido cuando el usuario completa la selección de aplicaciones."""
 
     def __init__(self, **kwargs):
+        """
+        Inicializa la pantalla de selección.
+
+        Args:
+            **kwargs: Argumentos传递给 Screen base.
+        """
         super().__init__(**kwargs)
         self.catalog = load_app_catalog(APP_METADATA)
         self.dep_graph = DependencyGraph(self.catalog)
@@ -127,6 +169,26 @@ class SelectionScreen(Screen):
         self.auto_dependencies: Set[str] = set()
 
     def compose(self) -> ComposeResult:
+        """
+        Construye el layout visual de la pantalla de selección.
+
+        Layout:
+            - Header con título de la aplicación.
+            - Horizontal(id="main-container"): Contenedor principal de dos paneles.
+                - VerticalScroll(id="left-panel"): Catálogo de apps.
+                    - Static(id="catalog-title"): Título "Syntalix-Orion V2".
+                    - Static(id="catalog-subtitle"): Instrucciones.
+                    - ModernCheckbox por cada app categorizada.
+                - VerticalScroll(id="right-panel"): Resumen del plan.
+                    - Static(id="monitor-title"): Título del resumen.
+                    - VerticalScroll(id="status-display"): Lista de apps seleccionadas.
+                    - Container(id="summary-container"): Barra RAM y conteo.
+                    - Vertical(id="action-container"): Botón continuar.
+            - Footer con información de atajos.
+
+        Yields:
+            ComposeResult: Generador de widgets para la composición.
+        """
         yield Header()
         with Horizontal(id="main-container"):
             with VerticalScroll(id="left-panel"):
