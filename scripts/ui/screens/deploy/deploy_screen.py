@@ -138,6 +138,22 @@ class DeployScreen(Screen):
 
         vars_to_inject = plan.vars_generated.copy()
 
+        selected_apps = set(plan.plan)
+        missing_required = []
+        for key, value in vars_to_inject.items():
+            if value in (None, "None", "null", ""):
+                app_prefix = key.split("__")[0] if "__" in key else key.split("_")[0]
+                if app_prefix.lower() in [a.lower() for a in selected_apps]:
+                    if key.endswith("_PASSWORD") or key.endswith("_SECRET"):
+                        missing_required.append(key)
+
+        if missing_required:
+            error_msg = f"[ERROR CRÍTICO] Faltan valores requeridos: {', '.join(missing_required)}"
+            logger.error(error_msg)
+            log_widget.write(error_msg)
+            self.notify(f"Faltan valores requeridos: {missing_required}", severity="error")
+            return
+
         env_file_path = get_main_env_path()
         try:
             if save_env_file(env_file_path, vars_to_inject):
