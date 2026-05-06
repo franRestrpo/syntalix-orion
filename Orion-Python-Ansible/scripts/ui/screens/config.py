@@ -37,23 +37,79 @@ class ConfigScreen(Screen):
     """
     CSS = """
     Screen { background: #0D1117; }
-    #config-container { height: 100%; }
-    #forms-container { height: auto; padding-bottom: 2; }
-    .section-title { text-style: bold; color: #00D9FF; margin-top: 1; }
-    .app-block { border: solid #21262D; padding: 1; margin: 1 0; background: #161B22; }
-    .app-title { text-style: bold; color: #F472B6; margin-bottom: 1; }
-    .form-label { color: #00D9FF; margin-top: 1; }
-    .form-desc { color: #6E7681; margin-bottom: 1; }
-    .input-row { height: auto; margin-bottom: 1; }
-    .secure-toggle { color: #8B949E; }
-    .ram-warning { color: #F59E0B; }
-    .btn-success { background: #10B981; color: #0D1117; }
-    .btn-back { color: #8B949E; }
-    #action-container { height: auto; align: center bottom; margin-top: 2; padding-bottom: 2; }
+    #config-container { 
+        height: 100%; 
+        border: solid #00D9FF;
+        margin: 1 2;
+        background: #0D1117;
+    }
+    #forms-container { 
+        padding: 1 4;
+    }
+    .section-title { 
+        text-style: bold; 
+        color: #00D9FF; 
+        margin: 1 0;
+        padding-left: 2;
+    }
+    .app-block { 
+        border: tall #21262D; 
+        padding: 1 2; 
+        margin: 1 0; 
+        background: #161B22; 
+    }
+    .app-title { 
+        text-style: bold; 
+        color: #F472B6; 
+        margin-top: 1;
+        background: #161B22;
+        padding: 0 1;
+    }
+    .form-label { 
+        color: #38BDF8; 
+        text-style: bold;
+        margin-top: 1; 
+    }
+    .form-desc { 
+        color: #8B949E; 
+        margin-bottom: 0;
+        italic: True;
+    }
+    Input {
+        background: #161B22;
+        border: tall #21262D;
+        color: #E6EDF3;
+        margin: 0 0 1 0;
+        padding: 0 1;
+    }
+    Input:focus {
+        border: tall #00D9FF;
+        background: #0D1117;
+    }
+    Input.-valid {
+        border: tall #10B981;
+    }
+    Input.-invalid {
+        border: tall #EF4444;
+    }
+
+    #plan-summary-box {
+        background: #161B22;
+        border: solid #21262D;
+        margin: 1 2;
+        padding: 1;
+    }
+
+    .btn-success { background: #10B981; color: #0D1117; text-style: bold; width: 100%; }
+    .btn-back { color: #8B949E; width: 100%; }
+    #action-container { 
+        padding: 2 4;
+        margin-top: 1;
+    }
     """
 
     BINDINGS = [
-        ("ctrl+d", "deploy", "Siguiente (Desplegar)"),
+        ("ctrl+enter", "deploy", "Confirmar y Desplegar"),
         ("ctrl+b", "back", "Atrás"),
     ]
 
@@ -77,16 +133,18 @@ class ConfigScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with VerticalScroll(id="config-container", classes="p-2"):
+        with VerticalScroll(id="config-container"):
             yield Static("⚙️ CONFIGURACIÓN DE SERVICIOS", id="config-title", classes="section-title")
-            yield Static(id="plan-summary", markup=True)
+            
+            with Vertical(id="plan-summary-box"):
+                yield Static(id="plan-summary", markup=True)
 
             yield Static("### Variables Requeridas", id="vars-title", classes="section-title")
             yield Static("", id="validation-error", classes="ram-warning")
+            
             yield Vertical(id="forms-container")
 
             with Vertical(id="action-container"):
-                yield Static("─" * 60)
                 yield Button("⚡ CONFIRMAR Y CONTINUAR  [Ctrl+Enter]", id="confirm-button", variant="success")
                 yield Button("← Volver", id="back-button", variant="default")
 

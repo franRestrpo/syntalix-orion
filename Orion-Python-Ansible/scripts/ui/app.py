@@ -39,23 +39,37 @@ class OrionTUI(App):
     CSS = """
     Screen { background: #0D1117; }
 
-    Header { background: #161B22; }
-    Header > Static { color: #00D9FF; text-style: bold; }
+    Header { 
+        background: #161B22; 
+        color: #00D9FF; 
+        text-style: bold;
+        border-bottom: solid #00D9FF;
+    }
 
-    Footer { background: #161B22; }
-    Footer > Static { color: #6E7681; }
+    Footer { 
+        background: #161B22; 
+        color: #6E7681;
+        border-top: solid #21262D;
+    }
 
-    #main-container { height: 100%; layout: horizontal; }
-    #left-panel { width: 50%; height: 100%; border-right: solid #00D9FF; padding: 1 2; }
-    #right-panel { width: 50%; height: 100%; padding: 1 2; }
-
-    Button { margin: 1 0; }
+    Button { 
+        margin: 1 0; 
+        text-style: bold;
+    }
     Button:hover { background: #00D9FF; color: #0D1117; }
-    Button:focus { background: #00D9FF; color: #0D1117; border: solid #FFFFFF; }
+    Button:focus { background: #00D9FF; color: #0D1117; border: tall #FFFFFF; }
 
-    #status-display { border: solid #21262D; background: #161B22; }
     .p-2 { padding: 2; }
     .mt-2 { margin-top: 2; }
+    
+    /* Scrollbar styling */
+    ScrollBar {
+        background: #0D1117;
+        color: #00D9FF;
+    }
+    ScrollBar > Slider {
+        background: #00D9FF;
+    }
     """
 
     SCREENS = {

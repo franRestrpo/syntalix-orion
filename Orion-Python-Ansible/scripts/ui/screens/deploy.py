@@ -35,20 +35,32 @@ class DeployScreen(Screen):
     """
     CSS = """
     Screen { background: #0D1117; }
-    #deploy-layout { height: 100%; padding: 1; }
+    #deploy-layout { 
+        height: 100%; 
+        border: solid #00D9FF;
+        margin: 1 2;
+        padding: 1 2;
+        background: #0D1117;
+    }
     #deploy-title { text-style: bold; color: #00D9FF; margin-bottom: 1; }
-    #deploy-status { color: #8B949E; margin-bottom: 1; }
+    #deploy-status { color: #8B949E; margin-bottom: 1; italic: True; }
     #ansible-log {
         height: 100%;
-        border: solid #00D9FF;
+        border: tall #21262D;
         margin: 1 0;
-        background: #161B22;
-        overflow-y: auto;
+        background: #0D1117;
+        color: #E6EDF3;
     }
-    #button-container { height: auto; align: center middle; margin-top: 1; }
+    #button-container { 
+        height: auto; 
+        align: center middle; 
+        margin-top: 1; 
+        padding: 0 4;
+    }
+    .btn-error { background: #EF4444; color: #E6EDF3; text-style: bold; width: 100%; }
     .log-success { color: #10B981; }
     .log-error { color: #EF4444; }
-    .log-info { color: #00D9FF; }
+    .log-info { color: #38BDF8; }
     .log-warning { color: #F59E0B; }
     """
 
@@ -58,14 +70,14 @@ class DeployScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="p-2", id="deploy-layout"):
+        with Vertical(id="deploy-layout"):
             yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", id="deploy-title")
             yield Static("", id="deploy-status")
 
             yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
 
             with Vertical(id="button-container"):
-                yield Button("Salir", id="quit-button", variant="error", disabled=True)
+                yield Button("CERRAR Y SALIR", id="quit-button", variant="error", disabled=True, classes="btn-error")
 
         yield Footer()
 
