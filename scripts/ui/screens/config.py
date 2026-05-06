@@ -128,6 +128,8 @@ class ConfigScreen(Screen):
     }
     """
 
+    CSS_PATH = "config_screen.tcss"
+
     BINDINGS = [
         ("ctrl+enter", "deploy", "Confirmar y Desplegar"),
         ("ctrl+b", "back", "Atrás"),

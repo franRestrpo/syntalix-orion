@@ -1,0 +1,96 @@
+#main-container {
+    height: 100%;
+    layout: horizontal;
+    border: solid $accent;
+    margin: 1 2;
+    background: $background;
+}
+
+#left-panel {
+    width: 50%;
+    height: 100%;
+    border-right: solid $surface-elevated;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+#right-panel {
+    width: 50%;
+    height: 100%;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+#catalog-title {
+    text-style: bold;
+    color: $accent;
+}
+
+#catalog-subtitle {
+    color: $text-secondary;
+    margin-bottom: 1;
+    text-style: italic;
+}
+
+.category-header {
+    text-style: bold;
+    margin-top: 1;
+    padding: 0 1;
+}
+
+.category-core { color: #F472B6; }
+.category-data { color: #60A5FA; }
+.category-monitoring { color: #34D399; }
+.category-ai { color: #A78BFA; }
+.category-automation { color: #FB923C; }
+.category-communication { color: #38BDF8; }
+.category-management { color: #94A3B8; }
+
+#monitor-title {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+#status-display {
+    height: 70%;
+    padding: 1;
+    margin-bottom: 1;
+    border: tall $surface-elevated;
+    background: $surface;
+}
+
+#summary-container {
+    height: auto;
+    padding: 0 1;
+}
+
+#action-container {
+    height: auto;
+    align: center bottom;
+    padding: 1;
+}
+
+.btn-primary {
+    background: $accent;
+    color: $background;
+    text-style: bold;
+    width: 100%;
+}
+
+.btn-back {
+    color: $text-secondary;
+}
+
+#footer-hint {
+    color: $text-muted;
+}
+
+.app-selected { color: $success; }
+.app-dependency { color: #60A5FA; }
+.app-dependency-label { color: #38BDF8; }
+
+.ram-warning { color: $warning; }
+.ram-critical { color: $error; }
+
+.divider { color: $surface-elevated; margin: 1 0; }
