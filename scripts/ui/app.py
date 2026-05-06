@@ -8,9 +8,7 @@ de la selección de aplicaciones y la orquestación del despliegue visual.
 
 import sys
 from pathlib import Path
-
-from textual.app import App
-from textual.binding import Binding
+import sys
 
 SCRIPT_DIR = Path(__file__).parent.absolute()
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
@@ -27,6 +25,12 @@ from ui.screens.deploy.deploy_screen import DeployScreen
 
 logger = get_logger(__name__)
 
+def _load_theme_css() -> str:
+    theme_path = SCRIPT_DIR / "theme.tcss"
+    if theme_path.exists():
+        return theme_path.read_text()
+    return ""
+
 class OrionTUI(App):
     """
     Aplicación Principal de la TUI de Syntalix-Orion.
@@ -36,7 +40,7 @@ class OrionTUI(App):
     2. Configuración de parámetros y variables de entorno.
     3. Ejecución y monitoreo en tiempo real del despliegue mediante Ansible.
     """
-    CSS = ""
+    CSS = _load_theme_css()
 
     SCREENS = {
         "selection": SelectionScreen,
@@ -57,9 +61,6 @@ class OrionTUI(App):
         logger.info("OrionTUI inicializada con tema nuevo")
 
     def on_mount(self) -> None:
-        theme_path = SCRIPT_DIR / "theme.tcss"
-        if theme_path.exists():
-            self.stylesheet.load(str(theme_path))
         self.push_screen("selection")
 
     def on_selection_screen_selection_complete(self, message: SelectionScreen.SelectionComplete) -> None:
