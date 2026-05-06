@@ -156,7 +156,6 @@ def _is_user_facing_var(key: str) -> bool:
         bool: True si es una variable de Category C.
     """
     user_facing_patterns = [
-        "TRAEFIK__PASSWORD",
         "GRAFANA__PASSWORD",
         "PORTAINER__PASSWORD",
         "AUTHENTIK__PASSWORD",

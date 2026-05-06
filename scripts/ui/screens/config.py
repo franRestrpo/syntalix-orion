@@ -264,6 +264,8 @@ class ConfigScreen(Screen):
                     return False, f"El valor '{val}' para '{desc}' no es un correo válido."
             elif v_type in ("secret", "password"):
                 if _is_user_facing_password(var_name):
+                    if val.startswith("$2"):
+                        continue  # Ya está hasheada, saltar validación de texto plano
                     is_valid, error_msg = validate_password_strength(val)
                     if not is_valid:
                         return False, f"Contraseña débil para '{desc}': {error_msg}"
@@ -279,6 +281,26 @@ class ConfigScreen(Screen):
             return
 
         error_widget.update("")
+        
+        # Aplicar transformaciones criptográficas requeridas (ej: bcrypt para Traefik/Odoo)
+        from core.security import hash_password_bcrypt
+        for app_id, app_meta in self.raw_metadata.items():
+            for var_name, var_def in app_meta.get("variables", {}).items():
+                if var_def.get("transform") == "bcrypt":
+                    clean_var_name = var_name.upper()
+                    app_prefix = app_id.upper() + "_"
+                    if clean_var_name.startswith(app_prefix):
+                        clean_var_name = clean_var_name[len(app_prefix):]
+                    full_key = f"{app_id.upper()}__{clean_var_name}"
+                    
+                    val = self.user_inputs.get(full_key, "")
+                    if val and not val.startswith("$2"):
+                        try:
+                            self.user_inputs[full_key] = hash_password_bcrypt(val)
+                        except Exception as e:
+                            self.notify(f"Error encriptando {full_key}: {e}", severity="error")
+                            return
+
         self.app.state_store.user_variables.update(self.user_inputs)
         if self.app.state_store.deployment_plan:
             self.app.state_store.deployment_plan.vars_generated.update(self.user_inputs)

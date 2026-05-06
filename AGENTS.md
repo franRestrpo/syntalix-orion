@@ -108,10 +108,10 @@ syntalix-orion/
 
 ### Categoría C: Aplicaciones con Interfaz (TUI)
 - **Origen:** Entrada directa del usuario en `ConfigScreen`
-- **Regla Crítica:** **PROHIBIDO HASHEAR** - Persistir texto plano fiel al ingreso
-- **Razón:** Compatibilidad con protocolos de autenticación de Docker Swarm y Traefik
-- **Validación obligatoria:** Fortaleza mínima antes de persistir
-- **Ejemplos:** `TRAEFIK_PASSWORD`, `GRAFANA_PASSWORD`, `PORTAINER_PASSWORD`
+- **Regla Crítica:** **PROHIBIDO HASHEAR por defecto** (salvo excepciones explícitas como Traefik) - Persistir texto plano fiel al ingreso para la mayoría de las apps.
+- **Excepción:** Traefik requiere **obligatoriamente** el uso de un hash (ej. bcrypt) para el middleware `basicauth`. Esta contraseña se solicitará en texto plano en la TUI pero deberá ser transformada a hash (bcrypt) antes de persistirse.
+- **Validación obligatoria:** Fortaleza mínima antes de persistir (antes de cualquier hasheo).
+- **Ejemplos:** `GRAFANA_PASSWORD`, `PORTAINER_PASSWORD` (texto plano). `TRAEFIK_PASSWORD` (hasheado con bcrypt).
 
 ## Validación de Fortaleza para Categoría C
 
