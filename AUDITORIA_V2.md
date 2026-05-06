@@ -8,7 +8,7 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 
 ### Hallazgos
 - [x] **Ejecución de Comandos (`shell=True`):** 
-  - **Ubicación:** `Orion-Python-Ansible/scripts/core/preflight.py`.
+  - **Ubicación:** `scripts/core/preflight.py`.
   - **Estado:** ✅ Solucionado. Se reemplazó la lógica de `subprocess` con `shutil.which`.
   - **Recomendación:** Mantener el uso de utilidades nativas de Python para evitar la exposición a inyecciones de shell.
 

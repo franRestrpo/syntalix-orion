@@ -97,7 +97,7 @@ Los tests pueden integrarse con CI/CD:
 # .github/workflows/test.yml
 - name: Run tests
   run: |
-    cd Orion-Python-Ansible/scripts
+    cd scripts
     pip install -r requirements.txt
     pytest --cov=core --junitxml=report.xml
 ```

@@ -97,8 +97,7 @@ flowchart TD
 ├── setup.sh                # Script de bootstrapping del servidor
 ├── site.yml                # Playbook maestro de Ansible
 ├── group_vars/all/vars.yml # Archivo consolidado de credenciales generado por la UI
-├── Orion-Python-Ansible/   # Capa lógica (Python) y utilidades
-│   └── scripts/            # Núcleo Python: TUI, dependencia de grafos, seguridad
+├── scripts/                # Núcleo Python: TUI, dependencia de grafos, seguridad
 ├── roles/                  # Roles de Ansible separados por capas:
 │   ├── core/               # - Base del sistema y Docker
 │   ├── data/               # - Bases de datos (Postgres, Mongo, etc.)

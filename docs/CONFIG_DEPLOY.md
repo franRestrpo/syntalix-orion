@@ -56,7 +56,7 @@ Syntalix-Orion incluye un **Wizard Interactivo** para facilitar el despliegue de
 Para iniciar el asistente, ejecute el script de Python:
 
 ```bash
-python3 Orion-Python-Ansible/scripts/main.py
+python3 main.py
 ```
 
 El asistente le solicitará:

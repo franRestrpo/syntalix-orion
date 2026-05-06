@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 
 # Configuración dinámica del PATH para asegurar la importación de módulos internos
-SCRIPT_DIR = Path(__file__).parent / "Orion-Python-Ansible" / "scripts"
+SCRIPT_DIR = Path(__file__).parent / "scripts"
 if SCRIPT_DIR.exists():
     sys.path.insert(0, str(SCRIPT_DIR))
 
