@@ -15,14 +15,12 @@ error() { echo -e "${ROJO}[ERROR]${RESET} $1" | tee -a setup.log; exit 1; }
 
 echo "=== Syntalix-Orion V2 Setup $(date) ===" > setup.log
 
-# 1. Validación de Root
 if [ "$EUID" -ne 0 ]; then
   error "Este script debe ejecutarse como root (sudo -i)"
 fi
 
 log "Iniciando preparación del entorno Syntalix-Orion V2..."
 
-# 2. Instalación de dependencias del SISTEMA
 SYS_DEPS="python3 python3-venv python3-pip git sshpass curl"
 
 export DEBIAN_FRONTEND=noninteractive
@@ -31,9 +29,8 @@ log "Actualizando repositorios..."
 apt-get update -qq >> setup.log 2>&1
 
 log "Instalando dependencias base (Python, Git, etc.)..."
-apt-get install -y $SYS_DEPS >> setup.log 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS). Revisa el archivo setup.log para ver el error exacto."
+apt-get install -y $SYS_DEPS >> setup.log 2>&1 || error "Fallo al instalar dependencias ($SYS_DEPS). Revisa setup.log."
 
-# Instalación limpia y oficial de Docker
 if ! command -v docker &> /dev/null; then
     log "Docker no encontrado. Instalando motor Docker oficial..."
     curl -fsSL https://get.docker.com -o get-docker.sh
@@ -61,63 +58,48 @@ PIP_CMD="$VENV_DIR/bin/pip"
 log "Instalando dependencias Python..."
 $PIP_CMD install --upgrade pip > /dev/null
 
-# Dependencias principales
-$PIP_CMD install ansible ansible-runner pyyaml > /dev/null
+if ! command -v uv &> /dev/null; then
+    log "Instalando uv (gestor de paquetes moderno)..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh >> setup.log 2>&1
+    UV_CMD="$HOME/.cargo/bin/uv"
+else
+    UV_CMD="uv"
+fi
 
-# SDKs y utilities
-$PIP_CMD install docker requests websocket-client jsondiff > /dev/null
-
-# Textual UI
-$PIP_CMD install textual > /dev/null
-
-# Nuevas dependencias V2
-$PIP_CMD install bcrypt pydantic jinja2 > /dev/null
+log "Instalando Syntalix-Orion como paquete editable..."
+cd "$(dirname "$0")"
+$VENV_DIR/bin/python -m pip install -e . >> setup.log 2>&1 || error "Fallo al instalar el paquete. Revisa setup.log."
 
 success "Entorno Python configurado."
 
-# Instalar Colecciones de Ansible requeridas
 log "Instalando colecciones de Ansible Galaxy..."
-$VENV_DIR/bin/ansible-galaxy collection install -r requirements.yml > /dev/null
+$VENV_DIR/bin/ansible-galaxy collection install -r requirements.yml > /dev/null 2>&1 || warn "Fallo al instalar colecciones de Ansible."
 success "Colecciones de Ansible instaladas."
 
-# 4. Validaciones Pre-vuelo
 log "Ejecutando validaciones pre-vuelo..."
 
-# Verificar Python
 PYTHON_VERSION=$($VENV_DIR/bin/python --version 2>&1)
 log "Python: $PYTHON_VERSION"
 
-# Verificar pip
-log "Verificando paquetes instalados..."
-REQUIRED_PKGS="ansible textual pyyaml pydantic bcrypt jinja2"
-MISSING=""
-
-for pkg in $REQUIRED_PKGS; do
-    if ! $VENV_DIR/bin/python -c "import $pkg" 2>/dev/null; then
-        MISSING="$MISSING $pkg"
-    fi
-done
-
-if [ -n "$MISSING" ]; then
-    warn "Paquetes faltantes:$MISSING - instalando..."
-    $PIP_CMD install $MISSING > /dev/null
+log "Verificando instalación del paquete..."
+if $VENV_DIR/bin/python -c "import syntalix_orion" 2>/dev/null; then
+    success "Paquete syntalix_orion instalado correctamente."
+else
+    error "El paquete no se instaló correctamente."
 fi
 
 success "Validaciones completadas."
 
-# 5. Ejecutar Syntalix-Orion
 log "Iniciando Syntalix-Orion V2..."
 echo "=============================================="
 
-# Por defecto modo local
 RUNNER_MODE=${RUNNER_MODE:-real}
 export RUNNER_MODE
 
-# Si se pasa el flag --deploy y ya existe ansible_vars.yml, despliega directo
 if [[ "$1" == "--deploy" || "$1" == "-d" ]]; then
-    if [ -f "ansible_vars.yml" ]; then
+    if [ -f "secrets/.env" ]; then
         log "Modo desatendido: Ejecutando Ansible Playbook directamente..."
-        $VENV_DIR/bin/ansible-playbook -i inventory.ini site.yml -e @ansible_vars.yml
+        $VENV_DIR/bin/ansible-playbook -i inventory.ini site.yml -e @secrets/.env
         if [ $? -eq 0 ]; then
             success "Despliegue finalizado correctamente."
             exit 0
@@ -125,11 +107,11 @@ if [[ "$1" == "--deploy" || "$1" == "-d" ]]; then
             error "Error durante el despliegue con Ansible."
         fi
     else
-        error "No se encontró ansible_vars.yml. Ejecuta primero sin --deploy para generarlo en la TUI."
+        error "No se encontró secrets/.env. Ejecuta primero sin --deploy para configurarlo en la TUI."
     fi
 fi
 
-$VENV_DIR/bin/python main.py local
+$VENV_DIR/bin/orion
 
 if [ $? -eq 0 ]; then
     echo "=============================================="

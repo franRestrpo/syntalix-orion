@@ -1,24 +1,24 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
     state: directory
     mode: "0755"
 
-- name: "Generar hash bcrypt para la contraseña de Traefik"
-  ansible.builtin.shell:
-    cmd: "python3 -c \"import sys, bcrypt; p=sys.argv[1]; print(p if p.startswith(('$2a$', '$2b$', '$2y$')) else bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode())\" \"{{ TRAEFIK__TRAEFIK_PASSWORD | default('admin', true) }}\""
-  register: traefik_pwd_hash
-  changed_when: false
-
 - name: "Configurar app_actual para traefik"
   ansible.builtin.set_fact:
     app_actual:
       nombre: "traefik"
       dominio: "{{ TRAEFIK__DASHBOARD_URL | default('traefik.localhost', true) }}"
-      usuario_admin: "{{ TRAEFIK__TRAEFIK_USER | default('admin', true) }}"
+      usuario_admin: "{{ TRAEFIK__USER | default('admin', true) }}"
       acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ traefik_pwd_hash.stdout }}"
+      password_db: "{{ TRAEFIK__PASSWORD | default('') }}"
 
 - name: "🌐 Asegurar que existen los volúmenes externos necesarios"
   ansible.builtin.shell:
@@ -29,10 +29,10 @@
   register: vol_creation
   changed_when: false
 
-- name: "Generar archivo .env para traefik"
+- name: "Generar archivo .env para traefik en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/traefik.env.j2"
-    dest: "{{ playbook_dir }}/deploy/traefik.env"
+    dest: "{{ playbook_dir }}/secrets/traefik.env"
   register: config_env
 
 - name: "Generar docker-compose para traefik"

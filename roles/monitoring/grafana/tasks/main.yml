@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -14,10 +20,10 @@
       acme_email: "{{ lookup('vars', 'GRAFANA__ACME_EMAIL', default='admin@localhost') }}"
       password_db: "{{ lookup('vars', 'GRAFANA__PASSWORD', default=lookup('vars', 'GRAFANA_PASSWORD', default='securepass')) }}"
 
-- name: "Generar archivo .env para grafana"
+- name: "Generar archivo .env para grafana en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/grafana.env.j2"
-    dest: "{{ playbook_dir }}/deploy/grafana.env"
+    dest: "{{ playbook_dir }}/secrets/grafana.env"
   register: config_env
 
 - name: "Generar docker-compose para grafana"

@@ -27,6 +27,7 @@ services:
 
     volumes:
       - "vol_certificates:/etc/traefik/letsencrypt"
+      - "../logs:/var/log/traefik"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
     networks:

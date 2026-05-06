@@ -65,6 +65,7 @@ secrets.yml
 *.pem
 *.key
 deploy/
+secrets/
 credenciales/
 ansible_vars.yml
 node_modules/

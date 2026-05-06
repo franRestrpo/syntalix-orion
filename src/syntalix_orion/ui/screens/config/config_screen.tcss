@@ -1,0 +1,16 @@
+/* ConfigScreen - Placeholder styles */
+Screen {
+    background: $surface;
+}
+
+#main-container {
+    height: 100%;
+}
+
+#left-panel {
+    width: 60%;
+}
+
+#right-panel {
+    width: 40%;
+}

@@ -1,4 +1,10 @@
 ---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
 - name: "Crear directorio de despliegue si no existe"
   ansible.builtin.file:
     path: "{{ playbook_dir }}/deploy"
@@ -15,10 +21,10 @@
       secret_key_base: "{{ vars.get('CHATWOOT__SECRET_KEY_BASE', 'securekey') }}"
       redis_pass: "{{ vars.get('REDIS__PASSWORD', 'securepass') }}"
 
-- name: "Generar archivo .env para chatwoot"
+- name: "Generar archivo .env para chatwoot en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/chatwoot.env.j2"
-    dest: "{{ playbook_dir }}/deploy/chatwoot.env"
+    dest: "{{ playbook_dir }}/secrets/chatwoot.env"
   register: config_env
 
 - name: "Generar docker-compose para chatwoot"

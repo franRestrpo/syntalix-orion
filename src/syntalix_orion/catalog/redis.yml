@@ -1,0 +1,12 @@
+id: redis
+name: Redis
+category: Data
+version: latest
+ram_mb: 256
+dependencies: []
+variables:
+  REDIS_PASSWORD:
+    type: secret
+    description: "Redis password"
+    auto_generate: true
+    length: 32
