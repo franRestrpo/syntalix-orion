@@ -150,17 +150,17 @@ def _is_user_facing_var(key: str) -> bool:
     donde el usuario ingresa la contraseña directamente.
 
     Args:
-        key: Clave de variable (ej: TRAEFIK__TRAEFIK_PASSWORD)
+        key: Clave de variable (ej: TRAEFIK__PASSWORD)
 
     Returns:
         bool: True si es una variable de Category C.
     """
     user_facing_patterns = [
-        "TRAEFIK__TRAEFIK_PASSWORD",
-        "GRAFANA__GRAFANA_PASSWORD",
-        "PORTAINER__PORTAINER_PASSWORD",
-        "AUTHENTIK__AUTHENTIK_PASSWORD",
-        "CHATWOOT__CHATWOOT_PASSWORD",
+        "TRAEFIK__PASSWORD",
+        "GRAFANA__PASSWORD",
+        "PORTAINER__PASSWORD",
+        "AUTHENTIK__PASSWORD",
+        "CHATWOOT__PASSWORD",
     ]
     return key in user_facing_patterns
 

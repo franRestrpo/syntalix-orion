@@ -405,18 +405,18 @@ def _is_user_facing_password(full_key: str) -> bool:
     Determina si una clave completa (APPID__VAR) corresponde a Category C.
 
     Args:
-        full_key: Clave completa (ej: TRAEFIK__TRAEFIK_PASSWORD)
+        full_key: Clave completa (ej: TRAEFIK__PASSWORD)
 
     Returns:
         bool: True si es Category C.
     """
     user_facing_keys = {
-        "TRAEFIK__TRAEFIK_PASSWORD",
-        "GRAFANA__GRAFANA_PASSWORD",
+        "TRAEFIK__PASSWORD",
+        "GRAFANA__PASSWORD",
         "GF_SECURITY__ADMIN_PASSWORD",
-        "PORTAINER__PORTAINER_PASSWORD",
-        "AUTHENTIK__AUTHENTIK_PASSWORD",
-        "CHATWOOT__CHATWOOT_PASSWORD",
+        "PORTAINER__PASSWORD",
+        "AUTHENTIK__PASSWORD",
+        "CHATWOOT__PASSWORD",
     }
     return full_key in user_facing_keys
 
