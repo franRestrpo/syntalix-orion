@@ -58,13 +58,15 @@ class DeployScreen(Screen):
     
     #log-container {
         height: 1fr;
-        border: tall #21262D;
-        background: #161B22;
-        margin-bottom: 1;
+        overflow: hidden;
     }
-    
+
     #ansible-log {
         height: 100%;
+        width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #161B22;
         color: #E6EDF3;
     }
     
@@ -97,8 +99,8 @@ class DeployScreen(Screen):
             yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", classes="section-title")
             yield Static("", id="deploy-status")
             
-            with Vertical(id="log-container"):
-                yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
+            with VerticalScroll(id="log-container"):
+                yield RichLog(id="ansible-log", highlight=True, auto_scroll=True, can_focus=True)
 
             with Vertical(id="action-container"):
                 yield Button("CERRAR Y SALIR", id="quit-button", variant="error", disabled=True, classes="btn-error")
