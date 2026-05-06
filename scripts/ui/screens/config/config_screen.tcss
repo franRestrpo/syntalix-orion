@@ -1,0 +1,106 @@
+#main-container {
+    height: 100%;
+    layout: horizontal;
+    border: solid $accent;
+    margin: 1 2;
+    background: $background;
+}
+
+#left-panel {
+    width: 60%;
+    height: 100%;
+    border-right: solid $surface-elevated;
+    padding: 0 2;
+    overflow-y: auto;
+}
+
+#right-panel {
+    width: 40%;
+    height: 100%;
+    padding: 1 2;
+}
+
+.section-title {
+    text-style: bold;
+    color: $accent;
+    margin: 1 0 0 0;
+}
+
+.app-title {
+    text-style: bold;
+    color: #F472B6;
+    margin-top: 1;
+    padding: 0 1;
+    background: $surface;
+}
+
+.form-label {
+    color: #38BDF8;
+    text-style: bold;
+    margin-top: 0;
+}
+
+.form-desc {
+    color: $text-secondary;
+    margin-bottom: 0;
+    text-style: italic;
+}
+
+Input {
+    background: $surface;
+    border: tall $accent;
+    color: #FFFFFF;
+    margin: 0 0 1 0;
+    height: 3;
+    padding: 0 1;
+}
+
+Input:focus {
+    border: tall #FFFFFF;
+    background: $background;
+}
+
+#status-display {
+    height: 75%;
+    padding: 1;
+    margin-bottom: 1;
+    border: tall $surface-elevated;
+    background: $background;
+}
+
+#action-container {
+    height: auto;
+    align: center bottom;
+}
+
+.btn-success {
+    background: $success;
+    color: $background;
+    text-style: bold;
+    width: 100%;
+    height: 3;
+}
+
+.btn-back {
+    color: $text-secondary;
+    width: 100%;
+}
+
+.ram-warning {
+    color: $error;
+    margin: 0;
+}
+
+.input-row {
+    margin-bottom: 0;
+    height: auto;
+}
+
+#forms-scroll-container {
+    height: 1fr;
+    overflow-y: auto;
+}
+
+#forms-container {
+    height: auto;
+}

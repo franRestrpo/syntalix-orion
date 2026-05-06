@@ -38,15 +38,15 @@ syntalix-orion/
 ├── engine/                          # Motor de ejecución Ansible
 │   └── ansible_runner_real.py      # Runner asíncrono basado en subprocess
 │
-├── Orion-Python-Ansible/scripts/    # Módulos Python (TUI, core, tests)
-│   ├── tui.py                      # Punto de entrada de la interfaz
-│   ├── core/                       # Lógica de negocio (DependencyGraph, Security, State)
-│   ├── ui/                         # Componentes de la interfaz Textual
-│   │   ├── app.py                  # Clase OrionTUI principal
-│   │   ├── screens/                # Pantallas (Selection, Config, Deploy)
-│   │   ├── managers/               # Gestores de estado (StateStore)
-│   │   └── components/             # Widgets personalizados
-│   └── tests/                      # Suite de tests pytest
+├── scripts/                   # Módulos Python (TUI, core, tests)
+│   ├── tui.py               # Punto de entrada de la interfaz
+│   ├── core/                # Lógica de negocio (DependencyGraph, Security, State)
+│   ├── ui/                  # Componentes de la interfaz Textual
+│   │   ├── app.py           # Clase OrionTUI principal
+│   │   ├── screens/         # Pantallas (Selection, Config, Deploy)
+│   │   ├── managers/        # Gestores de estado (StateStore)
+│   │   └── components/      # Widgets personalizados
+│   └── tests/               # Suite de tests pytest
 │
 ├── roles/                          # Roles Ansible (core, data, monitoring, apps)
 ├── group_vars/all/vars.yml         # Variables centralizadas

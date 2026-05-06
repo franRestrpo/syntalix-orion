@@ -23,7 +23,7 @@ from core.logging_config import get_logger
 from ui.managers.state_store import StateStore
 from ui.screens.selection import SelectionScreen
 from ui.screens.config import ConfigScreen
-from ui.screens.deploy import DeployScreen
+from ui.screens.deploy.deploy_screen import DeployScreen
 
 logger = get_logger(__name__)
 
@@ -36,27 +36,7 @@ class OrionTUI(App):
     2. Configuración de parámetros y variables de entorno.
     3. Ejecución y monitoreo en tiempo real del despliegue mediante Ansible.
     """
-    CSS = """
-    Screen { background: #0D1117; }
-
-    Header { background: #161B22; }
-    Header > Static { color: #00D9FF; text-style: bold; }
-
-    Footer { background: #161B22; }
-    Footer > Static { color: #6E7681; }
-
-    #main-container { height: 100%; layout: horizontal; }
-    #left-panel { width: 50%; height: 100%; border-right: solid #00D9FF; padding: 1 2; }
-    #right-panel { width: 50%; height: 100%; padding: 1 2; }
-
-    Button { margin: 1 0; }
-    Button:hover { background: #00D9FF; color: #0D1117; }
-    Button:focus { background: #00D9FF; color: #0D1117; border: solid #FFFFFF; }
-
-    #status-display { border: solid #21262D; background: #161B22; }
-    .p-2 { padding: 2; }
-    .mt-2 { margin-top: 2; }
-    """
+    CSS = ""
 
     SCREENS = {
         "selection": SelectionScreen,
@@ -77,6 +57,9 @@ class OrionTUI(App):
         logger.info("OrionTUI inicializada con tema nuevo")
 
     def on_mount(self) -> None:
+        theme_path = SCRIPT_DIR / "theme.tcss"
+        if theme_path.exists():
+            self.stylesheet.load(str(theme_path))
         self.push_screen("selection")
 
     def on_selection_screen_selection_complete(self, message: SelectionScreen.SelectionComplete) -> None:

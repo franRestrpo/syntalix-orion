@@ -52,7 +52,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "required": True
             },
             "TRAEFIK_PASSWORD": {
-                "type": "string",
+                "type": "secret",
                 "description": "Traefik Dashboard Password (texto plano)",
                 "required": True,
                 "auto_generate": False
@@ -85,7 +85,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "category": "Core",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["crowdsec", "traefik", "postgres_pgvector"],
+        "dependencies": ["crowdsec", "traefik", "postgres_pgvector", "redis"],
         "variables": {
             "AUTHENTIK_DOMAIN": {
                 "type": "domain",
@@ -298,13 +298,15 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
             "GRAFANA_USER": {
                 "type": "string",
                 "description": "Admin user for Grafana",
-                "default": "admin"
+                "default": "admin",
+                "auto_generate": False,
+                "required": True
             },
             "GRAFANA_PASSWORD": {
                 "type": "secret",
                 "description": "Admin password for Grafana",
-                "auto_generate": True,
-                "length": 16
+                "auto_generate": False,
+                "required": True
             }
         }
     },
