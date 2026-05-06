@@ -201,21 +201,28 @@ def hash_password_bcrypt(password: str) -> str:
     """
     Realiza un hasheo irreversible utilizando el algoritmo bcrypt.
     
-    Este método es el estándar para almacenar credenciales de usuario de forma segura, 
-    añadiendo un 'salt' aleatorio de forma transparente.
+    Este método es el estándar para almacenar credenciales de usuario de forma segura.
+    Se adapta el prefijo a '$2y$' para emular la salida de `htpasswd -nbB`, 
+    garantizando compatibilidad 100% con el basicauth de Traefik.
     
     Args:
         password (str): Contraseña en texto plano que se desea proteger.
         
     Returns:
-        str: Hash bcrypt resultante codificado en UTF-8.
+        str: Hash bcrypt resultante codificado en UTF-8 y compatible con htpasswd.
     """
     if not BCRYPT_AVAILABLE:
         raise ImportError("bcrypt no está instalado. Ejecute: pip install bcrypt")
     
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed.decode('utf-8')
+    hash_str = hashed.decode('utf-8')
+    
+    # Traefik y htpasswd de Apache esperan el prefijo $2y$
+    if hash_str.startswith("$2b$"):
+        hash_str = hash_str.replace("$2b$", "$2y$", 1)
+        
+    return hash_str
 
 
 def verify_password_bcrypt(password: str, hashed: str) -> bool:

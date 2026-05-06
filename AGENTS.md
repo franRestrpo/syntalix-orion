@@ -109,9 +109,9 @@ syntalix-orion/
 ### Categoría C: Aplicaciones con Interfaz (TUI)
 - **Origen:** Entrada directa del usuario en `ConfigScreen`
 - **Regla Crítica:** **PROHIBIDO HASHEAR por defecto** (salvo excepciones explícitas como Traefik) - Persistir texto plano fiel al ingreso para la mayoría de las apps.
-- **Excepción:** Traefik requiere **obligatoriamente** el uso de un hash (ej. bcrypt) para el middleware `basicauth`. Esta contraseña se solicitará en texto plano en la TUI pero deberá ser transformada a hash (bcrypt) antes de persistirse.
+- **Excepción:** Traefik requiere **obligatoriamente** el uso de un hash `htpasswd` para el middleware `basicauth`. La aplicación se encarga de emular la salida de `htpasswd -nbB` (prefijo `$2y$`) para evitar problemas de compatibilidad causados por el prefijo `$2b$` de Python.
 - **Validación obligatoria:** Fortaleza mínima antes de persistir (antes de cualquier hasheo).
-- **Ejemplos:** `GRAFANA_PASSWORD`, `PORTAINER_PASSWORD` (texto plano). `TRAEFIK_PASSWORD` (hasheado con bcrypt).
+- **Ejemplos:** `GRAFANA_PASSWORD`, `PORTAINER_PASSWORD` (texto plano). `TRAEFIK_PASSWORD` (hasheado con bcrypt formato htpasswd `$2y$`).
 
 ## Validación de Fortaleza para Categoría C
 
