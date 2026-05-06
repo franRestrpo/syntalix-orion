@@ -35,29 +35,56 @@ class DeployScreen(Screen):
     """
     CSS = """
     Screen { background: #0D1117; }
-    #deploy-layout { 
+    
+    #main-container { 
         height: 100%; 
+        layout: horizontal; 
         border: solid #00D9FF;
         margin: 1 2;
-        padding: 1 2;
         background: #0D1117;
     }
-    #deploy-title { text-style: bold; color: #00D9FF; margin-bottom: 1; }
-    #deploy-status { color: #8B949E; margin-bottom: 1; text-style: italic; }
+    
+    #left-panel { 
+        width: 70%; 
+        height: 100%; 
+        border-right: solid #21262D; 
+        padding: 1 2; 
+    }
+    
+    #right-panel { 
+        width: 30%; 
+        height: 100%; 
+        padding: 1 2; 
+    }
+    
+    .section-title { 
+        text-style: bold; 
+        color: #00D9FF; 
+        margin-bottom: 1;
+    }
+    
     #ansible-log {
-        height: 100%;
+        height: 1fr;
         border: tall #21262D;
-        margin: 1 0;
         background: #0D1117;
         color: #E6EDF3;
+        margin-top: 1;
     }
-    #button-container { 
+    
+    #status-display { 
+        height: 75%; 
+        padding: 1; 
+        margin-bottom: 1; 
+        border: tall #21262D;
+        background: #0D1117;
+    }
+    
+    #action-container { 
         height: auto; 
-        align: center middle; 
-        margin-top: 1; 
-        padding: 0 4;
+        align: center bottom; 
     }
-    .btn-error { background: #EF4444; color: #E6EDF3; text-style: bold; width: 100%; }
+    
+    .btn-error { background: #EF4444; color: #FFFFFF; text-style: bold; width: 100%; height: 3; }
     .log-success { color: #10B981; }
     .log-error { color: #EF4444; }
     .log-info { color: #38BDF8; }
@@ -70,15 +97,18 @@ class DeployScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(id="deploy-layout"):
-            yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", id="deploy-title")
-            yield Static("", id="deploy-status")
+        with Horizontal(id="main-container"):
+            with Vertical(id="left-panel"):
+                yield Static("🚀 EJECUCIÓN DE ANSIBLE", classes="section-title")
+                yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
 
-            yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
-
-            with Vertical(id="button-container"):
-                yield Button("CERRAR Y SALIR", id="quit-button", variant="error", disabled=True, classes="btn-error")
-
+            with Vertical(id="right-panel"):
+                yield Static("📊 ESTADO", classes="section-title")
+                with VerticalScroll(id="status-display"):
+                     yield Static("", id="deploy-status", markup=True)
+                
+                with Vertical(id="action-container"):
+                    yield Button("CERRAR Y SALIR", id="quit-button", variant="error", disabled=True, classes="btn-error")
         yield Footer()
 
     def on_mount(self) -> None:
