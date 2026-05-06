@@ -430,7 +430,9 @@ class DependencyGraph:
 
         existing_vars = existing_vars or {}
 
-        # Preservar y generar variables para todas las apps del plan
+        selected_apps = [aid for aid in ordered_plan if aid in app_ids]
+        dependencies = [aid for aid in ordered_plan if aid not in app_ids]
+
         all_vars: Dict[str, Any] = existing_vars.copy()
 
         # Añadir la lista de roles activos para Ansible
