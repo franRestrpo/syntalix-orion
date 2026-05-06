@@ -52,7 +52,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "required": True
             },
             "TRAEFIK_PASSWORD": {
-                "type": "password",
+                "type": "secret",
                 "description": "Traefik Dashboard Password (texto plano)",
                 "required": True,
                 "auto_generate": False
@@ -303,7 +303,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
                 "required": True
             },
             "GRAFANA_PASSWORD": {
-                "type": "password",
+                "type": "secret",
                 "description": "Admin password for Grafana",
                 "auto_generate": False,
                 "required": True
