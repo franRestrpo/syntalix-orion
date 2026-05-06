@@ -37,8 +37,8 @@ class DeployScreen(Screen):
     Screen { background: #0D1117; }
     
     #main-layout { 
-        height: 100%; 
-        border: solid #00D9FF;
+        height: 1fr; 
+        border: tall #00D9FF;
         margin: 1 2;
         padding: 1 2;
         background: #0D1117;
@@ -47,7 +47,7 @@ class DeployScreen(Screen):
     .section-title { 
         text-style: bold; 
         color: #00D9FF; 
-        margin-bottom: 1;
+        margin: 1 2;
     }
     
     #deploy-status { 
@@ -90,8 +90,8 @@ class DeployScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", classes="section-title")
         with Vertical(id="main-layout"):
-            yield Static("🚀 DESPLIEGUE DE INFRAESTRUCTURA", classes="section-title")
             yield Static("", id="deploy-status")
             
             yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
