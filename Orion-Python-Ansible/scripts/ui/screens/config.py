@@ -37,75 +37,83 @@ class ConfigScreen(Screen):
     """
     CSS = """
     Screen { background: #0D1117; }
-    #config-container { 
+    
+    #main-container { 
         height: 100%; 
+        layout: horizontal; 
         border: solid #00D9FF;
         margin: 1 2;
         background: #0D1117;
     }
-    #forms-container { 
-        padding: 1 4;
+    
+    #left-panel { 
+        width: 60%; 
+        height: 100%; 
+        border-right: solid #21262D; 
+        padding: 1 2; 
     }
+    
+    #right-panel { 
+        width: 40%; 
+        height: 100%; 
+        padding: 1 2; 
+    }
+    
     .section-title { 
         text-style: bold; 
         color: #00D9FF; 
-        margin: 1 0;
-        padding-left: 2;
+        margin-bottom: 1;
     }
-    .app-block { 
-        border: tall #21262D; 
-        padding: 1 2; 
-        margin: 1 0; 
-        background: #161B22; 
-    }
+    
     .app-title { 
         text-style: bold; 
         color: #F472B6; 
         margin-top: 1;
-        background: #161B22;
         padding: 0 1;
     }
+    
     .form-label { 
         color: #38BDF8; 
         text-style: bold;
         margin-top: 1; 
     }
+    
     .form-desc { 
         color: #8B949E; 
         margin-bottom: 0;
         text-style: italic;
     }
+    
     Input {
         background: #161B22;
-        border: tall #21262D;
-        color: #E6EDF3;
-        margin: 0 0 1 0;
+        border: tall #00D9FF;
+        color: #FFFFFF;
+        margin: 1 0;
+        height: 3;
         padding: 0 1;
     }
+    
     Input:focus {
-        border: tall #00D9FF;
+        border: tall #FFFFFF;
         background: #0D1117;
     }
-    Input.-valid {
-        border: tall #10B981;
-    }
-    Input.-invalid {
-        border: tall #EF4444;
-    }
 
-    #plan-summary-box {
-        background: #161B22;
-        border: solid #21262D;
-        margin: 1 2;
-        padding: 1;
+    #status-display { 
+        height: 75%; 
+        padding: 1; 
+        margin-bottom: 1; 
+        border: tall #21262D;
+        background: #0D1117;
     }
-
-    .btn-success { background: #10B981; color: #0D1117; text-style: bold; width: 100%; }
-    .btn-back { color: #8B949E; width: 100%; }
+    
     #action-container { 
-        padding: 2 4;
-        margin-top: 1;
+        height: auto; 
+        align: center bottom; 
     }
+    
+    .btn-success { background: #10B981; color: #0D1117; text-style: bold; width: 100%; height: 3; }
+    .btn-back { color: #8B949E; width: 100%; }
+    .ram-warning { color: #EF4444; margin: 1 0; }
     """
 
     BINDINGS = [
@@ -133,21 +141,20 @@ class ConfigScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with VerticalScroll(id="config-container"):
-            yield Static("⚙️ CONFIGURACIÓN DE SERVICIOS", id="config-title", classes="section-title")
-            
-            with Vertical(id="plan-summary-box"):
-                yield Static(id="plan-summary", markup=True)
+        with Horizontal(id="main-container"):
+            with VerticalScroll(id="left-panel"):
+                yield Static("📝 VARIABLES REQUERIDAS", classes="section-title")
+                yield Static("", id="validation-error", classes="ram-warning")
+                yield Vertical(id="forms-container")
 
-            yield Static("### Variables Requeridas", id="vars-title", classes="section-title")
-            yield Static("", id="validation-error", classes="ram-warning")
-            
-            yield Vertical(id="forms-container")
-
-            with Vertical(id="action-container"):
-                yield Button("⚡ CONFIRMAR Y CONTINUAR  [Ctrl+Enter]", id="confirm-button", variant="success")
-                yield Button("← Volver", id="back-button", variant="default")
-
+            with Vertical(id="right-panel"):
+                yield Static("📊 RESUMEN DE INSTALACIÓN", classes="section-title")
+                with VerticalScroll(id="status-display"):
+                     yield Static(id="plan-summary", markup=True)
+                
+                with Vertical(id="action-container"):
+                    yield Button("⚡ CONFIRMAR Y CONTINUAR [Ctrl+Enter]", id="confirm-button", variant="success", classes="btn-success")
+                    yield Button("← Volver", id="back-button", variant="default", classes="btn-back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -179,10 +186,19 @@ class ConfigScreen(Screen):
 
             summary = self.query_one("#plan-summary", Static)
             lines = [
-                f"- **Apps seleccionadas:** {len(selected)}",
-                f"- **Total a instalar:** {len(plan.plan)}",
-                f"- **RAM Estimada:** {plan.ram_total_mb} MB",
+                "[b]★ Apps en el Plan:[/b]",
             ]
+            for app_id in plan.plan:
+                app_meta = self.raw_metadata.get(app_id, {})
+                name = app_meta.get("name", app_id)
+                ram = app_meta.get("ram_mb", 0)
+                lines.append(f"  • {name} ([dim]{ram}MB[/])")
+            
+            lines.append("")
+            lines.append(f"[b]Resumen:[/b]")
+            lines.append(f"  Total Apps: [bold]{len(plan.plan)}[/]")
+            lines.append(f"  RAM Total: [bold #00D9FF]{plan.ram_total_mb}MB[/]")
+            
             summary.update("\n".join(lines))
 
             self.required_vars.clear()
@@ -211,7 +227,6 @@ class ConfigScreen(Screen):
                     app_vars_map[app_name] = app_specific_vars
 
             forms_container = self.query_one("#forms-container", Vertical)
-            # Eliminar hijos anteriores de forma segura
             for child in forms_container.children:
                 child.remove()
                 
@@ -219,7 +234,7 @@ class ConfigScreen(Screen):
 
             widgets_to_mount = []
             for app_name, vars_list in app_vars_map.items():
-                widgets_to_mount.append(Static(f"\n[📦] **{app_name}**", classes="app-title"))
+                widgets_to_mount.append(Static(f"\n[📦] {app_name}", classes="app-title"))
                 for full_key, desc, v_type in vars_list:
                     default_val = self.app.state_store.user_variables.get(full_key, plan.vars_generated.get(full_key, ""))
                     is_pwd = v_type == "secret"
@@ -234,11 +249,10 @@ class ConfigScreen(Screen):
 
     def _create_form_field(self, full_key: str, desc: str, default_val: str, is_pwd: bool) -> Vertical:
         label = Static(f"{full_key}", classes="form-label")
+        desc_widget = Static(f" {desc}", classes="form-desc")
         if is_pwd:
-            desc_widget = Static(f"[🔒] {desc}", classes="form-desc")
             input_widget = Input(value=default_val, placeholder=full_key, password=True, id=f"input-{full_key}")
         else:
-            desc_widget = Static(desc, classes="form-desc")
             input_widget = Input(value=default_val, placeholder=full_key, id=f"input-{full_key}")
         
         return Vertical(label, desc_widget, input_widget, classes="input-row")
