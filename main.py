@@ -111,31 +111,10 @@ def main():
     """
     Función principal que orquesta el flujo de arranque del sistema.
     
-    Procesa los argumentos de la línea de comandos (CLI) para permitir el 
-    inicio desatendido o muestra el menú de selección si no se proporcionan 
-    parámetros.
+    En V2 solo existe el modo local, así que se ejecuta directamente.
     """
     print_banner()
-    
-    # Detectar si se pasa argumento de modo
-    mode = None
-    if len(sys.argv) > 1:
-        arg = sys.argv[1].lower()
-        if arg in ('local', '-l', '--local'):
-            mode = 'local'
-        elif arg in ('--help', '-h'):
-            print("Uso: python main.py [local]")
-            print()
-            print("Opciones:")
-            print("  local, -l, --local   Modo Docker local (defecto)")
-            print("  --help, -h           Mostrar esta ayuda")
-            sys.exit(0)
-    
-    # Si no se especificó, preguntar
-    if mode is None:
-        mode = ask_installation_mode()
-    
-    # Ejecutar modo local (único soportado en V2)
+
     run_local_mode()
 
 
