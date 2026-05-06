@@ -471,7 +471,8 @@ class DependencyGraph:
                 if key in existing_vars and existing_vars[key]:
                     continue
 
-                if var_def.get("type") == "secret":
+                # Respetar auto_generate: si es False, no autogenerar (el usuario provee el valor)
+                if var_def.get("type") == "secret" and var_def.get("auto_generate", True):
                     value = self._generate_secret_value(var_def)
                     all_vars[key] = value
                 else:

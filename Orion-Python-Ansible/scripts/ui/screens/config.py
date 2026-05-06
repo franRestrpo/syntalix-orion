@@ -239,7 +239,7 @@ class ConfigScreen(Screen):
                 widgets_to_mount.append(Static(f"\n[📦] {app_name}", classes="app-title"))
                 for full_key, desc, v_type in vars_list:
                     default_val = self.app.state_store.user_variables.get(full_key, plan.vars_generated.get(full_key, ""))
-                    is_pwd = v_type == "secret"
+                    is_pwd = v_type in ("secret", "password")
                     widgets_to_mount.append(self._create_form_field(full_key, desc, default_val, is_pwd))
                     self.user_inputs[full_key] = default_val
 
