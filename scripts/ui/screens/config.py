@@ -51,6 +51,7 @@ class ConfigScreen(Screen):
         height: 100%; 
         border-right: solid #21262D; 
         padding: 0 2; 
+        overflow-y: auto;
     }
     
     #right-panel { 
@@ -116,6 +117,15 @@ class ConfigScreen(Screen):
     .btn-back { color: #8B949E; width: 100%; }
     .ram-warning { color: #EF4444; margin: 0; }
     .input-row { margin-bottom: 0; height: auto; }
+
+    #forms-scroll-container {
+        height: 1fr;
+        overflow-y: auto;
+    }
+
+    #forms-container {
+        height: auto;
+    }
     """
 
     BINDINGS = [
@@ -147,7 +157,8 @@ class ConfigScreen(Screen):
             with VerticalScroll(id="left-panel"):
                 yield Static("📝 VARIABLES REQUERIDAS", classes="section-title")
                 yield Static("", id="validation-error", classes="ram-warning")
-                yield Vertical(id="forms-container")
+                with VerticalScroll(id="forms-scroll-container"):
+                    yield Vertical(id="forms-container")
 
             with Vertical(id="right-panel"):
                 yield Static("📊 RESUMEN DE INSTALACIÓN", classes="section-title")

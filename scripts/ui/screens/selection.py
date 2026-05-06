@@ -70,10 +70,12 @@ class SelectionScreen(Screen):
         height: 100%; 
         border-right: solid #21262D; 
         padding: 1 2; 
+        overflow-y: auto;
     }
     #right-panel { 
         width: 50%; 
-        height: 100%; 
+        height: 100%;
+        overflow-y: auto; 
         padding: 1 2; 
     }
     #catalog-title { text-style: bold; color: #00D9FF; }
@@ -160,7 +162,7 @@ class SelectionScreen(Screen):
                             )
                             yield checkbox
 
-            with Vertical(id="right-panel"):
+            with VerticalScroll(id="right-panel"):
                 yield Static("◉ RESUMEN DE SELECCIÓN", id="monitor-title")
                 with VerticalScroll(id="status-display"):
                     yield Static(id="status-content", markup=True)
