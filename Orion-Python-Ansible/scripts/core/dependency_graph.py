@@ -428,45 +428,21 @@ class DependencyGraph:
             meta = self.catalog.get(aid, {})
             ram_total += int(meta.get("ram_mb", 0))
 
-        # Generar variables para todas las apps del plan
-        all_vars: Dict[str, Any] = {}
-        
-        # Añadir la lista de roles activos para Ansible
-        all_vars["ansible_enabled_roles"] = ordered_plan
-        
-        for aid in ordered_plan:
-            meta = self.catalog.get(aid, {})
-            vars_def = meta.get("variables", {}) or {}
-
-            for var_name, var_def in vars_def.items():
-                key = map_app_variable(aid, var_name)
-
-                if var_def.get("type") == "secret":
-                    value = self._generate_secret_value(var_def)
-                    all_vars[key] = value
-                else:
-                    value = var_def.get("default", "")
-                    all_vars[key] = value
-
         existing_vars = existing_vars or {}
-        
-        # Separar selected_apps de dependencies
-        selected_apps = [aid for aid in ordered_plan if aid in app_ids]
-        dependencies = [aid for aid in ordered_plan if aid not in app_ids]
 
-        # Generar variables para todas las apps del plan
+        # Preservar y generar variables para todas las apps del plan
         all_vars: Dict[str, Any] = existing_vars.copy()
-        
+
         # Añadir la lista de roles activos para Ansible
         all_vars["ansible_enabled_roles"] = ordered_plan
-        
+
         for aid in ordered_plan:
             meta = self.catalog.get(aid, {})
             vars_def = meta.get("variables", {}) or {}
 
             for var_name, var_def in vars_def.items():
                 key = map_app_variable(aid, var_name)
-                
+
                 # Preservar variable si ya existe y tiene un valor válido
                 if key in existing_vars and existing_vars[key]:
                     continue
