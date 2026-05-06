@@ -13,7 +13,7 @@ from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.containers import Vertical
+from textual.containers import Vertical, Horizontal, VerticalScroll
 from textual.widgets import Header, Footer, Static, Button, RichLog
 
 from engine.ansible_runner_real import RealAnsibleRunner
