@@ -85,7 +85,7 @@ APP_METADATA: Dict[str, Dict[str, Any]] = {
         "category": "Core",
         "version": "latest",
         "ram_mb": 512,
-        "dependencies": ["crowdsec", "traefik", "postgres_pgvector"],
+        "dependencies": ["crowdsec", "traefik", "postgres_pgvector", "redis"],
         "variables": {
             "AUTHENTIK_DOMAIN": {
                 "type": "domain",
