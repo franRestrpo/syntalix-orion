@@ -109,7 +109,7 @@ class SelectionScreen(Screen):
     .divider { color: #21262D; margin: 1 0; }
     """
 
-    CSS_PATH = "screens/selection/selection_screen.tcss"
+    CSS_PATH = "selection/selection_screen.tcss"
 
     BINDINGS = [
         ("ctrl+n", "next", "Siguiente (Configurar)"),
