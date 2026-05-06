@@ -18,7 +18,7 @@
       dominio: "{{ TRAEFIK__DASHBOARD_URL | default('traefik.localhost', true) }}"
       usuario_admin: "{{ TRAEFIK__TRAEFIK_USER | default('admin', true) }}"
       acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ TRAEFIK__TRAEFIK_PASSWORD }}"
+      password_db: "{{ TRAEFIK__TRAEFIK_PASSWORD | default('') }}"
 
 - name: "🌐 Asegurar que existen los volúmenes externos necesarios"
   ansible.builtin.shell:
