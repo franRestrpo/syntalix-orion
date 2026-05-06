@@ -10,6 +10,9 @@ import sys
 from pathlib import Path
 import sys
 
+from textual.app import App
+from textual.binding import Binding
+
 SCRIPT_DIR = Path(__file__).parent.absolute()
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
