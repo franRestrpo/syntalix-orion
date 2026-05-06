@@ -92,59 +92,6 @@ class SelectionScreen(Screen):
         >>> self.post_message(self.SelectionComplete())
     """
 
-    CSS = """
-    Screen { background: #0D1117; }
-    #main-container { 
-        height: 100%; 
-        layout: horizontal; 
-        border: solid #00D9FF;
-        margin: 1 2;
-        background: #0D1117;
-    }
-    #left-panel { 
-        width: 50%; 
-        height: 100%; 
-        border-right: solid #21262D; 
-        padding: 1 2; 
-        overflow-y: auto;
-    }
-    #right-panel { 
-        width: 50%; 
-        height: 100%;
-        overflow-y: auto; 
-        padding: 1 2; 
-    }
-    #catalog-title { text-style: bold; color: #00D9FF; }
-    #catalog-subtitle { color: #8B949E; margin-bottom: 1; text-style: italic; }
-    .category-header { text-style: bold; margin-top: 1; padding: 0 1; }
-    .category-core { color: #F472B6; }
-    .category-data { color: #60A5FA; }
-    .category-monitoring { color: #34D399; }
-    .category-ai { color: #A78BFA; }
-    .category-automation { color: #FB923C; }
-    .category-communication { color: #38BDF8; }
-    .category-management { color: #94A3B8; }
-    #monitor-title { text-style: bold; color: #00D9FF; margin-bottom: 1; }
-    #status-display { 
-        height: 70%; 
-        padding: 1; 
-        margin-bottom: 1; 
-        border: tall #21262D;
-        background: #161B22;
-    }
-    #summary-container { height: auto; padding: 0 1; }
-    #action-container { height: auto; align: center bottom; padding: 1; }
-    .btn-primary { background: #00D9FF; color: #0D1117; text-style: bold; width: 100%; }
-    .btn-back { color: #8B949E; }
-    #footer-hint { color: #6E7681; }
-    .app-selected { color: #10B981; }
-    .app-dependency { color: #60A5FA; }
-    .app-dependency-label { color: #38BDF8; }
-    .ram-warning { color: #F59E0B; }
-    .ram-critical { color: #EF4444; }
-    .divider { color: #21262D; margin: 1 0; }
-    """
-
     CSS_PATH = "selection/selection_screen.tcss"
 
     BINDINGS = [
