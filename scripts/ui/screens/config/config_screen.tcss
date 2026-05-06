@@ -1,3 +1,14 @@
+$accent: #00D9FF;
+$background: #0D1117;
+$surface: #161B22;
+$surface-elevated: #21262D;
+$text-primary: #E6EDF3;
+$text-secondary: #8B949E;
+$text-muted: #6E7681;
+$success: #10B981;
+$warning: #F59E0B;
+$error: #EF4444;
+
 #main-container {
     height: 100%;
     layout: horizontal;
