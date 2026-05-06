@@ -43,7 +43,7 @@ class DeployScreen(Screen):
         background: #0D1117;
     }
     #deploy-title { text-style: bold; color: #00D9FF; margin-bottom: 1; }
-    #deploy-status { color: #8B949E; margin-bottom: 1; italic: True; }
+    #deploy-status { color: #8B949E; margin-bottom: 1; text-style: italic; }
     #ansible-log {
         height: 100%;
         border: tall #21262D;

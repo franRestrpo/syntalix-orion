@@ -77,7 +77,7 @@ class SelectionScreen(Screen):
         padding: 1 2; 
     }
     #catalog-title { text-style: bold; color: #00D9FF; }
-    #catalog-subtitle { color: #8B949E; margin-bottom: 1; italic: True; }
+    #catalog-subtitle { color: #8B949E; margin-bottom: 1; text-style: italic; }
     .category-header { text-style: bold; margin-top: 1; padding: 0 1; }
     .category-core { color: #F472B6; }
     .category-data { color: #60A5FA; }

@@ -73,7 +73,7 @@ class ConfigScreen(Screen):
     .form-desc { 
         color: #8B949E; 
         margin-bottom: 0;
-        italic: True;
+        text-style: italic;
     }
     Input {
         background: #161B22;
