@@ -100,7 +100,7 @@ class DeployScreen(Screen):
             yield Static("", id="deploy-status")
             
             with VerticalScroll(id="log-container"):
-                yield RichLog(id="ansible-log", highlight=True, auto_scroll=True, can_focus=True)
+                yield RichLog(id="ansible-log", highlight=True, auto_scroll=True)
 
             with Vertical(id="action-container"):
                 yield Button("CERRAR Y SALIR", id="quit-button", variant="error", disabled=True, classes="btn-error")
