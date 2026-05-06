@@ -1,9 +1,25 @@
 """
 Pantalla de Configuración de Variables - Syntalix-Orion.
 
-Maneja la recolección de parámetros requeridos por las aplicaciones seleccionadas, 
-tales como dominios, correos electrónicos y secretos. Implementa lógica de 
-validación en tiempo de entrada para asegurar la coherencia de los datos.
+Maneja la recolección de parámetros requeridos por las aplicaciones seleccionadas,
+tales como dominios, correos electrónicos y secretos. Implementa validación en
+tiempo real para asegurar la coherencia de los datos antes de continuar al
+despliegue.
+
+Arquitectura de la Pantalla:
+    - Layout horizontal dividido en dos paneles.
+    - Panel izquierdo (60%): Formularios de variables con campos de entrada.
+    - Panel derecho (40%): Resumen del plan de instalación.
+
+Flujo de Datos:
+    1. Recupera el plan de selección desde StateStore.
+    2. Calcula las variables requeridas según los metadatos de apps.
+    3. Genera dinámicamente campos Input para cada variable.
+    4. Valida el formato de los campos (dominio, email, etc.).
+    5. Persiste las variables en StateStore para el despliegue.
+
+Autor: Syntalix-Orion Team
+Versión: 2.0.0
 """
 
 import sys
@@ -30,105 +46,29 @@ from ui.components import StatusIndicator
 class ConfigScreen(Screen):
     """
     Gestor de Formulario de Configuración Dinámica.
-    
-    Genera automáticamente campos de entrada basados en los metadatos de las 
-    aplicaciones del plan. Realiza validaciones de formato (dominios, email) 
-    antes de permitir el paso a la fase de despliegue.
-    """
-    CSS = """
-    Screen { background: #0D1117; }
-    
-    #main-container { 
-        height: 100%; 
-        layout: horizontal; 
-        border: solid #00D9FF;
-        margin: 1 2;
-        background: #0D1117;
-    }
-    
-    #left-panel { 
-        width: 60%; 
-        height: 100%; 
-        border-right: solid #21262D; 
-        padding: 0 2; 
-        overflow-y: auto;
-    }
-    
-    #right-panel { 
-        width: 40%; 
-        height: 100%; 
-        padding: 1 2; 
-    }
-    
-    .section-title { 
-        text-style: bold; 
-        color: #00D9FF; 
-        margin: 1 0 0 0;
-    }
-    
-    .app-title { 
-        text-style: bold; 
-        color: #F472B6; 
-        margin-top: 1;
-        padding: 0 1;
-        background: #161B22;
-    }
-    
-    .form-label { 
-        color: #38BDF8; 
-        text-style: bold;
-        margin-top: 0; 
-    }
-    
-    .form-desc { 
-        color: #8B949E; 
-        margin-bottom: 0;
-        text-style: italic;
-    }
-    
-    Input {
-        background: #161B22;
-        border: tall #00D9FF;
-        color: #FFFFFF;
-        margin: 0 0 1 0;
-        height: 3;
-        padding: 0 1;
-    }
-    
-    Input:focus {
-        border: tall #FFFFFF;
-        background: #0D1117;
-    }
 
-    #status-display { 
-        height: 75%; 
-        padding: 1; 
-        margin-bottom: 1; 
-        border: tall #21262D;
-        background: #0D1117;
-    }
-    
-    #action-container { 
-        height: auto; 
-        align: center bottom; 
-    }
-    
-    .btn-success { background: #10B981; color: #0D1117; text-style: bold; width: 100%; height: 3; }
-    .btn-back { color: #8B949E; width: 100%; }
-    .ram-warning { color: #EF4444; margin: 0; }
-    .input-row { margin-bottom: 0; height: auto; }
+    Genera automáticamente campos de entrada (Input) basados en los metadatos
+    de las aplicaciones seleccionadas en el plan. Cada campo incluye:
+        - Etiqueta con nombre de variable.
+        - Descripción del propósito del campo.
+        - Validación de formato según tipo (domain, email, secret, etc.).
 
-    #forms-scroll-container {
-        height: 1fr;
-        overflow-y: auto;
-    }
+    Atributos:
+        catalog (Dict[str, AppMetadata]): Catálogo de aplicaciones cargadas.
+        dependency_graph (DependencyGraph): Grafo de dependencias.
+        required_vars (List[Tuple]): Lista de variables requeridas.
+        user_inputs (Dict[str, str]): Diccionario de valores ingresados.
 
-    #forms-container {
-        height: auto;
-    }
+    Mensajes Emitidos:
+        ConfigComplete: Cuando todos los campos obligatorios están validados.
+        ConfigBack: Cuando el usuario solicita volver a la pantalla anterior.
+
+    Ejemplo:
+        >>> # Validación y envío de configuración
+        >>> self.post_message(self.ConfigComplete())
     """
 
-    CSS_PATH = "config_screen.tcss"
+    CSS_PATH = "config/config_screen.tcss"
 
     BINDINGS = [
         ("ctrl+enter", "deploy", "Confirmar y Desplegar"),
@@ -136,12 +76,18 @@ class ConfigScreen(Screen):
     ]
 
     class ConfigComplete(Message):
-        pass
+        """Mensaje emitido cuando la configuración se completa exitosamente."""
 
     class ConfigBack(Message):
-        pass
+        """Mensaje emitido cuando el usuario solicita volver a la pantalla anterior."""
 
     def __init__(self, **kwargs):
+        """
+        Inicializa la pantalla de configuración.
+
+        Args:
+            **kwargs: Argumentos传递给 Screen base.
+        """
         super().__init__(**kwargs)
         from apps_metadata import APP_METADATA
         from core.models import load_app_catalog
@@ -154,6 +100,26 @@ class ConfigScreen(Screen):
         self.user_inputs: Dict[str, str] = {}
 
     def compose(self) -> ComposeResult:
+        """
+        Construye el layout visual de la pantalla de configuración.
+
+        Layout:
+            - Header con título de la aplicación.
+            - Horizontal(id="main-container"): Contenedor principal.
+                - VerticalScroll(id="left-panel"): Formularios de variables.
+                    - Static: Título "VARIABLES REQUERIDAS".
+                    - Static(id="validation-error"): Mensajes de error.
+                    - VerticalScroll(id="forms-scroll-container"):
+                        - Vertical(id="forms-container"): Campos de entrada.
+                - Vertical(id="right-panel"): Resumen del plan.
+                    - Static: Título "RESUMEN DE INSTALACIÓN".
+                    - VerticalScroll(id="status-display"): Lista de apps.
+                    - Vertical(id="action-container"): Botones de acción.
+            - Footer.
+
+        Yields:
+            ComposeResult: Generador de widgets para la composición.
+        """
         yield Header()
         with Horizontal(id="main-container"):
             with VerticalScroll(id="left-panel"):
