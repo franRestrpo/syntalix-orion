@@ -50,7 +50,7 @@ class ConfigScreen(Screen):
         width: 60%; 
         height: 100%; 
         border-right: solid #21262D; 
-        padding: 1 2; 
+        padding: 0 2; 
     }
     
     #right-panel { 
@@ -62,7 +62,7 @@ class ConfigScreen(Screen):
     .section-title { 
         text-style: bold; 
         color: #00D9FF; 
-        margin-bottom: 1;
+        margin: 1 0 0 0;
     }
     
     .app-title { 
@@ -70,12 +70,13 @@ class ConfigScreen(Screen):
         color: #F472B6; 
         margin-top: 1;
         padding: 0 1;
+        background: #161B22;
     }
     
     .form-label { 
         color: #38BDF8; 
         text-style: bold;
-        margin-top: 1; 
+        margin-top: 0; 
     }
     
     .form-desc { 
@@ -88,7 +89,7 @@ class ConfigScreen(Screen):
         background: #161B22;
         border: tall #00D9FF;
         color: #FFFFFF;
-        margin: 1 0;
+        margin: 0 0 1 0;
         height: 3;
         padding: 0 1;
     }
@@ -113,7 +114,8 @@ class ConfigScreen(Screen):
     
     .btn-success { background: #10B981; color: #0D1117; text-style: bold; width: 100%; height: 3; }
     .btn-back { color: #8B949E; width: 100%; }
-    .ram-warning { color: #EF4444; margin: 1 0; }
+    .ram-warning { color: #EF4444; margin: 0; }
+    .input-row { margin-bottom: 0; height: auto; }
     """
 
     BINDINGS = [
