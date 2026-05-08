@@ -73,7 +73,6 @@ if [[ $del_configs =~ ^[yY]$ ]]; then
         success "Archivos de secretos (.env y backups) eliminados."
     fi
 fi
-fi
 
 # 4. Limpieza de redes (Opcional)
 read -p "¿Deseas eliminar la red SyntalixNet? (y/N): " del_net
