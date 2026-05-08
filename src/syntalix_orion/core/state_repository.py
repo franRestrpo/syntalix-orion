@@ -176,6 +176,15 @@ class StateRepository:
                                     continue
                             except:
                                 pass
+                        elif isinstance(disk_value, str) and value.startswith('[') and value.endswith(']'):
+                            # Si ambos son strings pero uno parece un JSON array
+                            try:
+                                import json
+                                if json.dumps(json.loads(disk_value)) == json.dumps(json.loads(value)):
+                                    continue
+                            except:
+                                pass
+                                
                         raise StatePersistenceError(
                             f"Verificacin fallida para {key}: "
                             f"memoria='{value}' disco='{disk_value}'"

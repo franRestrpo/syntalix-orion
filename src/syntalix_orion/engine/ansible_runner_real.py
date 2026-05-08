@@ -24,7 +24,9 @@ import re
 # Configurar logger local para el archivo de salida
 runner_logger = logging.getLogger("ansible_runner")
 runner_logger.setLevel(logging.DEBUG)
-log_file = Path(__file__).parent.parent / "logs" / "ansible_runner.log"
+# PROJECT_ROOT is at ../../../../ from engine
+project_root = Path(__file__).resolve().parent.parent.parent.parent
+log_file = project_root / "logs" / "ansible_runner.log"
 log_file.parent.mkdir(exist_ok=True)
 fh = logging.FileHandler(log_file)
 fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -114,6 +116,7 @@ class RealAnsibleRunner:
                 env = os.environ.copy()
                 env["ANSIBLE_STDOUT_CALLBACK"] = "default"
                 env["ANSIBLE_CALLBACK_RESULT_FORMAT"] = "yaml"
+                env["ANSIBLE_LOG_PATH"] = str(Path(private_data_dir) / "logs" / "ansible.log")
                 
                 process = subprocess.Popen(
                     cmd,
