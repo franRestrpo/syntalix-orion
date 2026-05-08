@@ -27,7 +27,7 @@ class DeployScreen(Screen):
     visualizar los logs del proceso de despliegue en tiempo real.
     """
 
-    CSS_PATH = "deploy/deploy_screen.tcss"
+    CSS_PATH = "deploy_screen.tcss"
 
     BINDINGS = [
         ("ctrl+b", "back", "Atrás"),
