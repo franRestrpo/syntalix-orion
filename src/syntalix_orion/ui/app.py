@@ -31,6 +31,7 @@ from textual.app import App
 from textual.binding import Binding
 
 from syntalix_orion.core.logging_config import get_logger
+from syntalix_orion.core.state_repository import StateRepository
 from syntalix_orion.ui.managers.state_store import StateStore
 from syntalix_orion.ui.screens.selection import SelectionScreen
 from syntalix_orion.ui.screens.config import ConfigScreen
@@ -90,14 +91,23 @@ class OrionTUI(App):
 
     def __init__(self, *args, **kwargs) -> None:
         """
-        Inicializa la aplicación OrionTUI.
+        Inicializa la aplicacin OrionTUI.
 
         Args:
-            *args: Argumentos variables传递给 textual.app.App.
-            **kwargs: Argumentos de palabra clave传递给 la clase base.
+            *args: Argumentos variables para textual.app.App.
+            **kwargs: Argumentos de palabra clave para la clase base.
         """
         super().__init__(*args, **kwargs)
         self.state_store = StateStore()
+        
+        # Load previous state
+        repo = StateRepository()
+        saved_state = repo.load_selection()
+        if saved_state and saved_state.get("selected_apps"):
+            self.state_store.selected_apps = set(saved_state["selected_apps"])
+            self.state_store.user_variables = saved_state.get("user_variables", {})
+            logger.info(f"Estado anterior cargado: {len(self.state_store.selected_apps)} apps")
+            
         logger.info("OrionTUI inicializada con tema nuevo")
 
     def on_mount(self) -> None:

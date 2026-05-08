@@ -131,14 +131,30 @@ class SelectionScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
-        for app in self.catalog.values():
-            if app.category in CORE_CATEGORIES:
-                self.app.state_store.add_app(app.id)
-                self.controller.user_selected.add(app.id)
-                for dep_id in app.dependencies:
-                    if dep_id in self.catalog:
-                        self.app.state_store.add_app(dep_id)
-                        self.controller.auto_dependencies.add(dep_id)
+        if self.app.state_store.selected_apps:
+            # Precargar desde estado guardado
+            for app_id in self.app.state_store.selected_apps:
+                self.controller.user_selected.add(app_id)
+                app = self.catalog.get(app_id)
+                if app and app.dependencies:
+                    for dep_id in app.dependencies:
+                        if dep_id in self.catalog:
+                            self.app.state_store.add_app(dep_id)
+                            self.controller.auto_dependencies.add(dep_id)
+                            
+            # Remover dependencias automticas de user_selected si estn en auto_dependencies
+            self.controller.user_selected = self.controller.user_selected - self.controller.auto_dependencies
+        else:
+            # Comportamiento por defecto (Core)
+            for app in self.catalog.values():
+                if app.category in CORE_CATEGORIES:
+                    self.app.state_store.add_app(app.id)
+                    self.controller.user_selected.add(app.id)
+                    for dep_id in app.dependencies:
+                        if dep_id in self.catalog:
+                            self.app.state_store.add_app(dep_id)
+                            self.controller.auto_dependencies.add(dep_id)
+
         self._update_status_display()
         self._update_all_checkboxes()
 
