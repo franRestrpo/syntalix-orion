@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    image: odoo:16.0
+    env_file:
+      - {{ playbook_dir }}/secrets/odoo.env
+    networks:
+      - {{ docker_network_name | default('SyntalixNet') }}
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.odoo.rule=Host(`{{ ODOO__DOMAIN | default('odoo.localhost') }}`)"
+        - "traefik.http.services.odoo.loadbalancer.server.port=80"
+
+networks:
+  {{ docker_network_name | default('SyntalixNet') }}:
+    external: true

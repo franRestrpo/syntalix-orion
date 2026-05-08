@@ -1,0 +1,8 @@
+id: uptime_kuma
+name: Uptime Kuma
+description: Self-hosted monitoring tool
+category: Monitoring
+version: latest
+ram_mb: 256
+dependencies: []
+variables: {}

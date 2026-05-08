@@ -168,27 +168,18 @@
     - { role: apps_comms/chatwoot, when: "'chatwoot' in ansible_enabled_roles", tags: [comms, chatwoot] }
     - { role: apps_comms/evolution_api, when: "'evolution_api' in ansible_enabled_roles", tags: [comms, evolution_api] }
     - { role: apps_comms/typebot, when: "'typebot' in ansible_enabled_roles", tags: [comms, typebot] }
+    - { role: apps_comms/listmonk, when: "'listmonk' in ansible_enabled_roles", tags: [comms, listmonk] }
+    - { role: apps_comms/postiz, when: "'postiz' in ansible_enabled_roles", tags: [comms, postiz] }
 
     # ═══════════════════════════════════════════════════════════════════════
     # 📋 MANAGEMENT - Gestión Empresarial
     # ═══════════════════════════════════════════════════════════════════════
 
-    # - role: apps_management/glpi
-    #   when: "'glpi' in ansible_enabled_roles"
-    #   tags: [management, glpi, helpdesk, itsm, asset]
-
-    # - role: apps_management/odoo
-    #   when: "'odoo' in ansible_enabled_roles"
-    #   tags: [management, odoo, erp, crm, business]
-
-    # - role: apps_management/nocodb
-    #   when: "'nocodb' in ansible_enabled_roles"
-    #   tags: [management, nocodb, database, spreadsheet, nocode]
-
-    # - role: apps_management/vaultwarden
-    #   when: "'vaultwarden' in ansible_enabled_roles"
-    #   tags: [management, vaultwarden, password, vault, security]
-
+    - { role: apps_management/glpi, when: "'glpi' in ansible_enabled_roles", tags: [management, glpi] }
+    - { role: apps_management/docuseal, when: "'docuseal' in ansible_enabled_roles", tags: [management, docuseal] }
+    - { role: apps_management/appflowy, when: "'appflowy' in ansible_enabled_roles", tags: [management, appflowy] }
+    - { role: apps_management/moodle, when: "'moodle' in ansible_enabled_roles", tags: [management, moodle] }
+    - { role: apps_management/odoo, when: "'odoo' in ansible_enabled_roles", tags: [management, odoo] }
   # ---------------------------------------------------------------------------
   # POST-TASKS: Resumen y Verificación Final
   # ---------------------------------------------------------------------------

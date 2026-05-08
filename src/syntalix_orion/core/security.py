@@ -336,7 +336,8 @@ def calculate_entropy(password: str) -> float:
     if charset_size == 0:
         charset_size = 26
 
-    entropy = len(password) * (charset_size ** 0.5 if charset_size > 1 else 1)
+    import math
+    entropy = len(password) * math.log2(charset_size)
     return entropy
 
 

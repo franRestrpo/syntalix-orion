@@ -1,0 +1,15 @@
+id: docuseal
+name: DocuSeal
+description: Open source document signing
+category: Management
+version: latest
+ram_mb: 512
+dependencies:
+- traefik
+- postgres_pgvector
+variables:
+  DOCUSEAL_DOMAIN:
+    type: domain
+    description: Domain for DocuSeal
+    required: true
+    auto_generate: false

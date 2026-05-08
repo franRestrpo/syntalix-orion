@@ -1,0 +1,16 @@
+/* DeployScreen - Placeholder styles */
+Screen {
+    background: $surface;
+}
+
+#main-container {
+    height: 100%;
+}
+
+#log-panel {
+    width: 70%;
+}
+
+#status-panel {
+    width: 30%;
+}

@@ -1,5 +1,6 @@
 id: postgres_pgvector
-name: "Postgres (pgvector)"
+name: Postgres (pgvector)
+description: PostgreSQL database with pgvector extension
 category: Data
 version: latest
 ram_mb: 2048
@@ -7,14 +8,14 @@ dependencies: []
 variables:
   POSTGRES_PASSWORD:
     type: secret
-    description: "PostgreSQL admin password"
+    description: PostgreSQL admin password
     auto_generate: true
     length: 32
   POSTGRES_USER:
     type: string
-    description: "Default database user"
-    default: "orion_admin"
+    description: Default database user
+    default: orion_admin
   POSTGRES_DB:
     type: string
-    description: "Default database name"
-    default: "appdb"
+    description: Default database name
+    default: appdb

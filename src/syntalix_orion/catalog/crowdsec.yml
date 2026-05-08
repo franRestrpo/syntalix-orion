@@ -1,18 +1,19 @@
 id: crowdsec
 name: CrowdSec
+description: Security engine and IPS
 category: Core
 version: latest
 ram_mb: 256
 dependencies:
-  - traefik
+- traefik
 variables:
   CROWDSEC_ENROLL_KEY:
     type: secret
-    description: "CrowdSec Enrollment Key"
+    description: CrowdSec Enrollment Key
     auto_generate: true
     length: 48
   BOUNCER_KEY_TRAEFIK:
     type: secret
-    description: "CrowdSec Bouncer Key for Traefik"
+    description: CrowdSec Bouncer Key for Traefik
     auto_generate: true
     length: 48

@@ -12,6 +12,8 @@ Características:
       no estén presentes en el entorno.
 """
 
+import json
+import tempfile
 import asyncio
 import os
 import sys
@@ -24,7 +26,9 @@ import re
 # Configurar logger local para el archivo de salida
 runner_logger = logging.getLogger("ansible_runner")
 runner_logger.setLevel(logging.DEBUG)
-log_file = Path(__file__).parent.parent / "logs" / "ansible_runner.log"
+# PROJECT_ROOT is at ../../../../ from engine
+project_root = Path(__file__).resolve().parent.parent.parent.parent
+log_file = project_root / "logs" / "ansible_runner.log"
 log_file.parent.mkdir(exist_ok=True)
 fh = logging.FileHandler(log_file)
 fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -54,7 +58,7 @@ class RealAnsibleRunner:
 
         # Encontrar la raíz del proyecto para asegurar que encuentre site.yml
         engine_dir = Path(__file__).parent.absolute()
-        project_root = engine_dir.parent
+        project_root = engine_dir.parent.parent.parent
         private_data_dir = str(project_root)
 
         pb = project_root / "site.yml"
@@ -71,18 +75,18 @@ class RealAnsibleRunner:
             inventory = project_root / "hosts" # fallback
             
         # Generar un archivo temporal seguro para inyectar las variables a Ansible
-        import json
-        import tempfile
         
-        vars_file = Path(private_data_dir) / ".ansible_vars.json"
+        # Usar NamedTemporaryFile para garantizar destruccion automatica incluso si el proceso muere brutalmente
+        fd, temp_vars_path = tempfile.mkstemp(prefix=".ansible_vars_", suffix=".json", dir=private_data_dir)
+        vars_file = Path(temp_vars_path)
         try:
-            # Eliminar todos los valores nulos o vacíos para que Ansible use los defaults
+            # Eliminar todos los valores nulos o vacos para que Ansible use los defaults
             clean_config = {k: v for k, v in config.items() if v not in (None, "None", "null", "")}
-            with open(vars_file, "w") as f:
+            with os.fdopen(fd, "w") as f:
                 json.dump(clean_config, f)
             os.chmod(vars_file, 0o600)
         except Exception as e:
-            self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear .ansible_vars.json: {e}"})
+            self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear variables temporales: {e}"})
         
         # Resolver la ruta correcta de ansible-playbook desde el entorno virtual activo
         python_bin_dir = Path(sys.executable).parent
@@ -112,6 +116,7 @@ class RealAnsibleRunner:
                 env = os.environ.copy()
                 env["ANSIBLE_STDOUT_CALLBACK"] = "default"
                 env["ANSIBLE_CALLBACK_RESULT_FORMAT"] = "yaml"
+                env["ANSIBLE_LOG_PATH"] = str(Path(private_data_dir) / "logs" / "ansible.log")
                 
                 process = subprocess.Popen(
                     cmd,

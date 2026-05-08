@@ -1,0 +1,20 @@
+id: evolution_api
+name: Evolution API
+description: WhatsApp API integration
+category: Automation
+version: latest
+ram_mb: 512
+dependencies:
+- mariadb
+- redis
+- traefik
+variables:
+  EVOLUTION_API_DOMAIN:
+    type: domain
+    description: Domain for Evolution API
+    required: true
+    auto_generate: false
+  EV_API_KEY:
+    type: secret
+    description: Evolution API key
+    auto_generate: true

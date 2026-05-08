@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    image: listmonk/listmonk:latest
+    env_file:
+      - {{ playbook_dir }}/secrets/listmonk.env
+    networks:
+      - {{ docker_network_name | default('SyntalixNet') }}
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.listmonk.rule=Host(`{{ LISTMONK__DOMAIN | default('listmonk.localhost') }}`)"
+        - "traefik.http.services.listmonk.loadbalancer.server.port=80"
+
+networks:
+  {{ docker_network_name | default('SyntalixNet') }}:
+    external: true

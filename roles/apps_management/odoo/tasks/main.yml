@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para odoo"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "odoo"
+      dominio: "{{ lookup('vars', 'ODOO__DOMAIN', default='odoo.localhost') }}"
+
+- name: "Generar archivo .env para odoo en secrets/"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/odoo.env.j2"
+    dest: "{{ playbook_dir }}/secrets/odoo.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para odoo"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/odoo.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/odoo_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack odoo"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/odoo_stack.yml odoo"
+  when: not config_stack.failed | default(false)

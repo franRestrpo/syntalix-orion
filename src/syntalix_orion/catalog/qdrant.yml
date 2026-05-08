@@ -1,0 +1,12 @@
+id: qdrant
+name: Qdrant
+description: Vector Database for AI
+category: Data
+version: latest
+ram_mb: 512
+dependencies: []
+variables:
+  QDRANT_PASSWORD:
+    type: secret
+    description: Qdrant access password
+    auto_generate: true

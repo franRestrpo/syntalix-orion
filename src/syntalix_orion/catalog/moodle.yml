@@ -1,0 +1,20 @@
+id: moodle
+name: Moodle
+description: Open-source learning management system
+category: Management
+version: latest
+ram_mb: 1024
+dependencies:
+- traefik
+- mariadb
+variables:
+  MOODLE_DOMAIN:
+    type: domain
+    description: Domain for Moodle
+    required: true
+    auto_generate: false
+  MOODLE_ADMIN_PASSWORD:
+    type: secret
+    description: Moodle Admin Password
+    required: true
+    auto_generate: true

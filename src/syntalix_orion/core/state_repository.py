@@ -128,7 +128,14 @@ class StateRepository:
             if value in (None, "None", "null", ""):
                 continue
 
-            sanitized = value.strip()
+            # Convert value to string to handle cases where it might be a list (like ansible_enabled_roles)
+            if isinstance(value, list):
+                # Representing python lists as JSON strings for .env files is usually safest
+                value_str = json.dumps(value)
+            else:
+                value_str = str(value)
+                
+            sanitized = value_str.strip()
 
             if _is_user_facing_password(key):
                 is_valid, error_msg = validate_password_strength(sanitized)
@@ -159,9 +166,25 @@ class StateRepository:
                 verified_vars = self.load_secrets()
                 for key, value in processed_vars.items():
                     disk_value = verified_vars.get(key)
+                    # Si era una lista que convertimos a JSON string para guardar, la recarga (load_secrets) 
+                    # podr haberla reconvertido en lista. Comparamos los strings o ignoramos si coinciden conceptualmente.
                     if disk_value != value:
+                        if isinstance(disk_value, list):
+                            try:
+                                if json.loads(value) == disk_value:
+                                    continue
+                            except:
+                                pass
+                        elif isinstance(disk_value, str) and value.startswith('[') and value.endswith(']'):
+                            # Si ambos son strings pero uno parece un JSON array
+                            try:
+                                if json.dumps(json.loads(disk_value)) == json.dumps(json.loads(value)):
+                                    continue
+                            except:
+                                pass
+                                
                         raise StatePersistenceError(
-                            f"Verificación fallida para {key}: "
+                            f"Verificacin fallida para {key}: "
                             f"memoria='{value}' disco='{disk_value}'"
                         )
 
@@ -185,7 +208,7 @@ class StateRepository:
         Returns:
             Diccionario de variables de entorno cargadas.
         """
-        env_vars: Dict[str, str] = {}
+        env_vars: Dict[str, Any] = {}
 
         if not self._secrets_file.exists():
             return env_vars
@@ -200,6 +223,14 @@ class StateRepository:
                         value = value.strip()
                         if value in ("None", "null", ""):
                             continue
+                        
+                        # Try to parse JSON strings back to python lists
+                        if value.startswith('[') and value.endswith(']'):
+                            try:
+                                value = json.loads(value)
+                            except:
+                                pass
+                                
                         env_vars[key] = value
         except Exception as e:
             logger.error(f"Error al leer secretos: {e}")

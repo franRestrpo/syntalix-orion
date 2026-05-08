@@ -1,0 +1,20 @@
+id: glpi
+name: GLPI
+description: IT Asset Management and Helpdesk
+category: Management
+version: latest
+ram_mb: 512
+dependencies:
+- traefik
+- mariadb
+variables:
+  GLPI_DOMAIN:
+    type: domain
+    description: Domain for GLPI
+    required: true
+    auto_generate: false
+  GLPI_ADMIN_PASSWORD:
+    type: secret
+    description: GLPI Admin Password
+    required: true
+    auto_generate: true

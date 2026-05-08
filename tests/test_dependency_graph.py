@@ -14,7 +14,7 @@ Funcionalidades auditadas:
 import pytest
 from pathlib import Path
 
-from syntalix_orion.core.dependency_graph import DependencyGraph
+from syntalix_orion.core.dependency_graph import DependencyGraph; from syntalix_orion.core.variable_orchestrator import VariableOrchestrator; from syntalix_orion.core.models import AppMetadata
 
 
 # Datos de prueba
@@ -144,7 +144,7 @@ class TestDependencyGraph:
             "app_bad": {
                 "id": "app_bad",
                 "name": "App Bad",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": ["nonexistent_dep"],
@@ -161,7 +161,7 @@ class TestDependencyGraph:
             "app1": {
                 "id": "app1",
                 "name": "App 1",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": ["app2"],
@@ -169,7 +169,7 @@ class TestDependencyGraph:
             "app2": {
                 "id": "app2",
                 "name": "App 2",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": ["app1"],
@@ -186,7 +186,7 @@ class TestDependencyGraph:
             "app_self": {
                 "id": "app_self",
                 "name": "App Self",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": ["app_self"],
@@ -226,7 +226,7 @@ class TestTotalRamForPlan:
             "app1": {
                 "id": "app1",
                 "name": "App 1",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": [],
@@ -234,7 +234,7 @@ class TestTotalRamForPlan:
             "app2": {
                 "id": "app2",
                 "name": "App 2", 
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 # Sin ram_mb definido
                 "dependencies": ["app1"],
@@ -255,7 +255,7 @@ class TestGenerateVarsForPlan:
             "app1": {
                 "id": "app1",
                 "name": "App 1",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": [],
@@ -271,8 +271,8 @@ class TestGenerateVarsForPlan:
                 },
             },
         }
-        dg = DependencyGraph(catalog=metadata_with_vars)
-        vars = dg.generate_vars_for_plan("app1")
+        dg = VariableOrchestrator(catalog={k: AppMetadata(**v) if isinstance(v, dict) else v for k, v in metadata_with_vars.items()})
+        vars = dg.generate_vars_for_plan(["app1"])
         
         assert "APP1__DB_PASSWORD" in vars
         assert "APP1__DB_HOST" in vars
@@ -284,7 +284,7 @@ class TestGenerateVarsForPlan:
             "app1": {
                 "id": "app1",
                 "name": "App 1",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": [],
@@ -296,8 +296,8 @@ class TestGenerateVarsForPlan:
                 },
             },
         }
-        dg = DependencyGraph(catalog=metadata_with_secret)
-        vars = dg.generate_vars_for_plan("app1")
+        dg = VariableOrchestrator(catalog={k: AppMetadata(**v) if isinstance(v, dict) else v for k, v in metadata_with_secret.items()})
+        vars = dg.generate_vars_for_plan(["app1"])
         
         secret = vars.get("APP1__SECRET_KEY")
         assert secret is not None
@@ -309,7 +309,7 @@ class TestGenerateVarsForPlan:
             "app1": {
                 "id": "app1",
                 "name": "App 1",
-                "category": "Test",
+                "category": "Core",
                 "version": "1.0",
                 "ram_mb": 100,
                 "dependencies": [],
@@ -322,8 +322,8 @@ class TestGenerateVarsForPlan:
                 },
             },
         }
-        dg = DependencyGraph(catalog=metadata_with_bcrypt)
-        vars = dg.generate_vars_for_plan("app1")
+        dg = VariableOrchestrator(catalog={k: AppMetadata(**v) if isinstance(v, dict) else v for k, v in metadata_with_bcrypt.items()})
+        vars = dg.generate_vars_for_plan(["app1"])
         
         hashed = vars.get("APP1__HASHED_PASS")
         assert hashed is not None
@@ -336,7 +336,7 @@ class TestPlanWithVars:
     def test_returns_all_fields(self):
         """Test que retorna todos los campos."""
         dg = DependencyGraph(catalog=SAMPLE_METADATA)
-        result = dg.plan_with_vars("app_a")
+        result = dg.plan_multi("app_a")
         
         assert "plan" in result
         assert "ram_mb_total" in result
@@ -348,7 +348,7 @@ class TestPlanWithVars:
     def test_plan_validity(self):
         """Test que el plan incluye todas las dependencias."""
         dg = DependencyGraph(catalog=SAMPLE_METADATA)
-        result = dg.plan_with_vars("app_c")
+        result = dg.plan_multi("app_c")
         
         plan = result["plan"]
         # Verificar que todas las dependencias están en el plan

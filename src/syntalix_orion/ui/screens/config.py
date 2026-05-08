@@ -32,6 +32,7 @@ from textual.message import Message
 
 from syntalix_orion.core.registry import get_registry
 from syntalix_orion.core.dependency_graph import DependencyGraph
+from syntalix_orion.core.variable_orchestrator import VariableOrchestrator
 from syntalix_orion.core.security import (
     validate_domain,
     validate_email,
@@ -94,8 +95,8 @@ class ConfigScreen(Screen):
         self.catalog = registry.load_all()
         self.raw_metadata = registry.export_to_legacy()
 
-        catalog_dict = {app_id: app.model_dump() for app_id, app in self.catalog.items()}
-        self.dependency_graph = DependencyGraph(catalog=catalog_dict)
+        self.dependency_graph = DependencyGraph(catalog=self.catalog)
+        self.variable_orchestrator = VariableOrchestrator(catalog=self.catalog)
         self.required_vars: List[Tuple[str, str, str]] = []
         self.user_inputs: Dict[str, str] = {}
 
@@ -156,11 +157,14 @@ class ConfigScreen(Screen):
         existing_vars = load_env_file(env_file_path)
 
         try:
-            result = self.dependency_graph.plan_with_vars_multi(selected, existing_vars=existing_vars)
+            result = self.dependency_graph.plan_multi(selected)
+            ordered_plan = result.get("plan", [])
+            vars_generated = self.variable_orchestrator.generate_vars_for_plan(ordered_plan, existing_vars)
+            
             plan = DeploymentPlan(
-                plan=result.get("plan", []),
+                plan=ordered_plan,
                 ram_total_mb=result.get("ram_mb_total", 0),
-                vars_generated=result.get("vars", {}),
+                vars_generated=vars_generated,
                 dependencies=result.get("dependencies", [])
             )
             self.app.state_store.deployment_plan = plan
