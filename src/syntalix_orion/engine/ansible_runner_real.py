@@ -54,7 +54,7 @@ class RealAnsibleRunner:
 
         # Encontrar la raíz del proyecto para asegurar que encuentre site.yml
         engine_dir = Path(__file__).parent.absolute()
-        project_root = engine_dir.parent
+        project_root = engine_dir.parent.parent.parent
         private_data_dir = str(project_root)
 
         pb = project_root / "site.yml"
@@ -74,15 +74,17 @@ class RealAnsibleRunner:
         import json
         import tempfile
         
-        vars_file = Path(private_data_dir) / ".ansible_vars.json"
+        # Usar NamedTemporaryFile para garantizar destruccion automatica incluso si el proceso muere brutalmente
+        fd, temp_vars_path = tempfile.mkstemp(prefix=".ansible_vars_", suffix=".json", dir=private_data_dir)
+        vars_file = Path(temp_vars_path)
         try:
-            # Eliminar todos los valores nulos o vacíos para que Ansible use los defaults
+            # Eliminar todos los valores nulos o vacos para que Ansible use los defaults
             clean_config = {k: v for k, v in config.items() if v not in (None, "None", "null", "")}
-            with open(vars_file, "w") as f:
+            with os.fdopen(fd, "w") as f:
                 json.dump(clean_config, f)
             os.chmod(vars_file, 0o600)
         except Exception as e:
-            self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear .ansible_vars.json: {e}"})
+            self._emit({"type": "log", "level": "warning", "message": f"No se pudo crear variables temporales: {e}"})
         
         # Resolver la ruta correcta de ansible-playbook desde el entorno virtual activo
         python_bin_dir = Path(sys.executable).parent

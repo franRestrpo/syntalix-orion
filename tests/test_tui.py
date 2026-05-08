@@ -75,7 +75,7 @@ class TestDependencyGraphMulti:
         from syntalix_orion.core.dependency_graph import DependencyGraph
         
         dg = DependencyGraph(catalog=sample_catalog)
-        result = dg.plan_with_vars_multi([])
+        result = dg.plan_multi([])
         
         assert result["plan"] == []
         assert result["ram_mb_total"] == 0
@@ -87,7 +87,7 @@ class TestDependencyGraphMulti:
         from syntalix_orion.core.dependency_graph import DependencyGraph
         
         dg = DependencyGraph(catalog=sample_catalog)
-        result = dg.plan_with_vars_multi(["traefik"])
+        result = dg.plan_multi(["traefik"])
         
         assert "traefik" in result["plan"]
         assert result["ram_mb_total"] == 256
@@ -99,7 +99,7 @@ class TestDependencyGraphMulti:
         from syntalix_orion.core.dependency_graph import DependencyGraph
         
         dg = DependencyGraph(catalog=sample_catalog)
-        result = dg.plan_with_vars_multi(["n8n"])
+        result = dg.plan_multi(["n8n"])
         
         # postgres y traefik deben estar en el plan como dependencias
         assert "traefik" in result["plan"]
@@ -126,7 +126,7 @@ class TestDependencyGraphMulti:
         from syntalix_orion.core.dependency_graph import DependencyGraph
         
         dg = DependencyGraph(catalog=sample_catalog)
-        result = dg.plan_with_vars_multi(["traefik", "postgres"])
+        result = dg.plan_multi(["traefik", "postgres"])
         
         assert len(result["plan"]) == 2
         assert set(result["selected_apps"]) == {"traefik", "postgres"}
@@ -137,7 +137,7 @@ class TestDependencyGraphMulti:
         from syntalix_orion.core.dependency_graph import DependencyGraph
 
         dg = DependencyGraph(catalog=sample_catalog)
-        result = dg.plan_with_vars_multi(["traefik"])
+        result = dg.plan_multi(["traefik"])
 
         # Debe generar la variable secret (nombre con prefijo app)
         assert "TRAEFIK__PASSWORD" in result["vars"]
@@ -150,7 +150,7 @@ class TestDependencyGraphMulti:
         dg = DependencyGraph(catalog=sample_catalog)
         
         with pytest.raises(KeyError) as exc_info:
-            dg.plan_with_vars_multi(["unknown_app"])
+            dg.plan_multi(["unknown_app"])
         
         assert "unknown_app" in str(exc_info.value)
 

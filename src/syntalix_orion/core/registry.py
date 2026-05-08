@@ -20,7 +20,7 @@ from pydantic import ValidationError
 
 from syntalix_orion.core.models import AppMetadata, AppVariable
 
-CATALOG_DIR = Path("catalog")
+CATALOG_DIR = Path(__file__).parent.parent / "catalog"
 
 
 class RegistryLoadError(Exception):
