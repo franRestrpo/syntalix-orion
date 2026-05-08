@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para appflowy"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "appflowy"
+      dominio: "{{ lookup('vars', 'APPFLOWY__DOMAIN', default='appflowy.localhost') }}"
+
+- name: "Generar archivo .env para appflowy en secrets/"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/appflowy.env.j2"
+    dest: "{{ playbook_dir }}/secrets/appflowy.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para appflowy"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/appflowy.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/appflowy_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack appflowy"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/appflowy_stack.yml appflowy"
+  when: not config_stack.failed | default(false)

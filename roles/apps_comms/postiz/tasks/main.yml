@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para postiz"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "postiz"
+      dominio: "{{ lookup('vars', 'POSTIZ__DOMAIN', default='postiz.localhost') }}"
+
+- name: "Generar archivo .env para postiz en secrets/"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/postiz.env.j2"
+    dest: "{{ playbook_dir }}/secrets/postiz.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para postiz"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/postiz.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/postiz_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack postiz"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/postiz_stack.yml postiz"
+  when: not config_stack.failed | default(false)

@@ -1,0 +1,37 @@
+---
+- name: "Crear directorio de secrets si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/secrets"
+    state: directory
+    mode: "0700"
+
+- name: "Crear directorio de despliegue si no existe"
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/deploy"
+    state: directory
+    mode: "0755"
+
+- name: "Configurar app_actual para listmonk"
+  ansible.builtin.set_fact:
+    app_actual:
+      nombre: "listmonk"
+      dominio: "{{ lookup('vars', 'LISTMONK__DOMAIN', default='listmonk.localhost') }}"
+
+- name: "Generar archivo .env para listmonk en secrets/"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/listmonk.env.j2"
+    dest: "{{ playbook_dir }}/secrets/listmonk.env"
+  register: config_env
+  ignore_errors: true
+
+- name: "Generar docker-compose para listmonk"
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/listmonk.yml.j2"
+    dest: "{{ playbook_dir }}/deploy/listmonk_stack.yml"
+  register: config_stack
+  ignore_errors: true
+
+- name: "Desplegar Stack listmonk"
+  ansible.builtin.command:
+    cmd: "docker stack deploy -c {{ playbook_dir }}/deploy/listmonk_stack.yml listmonk"
+  when: not config_stack.failed | default(false)

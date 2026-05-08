@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    image: appflowyinc/appflowy-cloud:latest
+    env_file:
+      - {{ playbook_dir }}/secrets/appflowy.env
+    networks:
+      - {{ docker_network_name | default('SyntalixNet') }}
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.appflowy.rule=Host(`{{ APPFLOWY__DOMAIN | default('appflowy.localhost') }}`)"
+        - "traefik.http.services.appflowy.loadbalancer.server.port=80"
+
+networks:
+  {{ docker_network_name | default('SyntalixNet') }}:
+    external: true

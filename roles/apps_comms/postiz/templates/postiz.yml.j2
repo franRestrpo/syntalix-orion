@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    image: git.novon.co/postiz/postiz:latest
+    env_file:
+      - {{ playbook_dir }}/secrets/postiz.env
+    networks:
+      - {{ docker_network_name | default('SyntalixNet') }}
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.postiz.rule=Host(`{{ POSTIZ__DOMAIN | default('postiz.localhost') }}`)"
+        - "traefik.http.services.postiz.loadbalancer.server.port=80"
+
+networks:
+  {{ docker_network_name | default('SyntalixNet') }}:
+    external: true
