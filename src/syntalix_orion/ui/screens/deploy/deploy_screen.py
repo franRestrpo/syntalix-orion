@@ -110,7 +110,7 @@ class DeployScreen(Screen):
             status = self.query_one("#deployment-status", Static)
             status.update("[b]Despliegue finalizado.[/b]")
 
-    @work(exclusive=True, thread=False)
+    @work(exclusive=True, thread=True)
     async def _run_deployment(self) -> None:
         self.app.call_from_thread(self._update_log_ui, "[dim]Preparando plan de ejecucin...[/dim]")
         
