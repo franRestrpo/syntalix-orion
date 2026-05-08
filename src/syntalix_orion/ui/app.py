@@ -137,6 +137,13 @@ class OrionTUI(App):
         Maneja el evento de retroceso en ConfigScreen.
 
         Args:
-            message: Mensaje de tipo ConfigBack que indica navegación hacia atrás.
+            message: Mensaje de tipo ConfigBack que indica navegacin hacia atrs.
         """
         self.pop_screen()
+
+    def on_deploy_screen_deploy_complete(self, message: DeployScreen.DeployComplete) -> None:
+        """
+        Maneja el evento de finalizacin exitosa o manual en DeployScreen.
+        Sale de la aplicacin limpiamente.
+        """
+        self.exit()
