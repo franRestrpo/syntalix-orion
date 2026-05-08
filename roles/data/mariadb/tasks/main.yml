@@ -18,7 +18,7 @@
       dominio: "{{ lookup('vars', 'MARIADB__DOMAIN', default=lookup('vars', 'MARIADB_DOMAIN', default=MARIADB__TRAEFIK_DASHBOARD_URL | default('mariadb.localhost', true))) }}"
       usuario_admin: "{{ lookup('vars', 'MARIADB__ADMIN_EMAIL', default=MARIADB__TRAEFIK_USER | default('admin', true)) }}"
       acme_email: "{{ MARIADB__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ lookup('vars', 'MARIADB__MYSQL_ROOT_PASSWORD', default=MARIADB__DB_PASSWORD | default('securepass', true)) }}"
+      password_db: "{{ lookup('vars', 'MARIADB__MYSQL_ROOT_PASSWORD', default=MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true)) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 

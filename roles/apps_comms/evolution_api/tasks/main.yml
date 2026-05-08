@@ -20,7 +20,7 @@
       api_key: "{{ lookup('vars', 'EVOLUTION_API__EV_API_KEY', default='securekey') }}"
       password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='securepass') }}"
       maria_user: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_USERNAME', default='admin') }}"
-      maria_pass: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_PASSWORD', default='securepass') }}"
+      maria_pass: "{{ lookup('vars', 'MARIADB__MYSQL_ROOT_PASSWORD', default=MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true)) }}"
 
 - name: "Generar archivo .env para evolution_api en secrets/"
   ansible.builtin.template:

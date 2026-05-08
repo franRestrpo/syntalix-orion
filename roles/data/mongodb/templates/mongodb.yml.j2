@@ -22,7 +22,7 @@ services:
         - "traefik.http.services.mongodb.loadbalancer.server.port=27017"
     environment:
       - "MONGO_INITDB_ROOT_USERNAME={{ app_actual.usuario_admin | default('admin') }}"
-      - "MONGO_INITDB_ROOT_PASSWORD={{ app_actual.password_db | default('securepass') }}"
+      - "MONGO_INITDB_ROOT_PASSWORD={{ app_actual.password_db | default(MONGODB__MONGODB_ROOT_PASSWORD | default('securepass', true), true) }}"
 
 volumes:
   mongodb_data:

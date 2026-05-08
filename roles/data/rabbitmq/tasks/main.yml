@@ -18,7 +18,7 @@
       dominio: "{{ lookup('vars', 'RABBITMQ__DOMAIN', default=lookup('vars', 'RABBITMQ_DOMAIN', default=RABBITMQ__TRAEFIK_DASHBOARD_URL | default('rabbitmq.localhost', true))) }}"
       usuario_admin: "{{ lookup('vars', 'RABBITMQ__ADMIN_EMAIL', default=RABBITMQ__TRAEFIK_USER | default('admin', true)) }}"
       acme_email: "{{ RABBITMQ__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default=RABBITMQ__DB_PASSWORD | default('securepass', true)) }}"
+      password_db: "{{ lookup('vars', 'RABBITMQ__RABBITMQ_DEFAULT_PASS', default=RABBITMQ__RABBITMQ_DEFAULT_PASS | default('securepass', true)) }}"
       chatwoot_db_host: "postgres_pgvector"
       chatwoot_redis_host: "redis"
 
