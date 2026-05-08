@@ -1,4 +1,4 @@
-# 📋 Reporte de Auditoría Técnica: Syntalix-Orion V2
+# 📋 Reporte de Auditoría Técnica: Syntalix-Orion V2 (ACTUALIZADO)
 
 Este documento detalla los hallazgos tras la revisión exhaustiva del código fuente y la arquitectura del proyecto, clasificados por categorías críticas.
 
@@ -7,19 +7,17 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 ## 1. 🛡️ Seguridad (Security Issues)
 
 ### Hallazgos
-- [x] **Ejecución de Comandos (`shell=True`):** 
-  - **Ubicación:** `scripts/core/preflight.py`.
-  - **Estado:** ✅ Solucionado. Se reemplazó la lógica de `subprocess` con `shutil.which`.
-  - **Recomendación:** Mantener el uso de utilidades nativas de Python para evitar la exposición a inyecciones de shell.
+- [x] **Ejecución de Comandos (`shell=True`):**
+  - **Ubicación:** `src/syntalix_orion/core/preflight.py`.
+  - **Estado:** ✅ Solucionado. Se reemplazó la lógica de `subprocess` con llamadas seguras (arreglos `[]`) y `shutil.which`.
 
-- [ ] **Almacenamiento de Secretos (`.env`):**
-  - **Ubicación:** Raíz del proyecto.
-  - **Riesgo:** Aunque se aplica `chmod 600`, si un servicio (como Traefik) se configura mal y expone la raíz del proyecto, el archivo `.env` (que contiene todas las claves de base de datos) podría ser accesible.
-  - **Recomendación:** Mover los archivos sensibles a un directorio dedicado (ej: `secrets/` o `credentials/`) que esté explícitamente excluido de cualquier montaje de volumen de contenedor.
-- [ ] **Validación de Secretos en Metadatos:**
-  - **Ubicación:** `apps_metadata.py`.
-  - **Riesgo:** Algunas contraseñas como `TRAEFIK_PASSWORD` se piden en texto plano y no se validan contra políticas de robustez complejas más allá de la longitud.
-  - **Recomendación:** Implementar un validador de entropía para secretos introducidos manualmente por el usuario.
+- [x] **Almacenamiento de Secretos (`.env`):**
+  - **Ubicación:** `secrets/.env`.
+  - **Estado:** ✅ Solucionado. El archivo reside en `secrets/` con `chmod 600`. `StateRepository` implementa escritura atómica (Write-and-Rename).
+
+- [x] **Validación de Secretos en Metadatos:**
+  - **Ubicación:** `src/syntalix_orion/core/security.py`, `config.py`, `state_repository.py`.
+  - **Estado:** ✅ Solucionado. Se implementó validación de fortaleza (mínimo 12 caracteres, mayúsculas, números, símbolos y entropía >= 64 bits).
 
 ---
 
@@ -27,47 +25,44 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 
 ### Hallazgos
 - [x] **DependencyGraph Multitarea:**
-  - **Estado:** ✅ Solucionado. 
+  - **Estado:** ✅ Solucionado.
   - **Mejora:** La lógica criptográfica se delegó a `core/security.py` y el formateo de variables a `utils.map_app_variable`. `DependencyGraph` ahora es puramente un orquestador del grafo.
 
-- [ ] **Lógica de Negocio en la UI:**
-  - **Ubicación:** `ui/screens/selection.py` y `config.py`.
-  - **Problema:** Las pantallas de Textual contienen lógica compleja de resolución de dependencias transitivas y validación de planes.
-  - **Recomendación:** Mover la lógica de "si selecciono A, debo marcar B" a un controlador de estado (`StateStore` o un `DeploymentController`) para que la UI sea puramente presentacional.
+- [x] **Lógica de Negocio en la UI:**
+  - **Ubicación:** `src/syntalix_orion/ui/screens/selection.py`.
+  - **Estado:** ✅ Solucionado. Se creó `DeploymentController` que encapsula toda la lógica de resolución de dependencias transitivas. `SelectionScreen` es ahora puramente presentacional.
 
 ---
 
 ## 3. 🧹 Código Limpio (Clean Code Issues)
 
 ### Hallazgos
-- [ ] **Inyección Dinámica de PATH:**
-  - **Ubicación:** `main.py`, `tui.py`, `ui/app.py`, etc.
-  - **Problema:** Uso repetitivo de `sys.path.insert(0, ...)` para poder importar módulos locales. Esto es frágil y dificulta el testing.
-  - **Recomendación:** Estructurar el proyecto como un paquete Python instalable (`pyproject.toml` o `setup.py`) y usar rutas relativas de importación estándar.
-- [ ] **Carga de Metadatos Redundante:**
-  - **Ubicación:** `core/dependency_graph.py` (función `_load_app_metadata`).
-  - **Problema:** Algoritmo de búsqueda de archivos manual con múltiples fallbacks. 
-  - **Recomendación:** Centralizar la carga del catálogo en un solo punto (Registry) que sea inyectado en las clases que lo necesiten.
+- [x] **Inyección Dinámica de PATH:**
+  - **Ubicación:** Múltiples archivos (`main.py`, `ui/app.py`, `ui/screens/selection.py`, etc.).
+  - **Estado:** ✅ Solucionado. Se estructuró el proyecto como paquete Python instalable con `pyproject.toml` y layout `src/`. Se eliminaron las 13+ inyecciones de `sys.path.insert()`.
+
+- [x] **Carga de Metadatos Redundante:**
+  - **Ubicación:** `src/syntalix_orion/core/dependency_graph.py`.
+  - **Estado:** ✅ Solucionado. Se creó `AppRegistry` que centraliza la carga del catálogo desde archivos YAML validados con Pydantic.
+
 - [x] **Manejo de Errores Silencioso:**
-  - **Ubicación:** `core/state.py`.
-  - **Estado:** ✅ Solucionado. Se integró el sistema de logging para capturar excepciones en la persistencia de estado y archivos .env.
-  - **Mejora:** Facilita el diagnóstico de problemas de permisos o errores de E/S en entornos de producción.
+  - **Ubicación:** `src/syntalix_orion/core/state.py`.
+  - **Estado:** ✅ Solucionado. Se integró `logging` para capturar excepciones en persistencia de estado y variables.
 
 ---
 
 ## 4. 🏛️ Arquitectura (Architectural Flaws)
 
 ### Hallazgos
-- [ ] **Acoplamiento con Ansible:**
-  - **Ubicación:** `engine/ansible_runner_real.py`.
-  - **Problema:** El runner asume rutas fijas para `site.yml` y depende de la existencia de un binario en el venv.
-  - **Recomendación:** Abstraer el `AnsibleRunner` mediante una interfaz/clase base para permitir otros backends o modos de simulación (Mock) más robustos.
-- [ ] **Fuente de Verdad (apps_metadata.py):**
-  - **Problema:** El catálogo es un diccionario Python gigante. A medida que crezca, será difícil de mantener.
-  - **Recomendación:** Migrar el catálogo a archivos YAML o JSON individuales por aplicación y cargarlos dinámicamente al inicio.
-- [ ] **Gestión de Estado Centralizada:**
-  - **Problema:** El estado se guarda en `state.json` y `.env` de forma fragmentada.
-  - **Recomendación:** Implementar un repositorio de estado unificado que maneje la persistencia de forma atómica.
+- [x] **Acoplamiento con Ansible:**
+  - **Ubicación:** `src/syntalix_orion/engine/ansible_runner.py` y `ansible_runner_real.py`.
+  - **Estado:** ✅ Solucionado. Se abstrajo mediante un patrón Factory (`get_runner()`) que retorna un Mock o el Real Runner según la variable `RUNNER_MODE`.
+
+- [x] **Fuente de Verdad (`apps_metadata.py`):**
+  - **Estado:** ✅ En proceso de mejora. Se creó `src/syntalix_orion/catalog/` con archivos YAML validados por Pydantic. `apps_metadata.py` se mantiene como legacy bridge para backwards compatibility.
+
+- [x] **Gestión de Estado Centralizada:**
+  - **Estado:** ✅ Solucionado. Se implementó `StateRepository` que maneja persistencia atómica de `state.json` y `secrets/.env` de forma transaccional.
 
 ---
 
@@ -75,16 +70,45 @@ Este documento detalla los hallazgos tras la revisión exhaustiva del código fu
 
 ### Hallazgos
 - [x] **Código Muerto (Dead Code) en `main.py`:**
-  - **Estado:** ✅ Solucionado. Se eliminaron las referencias a Proxmox y la función `run_remote_mode`.
-  - **Mejora:** La interfaz ahora es coherente con las capacidades reales del sistema, evitando errores de importación.
+  - **Estado:** ✅ Solucionado. Se eliminaron las referencias a Proxmox.
+
 - [x] **Importaciones Condicionales Frágiles:**
-  - **Estado:** ✅ Solucionado. Se eliminaron junto con la lógica de Proxmox.
+  - **Estado:** ✅ Solucionado. Limpiadas junto con la lógica de Proxmox.
 
 ---
 
-## ✅ Resumen de Recomendaciones Críticas
+## ✅ Resumen de Implementación Completada
 
-1.  **Eliminar `shell=True`** en todas las llamadas de sistema.
-2.  **Eliminar manipulaciones de `sys.path`** a favor de un entorno de paquete Python formal.
-3.  **Refactorizar `DependencyGraph`** para separar el análisis de grafo de la generación de datos.
-4.  **Centralizar el almacenamiento de credenciales** en un directorio protegido y fuera de la raíz de la aplicación.
+| # | Categoría | Estado | Descripción |
+|---|-----------|--------|-------------|
+| 1 | Estructura `src/` + `pyproject.toml` | ✅ Completo | Paquete formal con imports absolutos |
+| 2 | Gestión con `uv` | ✅ Completo | Instalación vía `uv pip install -e .` |
+| 3 | Modelos Pydantic | ✅ Completo | `AppMetadata`, `AppVariable`, `DeploymentPlan` validados |
+| 4 | AppRegistry + YAML catalog | ✅ Completo | `src/syntalix_orion/catalog/` con 8 apps |
+| 5 | DeploymentController (SRP) | ✅ Completo | Lógica de negocio centralizada |
+| 6 | StateRepository (Atomic Write) | ✅ Completo | Write-and-Rename con backups |
+| 7 | Actualización setup.sh | ✅ Completo | Soporta nuevo layout y comando `orion` |
+| 8 | Documentación AGENTS.md | ✅ Completo | Actualizado con nuevos comandos |
+
+---
+
+## 🚀 Comandos Actualizados
+
+```bash
+# Instalación
+uv venv
+uv pip install -e ".[dev]"
+
+# Ejecución estándar
+orion
+
+# Verificación de imports
+python -c "from syntalix_orion.core.models import AppMetadata; print('OK')"
+
+# Tests
+pytest tests/
+```
+
+---
+
+*Este documento se mantiene actualizado para reflejar el estado actual del proyecto.*

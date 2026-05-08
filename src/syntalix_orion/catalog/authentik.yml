@@ -1,0 +1,21 @@
+id: authentik
+name: Authentik
+category: Core
+version: latest
+ram_mb: 512
+dependencies:
+  - crowdsec
+  - traefik
+  - postgres_pgvector
+  - redis
+variables:
+  AUTHENTIK_DOMAIN:
+    type: domain
+    description: "Domain for Authentik platform"
+    required: true
+    auto_generate: false
+  AUTHENTIK_SECRET_KEY:
+    type: secret
+    description: "Authentik Secret Key"
+    auto_generate: true
+    length: 50

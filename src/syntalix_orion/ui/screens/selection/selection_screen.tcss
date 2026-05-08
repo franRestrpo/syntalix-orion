@@ -1,0 +1,16 @@
+/* SelectionScreen - Placeholder styles */
+Screen {
+    background: $surface;
+}
+
+#main-container {
+    height: 100%;
+}
+
+#left-panel {
+    width: 50%;
+}
+
+#right-panel {
+    width: 50%;
+}
