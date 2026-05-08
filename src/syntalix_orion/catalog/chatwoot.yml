@@ -1,5 +1,6 @@
 id: chatwoot
 name: Chatwoot
+description: Customer engagement suite
 category: Communication
 version: latest
 ram_mb: 1024

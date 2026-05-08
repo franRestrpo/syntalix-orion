@@ -1,5 +1,6 @@
 id: openwebui
 name: OpenWebUI
+description: User-friendly WebUI for LLMs
 category: AI
 version: latest
 ram_mb: 512

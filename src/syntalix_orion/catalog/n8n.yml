@@ -1,5 +1,6 @@
 id: n8n
 name: n8n
+description: Workflow automation tool
 category: Automation
 version: latest
 ram_mb: 1024

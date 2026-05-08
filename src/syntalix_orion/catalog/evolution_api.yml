@@ -1,5 +1,6 @@
 id: evolution_api
 name: Evolution API
+description: WhatsApp API integration
 category: Automation
 version: latest
 ram_mb: 512

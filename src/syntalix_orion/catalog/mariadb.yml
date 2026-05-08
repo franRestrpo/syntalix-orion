@@ -1,5 +1,6 @@
 id: mariadb
 name: MariaDB / MySQL
+description: Open source relational database
 category: Data
 version: 10.x
 ram_mb: 512

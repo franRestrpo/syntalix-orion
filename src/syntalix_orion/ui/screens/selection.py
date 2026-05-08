@@ -110,10 +110,12 @@ class SelectionScreen(Screen):
                                 app_id=app.id,
                                 is_mandatory=is_mandatory,
                                 value=is_selected,
-                                tooltip=f"ID: {app.id}\nRAM: {app.ram_mb}MB{deps_tooltip}",
+                                tooltip=f"{app.description}\n\nID: {app.id}\nRAM: {app.ram_mb}MB{deps_tooltip}" if app.description else f"ID: {app.id}\nRAM: {app.ram_mb}MB{deps_tooltip}",
                                 category=category.lower()
                             )
                             yield checkbox
+                            if app.description:
+                                yield Static(f"   [dim]{app.description}[/dim]", classes="app-description")
 
             with VerticalScroll(id="right-panel"):
                 yield Static("◉ RESUMEN DE SELECCIÓN", id="monitor-title")

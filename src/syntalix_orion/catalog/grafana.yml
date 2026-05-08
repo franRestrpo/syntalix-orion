@@ -1,19 +1,20 @@
 id: grafana
 name: Grafana
+description: Operational dashboards for your data
 category: Monitoring
 version: latest
 ram_mb: 512
 dependencies:
-  - traefik
-  - prometheus
+- traefik
+- prometheus
 variables:
   GRAFANA_DOMAIN:
     type: domain
-    description: "Domain for Grafana Dashboard"
+    description: Domain for Grafana Dashboard
     required: true
     auto_generate: false
   GRAFANA_PASSWORD:
     type: secret
-    description: "Grafana admin password"
+    description: Grafana admin password
     required: true
     auto_generate: false

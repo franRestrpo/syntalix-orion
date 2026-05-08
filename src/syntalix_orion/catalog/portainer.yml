@@ -1,18 +1,19 @@
 id: portainer
 name: Portainer
+description: Container management interface
 category: Core
 version: latest
 ram_mb: 256
 dependencies:
-  - traefik
+- traefik
 variables:
   PORTAINER_DOMAIN:
     type: domain
-    description: "Domain for Portainer Dashboard"
+    description: Domain for Portainer Dashboard
     required: true
     auto_generate: false
   PORTAINER_ENCRYPTION_KEY:
     type: secret
-    description: "Encryption key for Portainer DB"
+    description: Encryption key for Portainer DB
     auto_generate: true
     length: 32

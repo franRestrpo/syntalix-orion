@@ -1,5 +1,6 @@
 id: loki
 name: Loki
+description: Log aggregation system
 category: Monitoring
 version: latest
 ram_mb: 512

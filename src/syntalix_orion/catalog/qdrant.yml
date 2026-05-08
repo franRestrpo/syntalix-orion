@@ -1,5 +1,6 @@
 id: qdrant
 name: Qdrant
+description: Vector Database for AI
 category: Data
 version: latest
 ram_mb: 512

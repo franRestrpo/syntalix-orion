@@ -1,5 +1,6 @@
 id: mongodb
 name: MongoDB
+description: Document-based NoSQL database
 category: Data
 version: latest
 ram_mb: 1024

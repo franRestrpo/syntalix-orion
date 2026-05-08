@@ -1,5 +1,6 @@
 id: minio
 name: MinIO
+description: High Performance Object Storage
 category: Data
 version: latest
 ram_mb: 1024

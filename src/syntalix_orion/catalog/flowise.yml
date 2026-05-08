@@ -1,5 +1,6 @@
 id: flowise
 name: Flowise
+description: Drag & drop UI to build customized LLM flows
 category: AI
 version: latest
 ram_mb: 512

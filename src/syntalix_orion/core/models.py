@@ -102,6 +102,7 @@ class AppMetadata(BaseModel):
     """
     id: str = Field(..., description="Identificador único (slug) de la aplicación")
     name: str = Field(..., description="Nombre comercial o descriptivo")
+    description: str = Field(default="", description="Breve descripcion de la app")
     category: str = Field(..., description="Categoría funcional en el ecosistema")
     version: str = Field(..., description="Etiqueta de versión (tag de imagen Docker)")
     ram_mb: int = Field(..., ge=0, le=65536, description="Memoria RAM mínima recomendada en MB")

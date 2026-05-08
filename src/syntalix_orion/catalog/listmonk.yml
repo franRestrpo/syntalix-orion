@@ -1,5 +1,6 @@
 id: listmonk
 name: Listmonk
+description: Self-hosted newsletter and mailing list manager
 category: Communication
 version: latest
 ram_mb: 256

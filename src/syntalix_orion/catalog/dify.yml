@@ -1,5 +1,6 @@
 id: dify
 name: Dify AI
+description: LLM Application Development Platform
 category: AI
 version: latest
 ram_mb: 1536

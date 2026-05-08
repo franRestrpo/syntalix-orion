@@ -1,5 +1,6 @@
 id: prometheus
 name: Prometheus
+description: Systems monitoring and alerting toolkit
 category: Monitoring
 version: latest
 ram_mb: 512
@@ -7,5 +8,5 @@ dependencies: []
 variables:
   PROMETHEUS_RETENTION:
     type: string
-    description: "Data retention period"
-    default: "15d"
+    description: Data retention period
+    default: 15d

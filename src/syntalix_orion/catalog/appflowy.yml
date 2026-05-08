@@ -1,5 +1,6 @@
 id: appflowy
 name: AppFlowy
+description: Open source alternative to Notion
 category: Management
 version: latest
 ram_mb: 1024

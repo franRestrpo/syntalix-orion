@@ -1,5 +1,6 @@
 id: odoo
 name: Odoo (Community)
+description: Open Source ERP and CRM
 category: Management
 version: 15.x
 ram_mb: 1024

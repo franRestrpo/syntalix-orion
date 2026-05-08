@@ -1,5 +1,6 @@
 id: docuseal
 name: DocuSeal
+description: Open source document signing
 category: Management
 version: latest
 ram_mb: 512

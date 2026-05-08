@@ -14,3 +14,5 @@ Screen {
 #right-panel {
     width: 50%;
 }
+
+.app-description { margin-left: 2; margin-bottom: 1; height: 1; }

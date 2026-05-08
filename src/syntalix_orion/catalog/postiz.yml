@@ -1,5 +1,6 @@
 id: postiz
 name: Postiz
+description: Open source social media scheduling
 category: Communication
 version: latest
 ram_mb: 1024

@@ -1,5 +1,6 @@
 id: glpi
 name: GLPI
+description: IT Asset Management and Helpdesk
 category: Management
 version: latest
 ram_mb: 512

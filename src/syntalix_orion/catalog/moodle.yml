@@ -1,5 +1,6 @@
 id: moodle
 name: Moodle
+description: Open-source learning management system
 category: Management
 version: latest
 ram_mb: 1024

@@ -1,5 +1,6 @@
 id: activepieces
 name: ActivePieces
+description: Open source business automation
 category: Automation
 version: latest
 ram_mb: 512
