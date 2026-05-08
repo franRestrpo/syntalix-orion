@@ -128,7 +128,14 @@ class StateRepository:
             if value in (None, "None", "null", ""):
                 continue
 
-            sanitized = value.strip()
+            # Convert value to string to handle cases where it might be a list (like ansible_enabled_roles)
+            if isinstance(value, list):
+                # Representing python lists as JSON strings for .env files is usually safest
+                value_str = json.dumps(value)
+            else:
+                value_str = str(value)
+                
+            sanitized = value_str.strip()
 
             if _is_user_facing_password(key):
                 is_valid, error_msg = validate_password_strength(sanitized)
@@ -185,7 +192,7 @@ class StateRepository:
         Returns:
             Diccionario de variables de entorno cargadas.
         """
-        env_vars: Dict[str, str] = {}
+        env_vars: Dict[str, Any] = {}
 
         if not self._secrets_file.exists():
             return env_vars
@@ -200,6 +207,15 @@ class StateRepository:
                         value = value.strip()
                         if value in ("None", "null", ""):
                             continue
+                        
+                        # Try to parse JSON strings back to python lists
+                        if value.startswith('[') and value.endswith(']'):
+                            try:
+                                import json
+                                value = json.loads(value)
+                            except:
+                                pass
+                                
                         env_vars[key] = value
         except Exception as e:
             logger.error(f"Error al leer secretos: {e}")
