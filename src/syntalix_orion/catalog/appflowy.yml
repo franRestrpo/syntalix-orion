@@ -1,0 +1,15 @@
+id: appflowy
+name: AppFlowy
+category: Management
+version: latest
+ram_mb: 1024
+dependencies:
+- traefik
+- postgres_pgvector
+- redis
+variables:
+  APPFLOWY_DOMAIN:
+    type: domain
+    description: Domain for AppFlowy Cloud
+    required: true
+    auto_generate: false

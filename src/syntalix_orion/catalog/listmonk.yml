@@ -1,0 +1,24 @@
+id: listmonk
+name: Listmonk
+category: Communication
+version: latest
+ram_mb: 256
+dependencies:
+- traefik
+- postgres_pgvector
+variables:
+  LISTMONK_DOMAIN:
+    type: domain
+    description: Domain for Listmonk
+    required: true
+    auto_generate: false
+  LISTMONK_ADMIN_USERNAME:
+    type: string
+    description: Listmonk Admin Username
+    default: admin
+    required: true
+  LISTMONK_ADMIN_PASSWORD:
+    type: secret
+    description: Listmonk Admin Password
+    required: true
+    auto_generate: true

@@ -1,0 +1,19 @@
+id: postiz
+name: Postiz
+category: Communication
+version: latest
+ram_mb: 1024
+dependencies:
+- traefik
+- postgres_pgvector
+- redis
+variables:
+  POSTIZ_DOMAIN:
+    type: domain
+    description: Domain for Postiz
+    required: true
+    auto_generate: false
+  POSTIZ_JWT_SECRET:
+    type: secret
+    description: Postiz JWT Secret
+    auto_generate: true

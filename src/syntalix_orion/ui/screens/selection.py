@@ -31,13 +31,15 @@ CATEGORY_COLORS = {
 }
 
 APP_ICONS = {
-    "traefik": "🌐", "crowdsec": "🛡️", "authentik": "🔐", "portainer": "📦",
-    "postgres_pgvector": "🐘", "mariadb": "🗄️", "mongodb": "🍃", "rabbitmq": "🐰",
-    "redis": "💾", "qdrant": "🔍", "minio": "☁️",
-    "prometheus": "📊", "grafana": "📈", "loki": "📋", "uptime_kuma": "⏱️",
-    "dify": "🤖", "openwebui": "💬", "flowise": "🌊",
-    "n8n": "⚡", "activepieces": "🔧", "evolution_api": "📱",
-    "chatwoot": "💬", "odoo": "🏢"
+    "traefik": "??", "crowdsec": "???", "authentik": "??", "portainer": "??",
+    "postgres_pgvector": "??", "mariadb": "???", "mongodb": "??", "rabbitmq": "??",
+    "redis": "??", "qdrant": "??", "minio": "??",
+    "prometheus": "??", "grafana": "??", "loki": "??", "uptime_kuma": "??",
+    "dify": "??", "openwebui": "??", "flowise": "??",
+    "n8n": "?", "activepieces": "??", "evolution_api": "??",
+    "chatwoot": "??", "odoo": "??",
+    "glpi": "??", "docuseal": "??", "appflowy": "??",
+    "listmonk": "??", "postiz": "??", "moodle": "??"
 }
 
 
