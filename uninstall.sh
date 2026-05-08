@@ -50,16 +50,29 @@ if [[ $del_volumes =~ ^[yY]$ ]]; then
     success "Volúmenes eliminados."
 fi
 
-# 3. Limpieza de archivos de despliegue
-read -p "¿Deseas eliminar los archivos de configuración en el directorio 'deploy/'? (y/N): " del_configs
+# 3. Limpieza de archivos de despliegue y estado de la TUI
+read -p "¿Deseas eliminar los archivos de configuración (deploy/), secretos y el estado de la TUI? (y/N): " del_configs
 if [[ $del_configs =~ ^[yY]$ ]]; then
     log "Limpiando directorio deploy/..."
     if [ -d "deploy" ]; then
         rm -rf deploy/*
-        success "Archivos de configuración eliminados."
+        success "Archivos de configuración (stacks) eliminados."
     else
         warn "El directorio deploy/ no existe."
     fi
+
+    log "Limpiando estado y memoria de la TUI..."
+    if [ -f "state.json" ]; then
+        rm -f state.json
+        success "Archivo state.json eliminado (memoria de la TUI borrada)."
+    fi
+
+    if [ -d "secrets" ]; then
+        rm -rf secrets/.env
+        rm -rf secrets/backups/*
+        success "Archivos de secretos (.env y backups) eliminados."
+    fi
+fi
 fi
 
 # 4. Limpieza de redes (Opcional)
