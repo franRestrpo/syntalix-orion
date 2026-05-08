@@ -12,6 +12,8 @@ Características:
       no estén presentes en el entorno.
 """
 
+import json
+import tempfile
 import asyncio
 import os
 import sys
@@ -73,8 +75,6 @@ class RealAnsibleRunner:
             inventory = project_root / "hosts" # fallback
             
         # Generar un archivo temporal seguro para inyectar las variables a Ansible
-        import json
-        import tempfile
         
         # Usar NamedTemporaryFile para garantizar destruccion automatica incluso si el proceso muere brutalmente
         fd, temp_vars_path = tempfile.mkstemp(prefix=".ansible_vars_", suffix=".json", dir=private_data_dir)
