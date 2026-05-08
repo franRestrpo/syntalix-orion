@@ -171,7 +171,6 @@ class StateRepository:
                     if disk_value != value:
                         if isinstance(disk_value, list):
                             try:
-                                import json
                                 if json.loads(value) == disk_value:
                                     continue
                             except:
@@ -179,7 +178,6 @@ class StateRepository:
                         elif isinstance(disk_value, str) and value.startswith('[') and value.endswith(']'):
                             # Si ambos son strings pero uno parece un JSON array
                             try:
-                                import json
                                 if json.dumps(json.loads(disk_value)) == json.dumps(json.loads(value)):
                                     continue
                             except:
@@ -229,7 +227,6 @@ class StateRepository:
                         # Try to parse JSON strings back to python lists
                         if value.startswith('[') and value.endswith(']'):
                             try:
-                                import json
                                 value = json.loads(value)
                             except:
                                 pass
