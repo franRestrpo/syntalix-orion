@@ -261,6 +261,7 @@ screens/{screen}/screen_name.tcss (Local)
 ### CONTRASEÑAS DE INFRAESTRUCTURA (Category A - NUNCA HASHEAR)
 - Texto plano seguro (`secrets.token_urlsafe()`)
 - Compatibilidad con protocolos de autenticación de bases de datos
+- **Regla de Independencia y Reutilización:** Los servicios base (como Redis, Postgres, MariaDB) se instancian una vez por red. Sus contraseñas autogeneradas se persistirán en el archivo global `secrets/.env` con su formato canónico (ej. `REDIS__REDIS_PASSWORD`, `POSTGRES_PGVECTOR__POSTGRES_PASSWORD`). Todas las aplicaciones dependientes (como n8n, Authentik) **DEBEN** referenciar explícitamente estas variables canónicas en lugar de usar variables locales genéricas o aliases. NUNCA se debe inyectar contraseñas de infraestructura a través de variables intermedias como `app_actual.password_db` en los playbooks.
 
 ### CONTRASEÑAS DE APLICACIONES UI (Category C - PROHIBIDO HASHEAR)
 - Text plano fiel al ingreso del usuario
@@ -314,6 +315,9 @@ sudo ./setup.sh --deploy
 ## Workflow de Desarrollo
 
 **IMPORTANTE:** El desarrollo se realiza localmente pero la ejecución y testing se validan en el VPS remoto. **Commit y push inmediatos** tras cada cambio funcional.
+
+### Estándar de Commits (Git)
+Todos los mensajes de commit de Git deben redactarse en **español** de manera profesional, clara y descriptiva. Se recomienda el uso de la convención de "Conventional Commits" manteniendo el prefijo técnico (ej. `feat:`, `fix:`, `refactor:`, `docs:`) pero con el resumen y cuerpo del mensaje íntegramente en español (ej. `fix(n8n): corrige el error 522 de conexión en traefik`).
 
 ### Verificación de imports tras cambios
 

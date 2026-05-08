@@ -39,26 +39,43 @@ fi
 # 2. Limpieza de volúmenes (Opcional)
 read -p "¿Deseas eliminar también los VOLÚMENES de datos? (¡Esto es IRREVERSIBLE!) (y/N): " del_volumes
 if [[ $del_volumes =~ ^[yY]$ ]]; then
-    log "Forzando eliminación de configuración cacheada en volúmenes críticos (n8n, postgres)..."
+    log "Forzando eliminación de configuración cacheada en volúmenes críticos (n8n, postgres, mariadb, glpi)..."
     docker run --rm -v n8n_n8n_data:/home/node/.n8n alpine rm -rf /home/node/.n8n/* 2>/dev/null || true
     docker run --rm -v n8n_data:/home/node/.n8n alpine rm -rf /home/node/.n8n/* 2>/dev/null || true
     docker run --rm -v postgres_pgvector_postgres_data:/var/lib/postgresql/data alpine rm -rf /var/lib/postgresql/data/* 2>/dev/null || true
     docker run --rm -v postgres_data:/var/lib/postgresql/data alpine rm -rf /var/lib/postgresql/data/* 2>/dev/null || true
+    docker run --rm -v mariadb_mariadb_data:/var/lib/mysql alpine rm -rf /var/lib/mysql/* 2>/dev/null || true
+    docker run --rm -v mariadb_data:/var/lib/mysql alpine rm -rf /var/lib/mysql/* 2>/dev/null || true
+    docker run --rm -v glpi_glpi_data:/var/glpi alpine rm -rf /var/glpi/* 2>/dev/null || true
+    docker run --rm -v glpi_data:/var/glpi alpine rm -rf /var/glpi/* 2>/dev/null || true
 
     log "Eliminando volúmenes de Docker no utilizados..."
+    sleep 3
     docker volume prune -f
     success "Volúmenes eliminados."
 fi
 
-# 3. Limpieza de archivos de despliegue
-read -p "¿Deseas eliminar los archivos de configuración en el directorio 'deploy/'? (y/N): " del_configs
+# 3. Limpieza de archivos de despliegue y estado de la TUI
+read -p "¿Deseas eliminar los archivos de configuración (deploy/), secretos y el estado de la TUI? (y/N): " del_configs
 if [[ $del_configs =~ ^[yY]$ ]]; then
     log "Limpiando directorio deploy/..."
     if [ -d "deploy" ]; then
         rm -rf deploy/*
-        success "Archivos de configuración eliminados."
+        success "Archivos de configuración (stacks) eliminados."
     else
         warn "El directorio deploy/ no existe."
+    fi
+
+    log "Limpiando estado y memoria de la TUI..."
+    if [ -f "state.json" ]; then
+        rm -f state.json
+        success "Archivo state.json eliminado (memoria de la TUI borrada)."
+    fi
+
+    if [ -d "secrets" ]; then
+        rm -rf secrets/.env
+        rm -rf secrets/backups/*
+        success "Archivos de secretos (.env y backups) eliminados."
     fi
 fi
 

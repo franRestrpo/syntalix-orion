@@ -2,12 +2,12 @@ version: '3.8'
 services:
   redis:
     image: redis:7-alpine
-    command: redis-server --requirepass {{ REDIS__PASSWORD }}
+    command: redis-server --requirepass {{ REDIS__REDIS_PASSWORD | default('secret', true) }}
     deploy:
       restart_policy:
         condition: on-failure
-    environment:
-      - REDIS_PASSWORD={{ REDIS__PASSWORD }}
+    env_file:
+      - {{ playbook_dir }}/secrets/redis.env
     networks:
       SyntalixNet:
         aliases:

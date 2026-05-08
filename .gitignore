@@ -74,3 +74,6 @@ node_modules/
 state.json
 textual.log
 logs/
+
+# Tooling
+.understand-anything/

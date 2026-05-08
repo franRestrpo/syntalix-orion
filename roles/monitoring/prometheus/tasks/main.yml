@@ -18,7 +18,6 @@
       dominio: "{{ lookup('vars', 'PROMETHEUS__DOMAIN', default=lookup('vars', 'PROMETHEUS_DOMAIN', default='prometheus.localhost')) }}"
       usuario_admin: "{{ lookup('vars', 'PROMETHEUS__USER', default=lookup('vars', 'PROMETHEUS_USER', default='admin')) }}"
       acme_email: "{{ lookup('vars', 'PROMETHEUS__ACME_EMAIL', default='admin@localhost') }}"
-      password_db: "{{ lookup('vars', 'PROMETHEUS__PASSWORD', default='securepass') }}"
 
 - name: "Generar archivo .env para prometheus en secrets/"
   ansible.builtin.template:

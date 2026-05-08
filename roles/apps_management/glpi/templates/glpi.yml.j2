@@ -1,17 +1,25 @@
 version: '3.8'
 
 services:
-  app:
-    image: diouxx/glpi
+  glpi:
+    image: glpi/glpi:latest
     env_file:
       - {{ playbook_dir }}/secrets/glpi.env
+    volumes:
+      - glpi_data:/var/glpi
     networks:
       - {{ docker_network_name | default('SyntalixNet') }}
     deploy:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.glpi.rule=Host(`{{ GLPI__DOMAIN | default('glpi.localhost') }}`)"
+        - "traefik.http.routers.glpi.entrypoints=websecure"
+        - "traefik.http.routers.glpi.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.glpi.loadbalancer.server.port=80"
+
+volumes:
+  glpi_data:
+    name: glpi_data
 
 networks:
   {{ docker_network_name | default('SyntalixNet') }}:

@@ -14,3 +14,11 @@ variables:
     type: string
     description: Default database
     default: appdb
+  MYSQL_USER:
+    type: string
+    description: Default database user
+    default: orion_admin
+  MYSQL_PASSWORD:
+    type: secret
+    description: Database user password
+    auto_generate: true
