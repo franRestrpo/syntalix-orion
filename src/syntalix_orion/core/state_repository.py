@@ -166,9 +166,18 @@ class StateRepository:
                 verified_vars = self.load_secrets()
                 for key, value in processed_vars.items():
                     disk_value = verified_vars.get(key)
+                    # Si era una lista que convertimos a JSON string para guardar, la recarga (load_secrets) 
+                    # podr haberla reconvertido en lista. Comparamos los strings o ignoramos si coinciden conceptualmente.
                     if disk_value != value:
+                        if isinstance(disk_value, list):
+                            try:
+                                import json
+                                if json.loads(value) == disk_value:
+                                    continue
+                            except:
+                                pass
                         raise StatePersistenceError(
-                            f"Verificación fallida para {key}: "
+                            f"Verificacin fallida para {key}: "
                             f"memoria='{value}' disco='{disk_value}'"
                         )
 
