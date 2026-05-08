@@ -1,0 +1,7 @@
+id: loki
+name: Loki
+category: Monitoring
+version: latest
+ram_mb: 512
+dependencies: []
+variables: {}

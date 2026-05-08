@@ -1,0 +1,15 @@
+id: mariadb
+name: MariaDB / MySQL
+category: Data
+version: 10.x
+ram_mb: 512
+dependencies: []
+variables:
+  MYSQL_ROOT_PASSWORD:
+    type: secret
+    description: MySQL root password
+    auto_generate: true
+  MYSQL_DATABASE:
+    type: string
+    description: Default database
+    default: appdb

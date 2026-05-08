@@ -1,0 +1,15 @@
+id: flowise
+name: Flowise
+category: AI
+version: latest
+ram_mb: 512
+dependencies:
+- postgres_pgvector
+- redis
+- traefik
+variables:
+  FLOWISE_DOMAIN:
+    type: domain
+    description: Domain for Flowise AI
+    required: true
+    auto_generate: false

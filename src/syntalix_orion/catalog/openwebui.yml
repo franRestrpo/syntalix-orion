@@ -1,0 +1,13 @@
+id: openwebui
+name: OpenWebUI
+category: AI
+version: latest
+ram_mb: 512
+dependencies:
+- traefik
+variables:
+  OPENWEBUI_DOMAIN:
+    type: domain
+    description: Domain for OpenWebUI
+    required: true
+    auto_generate: false

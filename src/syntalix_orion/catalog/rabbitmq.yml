@@ -1,0 +1,12 @@
+id: rabbitmq
+name: RabbitMQ
+category: Data
+version: 3-management
+ram_mb: 512
+dependencies: []
+volumes:
+  /var/lib/rabbitmq: rabbitmq_data
+environment:
+  RABBITMQ_DEFAULT_USER: orion
+  RABBITMQ_DEFAULT_PASS: auto_generate
+  RABBITMQ_DEFAULT_VHOST: /

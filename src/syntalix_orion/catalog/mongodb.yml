@@ -1,0 +1,11 @@
+id: mongodb
+name: MongoDB
+category: Data
+version: latest
+ram_mb: 1024
+dependencies: []
+variables:
+  MONGODB_ROOT_PASSWORD:
+    type: secret
+    description: MongoDB root password
+    auto_generate: true

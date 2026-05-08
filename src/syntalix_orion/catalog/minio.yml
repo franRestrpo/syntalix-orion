@@ -1,0 +1,11 @@
+id: minio
+name: MinIO
+category: Data
+version: latest
+ram_mb: 1024
+dependencies: []
+variables:
+  MINIO_SECRET_KEY:
+    type: secret
+    description: MinIO secret key
+    auto_generate: true

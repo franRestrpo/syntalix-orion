@@ -1,0 +1,25 @@
+id: chatwoot
+name: Chatwoot
+category: Communication
+version: latest
+ram_mb: 1024
+dependencies:
+- postgres_pgvector
+- redis
+- rabbitmq
+- traefik
+variables:
+  CHATWOOT_DOMAIN:
+    type: domain
+    description: Domain for Chatwoot platform
+    required: true
+    auto_generate: false
+  SECRET_KEY_BASE:
+    type: secret
+    description: Chatwoot secret key base
+    auto_generate: true
+  ACME_EMAIL:
+    type: email
+    description: Email for TLS certificates
+    required: true
+    auto_generate: false

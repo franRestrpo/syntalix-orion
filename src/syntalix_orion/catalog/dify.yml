@@ -1,0 +1,20 @@
+id: dify
+name: Dify AI
+category: AI
+version: latest
+ram_mb: 1536
+dependencies:
+- postgres_pgvector
+- redis
+- qdrant
+- traefik
+variables:
+  DIFY_DOMAIN:
+    type: domain
+    description: Domain for Dify AI platform
+    required: true
+    auto_generate: false
+  DIFY_INIT_PASSWORD:
+    type: secret
+    description: Dify init admin password
+    auto_generate: true

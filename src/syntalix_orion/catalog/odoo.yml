@@ -1,0 +1,20 @@
+id: odoo
+name: Odoo (Community)
+category: Management
+version: 15.x
+ram_mb: 1024
+dependencies:
+- postgres_pgvector
+- redis
+- traefik
+variables:
+  ODOO_DOMAIN:
+    type: domain
+    description: Domain for Odoo ERP
+    required: true
+    auto_generate: false
+  ADMIN_PASSWORD:
+    type: secret
+    description: Admin password for Odoo
+    auto_generate: true
+    transform: bcrypt

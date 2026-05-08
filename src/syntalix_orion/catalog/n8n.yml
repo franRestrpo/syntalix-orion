@@ -1,0 +1,28 @@
+id: n8n
+name: n8n
+category: Automation
+version: latest
+ram_mb: 1024
+dependencies:
+- postgres_pgvector
+- redis
+- traefik
+variables:
+  N8N_DOMAIN:
+    type: domain
+    description: Domain for n8n Automation
+    required: true
+    auto_generate: false
+  N8N_BASIC_AUTH:
+    type: secret
+    description: n8n basic auth password
+    auto_generate: true
+  N8N_ENCRYPTION_KEY:
+    type: secret
+    description: n8n Encryption Key
+    auto_generate: true
+  N8N_RUNNERS_AUTH_TOKEN:
+    type: secret
+    description: n8n Worker Auth Token
+    auto_generate: true
+    length: 32

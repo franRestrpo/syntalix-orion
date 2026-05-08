@@ -1,0 +1,7 @@
+id: uptime_kuma
+name: Uptime Kuma
+category: Monitoring
+version: latest
+ram_mb: 256
+dependencies: []
+variables: {}

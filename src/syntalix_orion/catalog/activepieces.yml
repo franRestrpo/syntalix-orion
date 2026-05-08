@@ -1,0 +1,10 @@
+id: activepieces
+name: ActivePieces
+category: Automation
+version: latest
+ram_mb: 512
+dependencies:
+- postgres_pgvector
+- redis
+- traefik
+variables: {}
