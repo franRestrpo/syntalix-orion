@@ -20,8 +20,8 @@ services:
         - "traefik.http.routers.mariadb.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.mariadb.loadbalancer.server.port=3306"
     environment:
-      - "MARIADB_ROOT_PASSWORD={{ app_actual.password_db | default(MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true), true) }}"
-      - "MARIADB_DATABASE={{ app_actual.database | default('evolutionapi') }}"
+      - "MARIADB_ROOT_PASSWORD={{ MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true) }}"
+      - "MARIADB_DATABASE={{ MARIADB__DATABASE | default('evolutionapi', true) }}"
 
 volumes:
   mariadb_data:

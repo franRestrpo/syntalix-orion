@@ -16,7 +16,6 @@
     app_actual:
       nombre: "glpi"
       dominio: "{{ lookup('vars', 'GLPI__DOMAIN', default='glpi.localhost') }}"
-      password_db: "{{ lookup('vars', 'MARIADB__MYSQL_ROOT_PASSWORD', default=MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true)) }}"
 
 - name: "Generar archivo .env para glpi en secrets/"
   ansible.builtin.template:
