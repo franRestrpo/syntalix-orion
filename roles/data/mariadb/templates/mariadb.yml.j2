@@ -21,7 +21,7 @@ services:
         - "traefik.http.services.mariadb.loadbalancer.server.port=3306"
     environment:
       - "MARIADB_ROOT_PASSWORD={{ MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true) }}"
-      - "MARIADB_DATABASE={{ MARIADB__DATABASE | default('evolutionapi', true) }}"
+      - "MARIADB_DATABASE={{ MARIADB__MYSQL_DATABASE | default('appdb', true) }}"
     command:
       - --innodb-use-native-aio=0
 
