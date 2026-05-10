@@ -19,11 +19,8 @@ services:
         - "traefik.http.routers.mariadb.entrypoints=websecure"
         - "traefik.http.routers.mariadb.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.mariadb.loadbalancer.server.port=3306"
-    environment:
-      - "MARIADB_ROOT_PASSWORD={{ MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true) }}"
-      - "MARIADB_DATABASE={{ MARIADB__MYSQL_DATABASE | default('appdb', true) }}"
-      - "MARIADB_USER={{ MARIADB__MYSQL_USER | default('orion_admin', true) }}"
-      - "MARIADB_PASSWORD={{ MARIADB__MYSQL_PASSWORD | default('securepass', true) }}"
+    env_file:
+      - {{ playbook_dir }}/secrets/mariadb.env
     command:
       - --innodb-use-native-aio=0
 

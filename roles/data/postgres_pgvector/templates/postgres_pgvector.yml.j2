@@ -5,10 +5,8 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-    environment:
-      - POSTGRES_USER={{ POSTGRES_PGVECTOR__POSTGRES_USER | default('orion_admin', true) }}
-      - POSTGRES_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('secret', true) }}
-      - POSTGRES_DB={{ POSTGRES_PGVECTOR__POSTGRES_DB | default('appdb', true) }}
+    env_file:
+      - {{ playbook_dir }}/secrets/postgres_pgvector.env
     networks:
       SyntalixNet:
         aliases:
