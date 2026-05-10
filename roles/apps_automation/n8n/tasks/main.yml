@@ -17,7 +17,6 @@
       nombre: "n8n"
       dominio: "{{ N8N__DOMAIN | default('n8n.localhost', true) }}"
       acme_email: "{{ TRAEFIK__ACME_EMAIL | default('admin@localhost', true) }}"
-      password_db: "{{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('securepass', true) }}"
       basic_auth: "{{ N8N__N8N_BASIC_AUTH | default('admin:securepass', true) }}"
 
 - name: "Generar archivo .env para n8n en secrets/"

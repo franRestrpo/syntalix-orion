@@ -261,6 +261,7 @@ screens/{screen}/screen_name.tcss (Local)
 ### CONTRASEÑAS DE INFRAESTRUCTURA (Category A - NUNCA HASHEAR)
 - Texto plano seguro (`secrets.token_urlsafe()`)
 - Compatibilidad con protocolos de autenticación de bases de datos
+- **Regla de Independencia y Reutilización:** Los servicios base (como Redis, Postgres, MariaDB) se instancian una vez por red. Sus contraseñas autogeneradas se persistirán en el archivo global `secrets/.env` con su formato canónico (ej. `REDIS__REDIS_PASSWORD`, `POSTGRES_PGVECTOR__POSTGRES_PASSWORD`). Todas las aplicaciones dependientes (como n8n, Authentik) **DEBEN** referenciar explícitamente estas variables canónicas en lugar de usar variables locales genéricas o aliases. NUNCA se debe inyectar contraseñas de infraestructura a través de variables intermedias como `app_actual.password_db` en los playbooks.
 
 ### CONTRASEÑAS DE APLICACIONES UI (Category C - PROHIBIDO HASHEAR)
 - Text plano fiel al ingreso del usuario

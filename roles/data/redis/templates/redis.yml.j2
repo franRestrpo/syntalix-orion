@@ -2,12 +2,12 @@ version: '3.8'
 services:
   redis:
     image: redis:7-alpine
-    command: redis-server --requirepass {{ app_actual.password_db | default(REDIS__REDIS_PASSWORD | default('secret', true), true) }}
+    command: redis-server --requirepass {{ REDIS__REDIS_PASSWORD | default('secret', true) }}
     deploy:
       restart_policy:
         condition: on-failure
     environment:
-      - REDIS_PASSWORD={{ app_actual.password_db | default(REDIS__REDIS_PASSWORD | default('secret', true), true) }}
+      - REDIS_PASSWORD={{ REDIS__REDIS_PASSWORD | default('secret', true) }}
     networks:
       SyntalixNet:
         aliases:
