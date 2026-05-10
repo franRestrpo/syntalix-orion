@@ -47,7 +47,7 @@ services:
     environment:
       - POSTGRES_DB=chatwoot
       - POSTGRES_USER=chatwoot
-      - POSTGRES_PASSWORD={{ shared_db_password | default(app_actual.password_db | default('chatwoot123', true)) }}
+      - POSTGRES_PASSWORD={{ POSTGRES_PGVECTOR__POSTGRES_PASSWORD | default('chatwoot123', true) }}
     networks:
       - SyntalixNet
 {% endif %}

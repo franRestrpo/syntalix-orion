@@ -70,7 +70,22 @@ services:
         - "traefik.http.routers.traefik-root.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.traefik-root.middlewares=authtraefik,redirect-dashboard"
         # Basic Auth Middleware (User: {{ app_actual.usuario_admin | default('admin', true) }})
-        - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin', true) }}:{{ app_actual.password_db | default('password_seguro', true) | replace('$', '$$') }}"
+        - "traefik.http.middlewares.authtraefik.basicauth.users={{ app_actual.usuario_admin | default('admin', true) }}:{{ TRAEFIK__PASSWORD | default('password_seguro', true) | replace('
+
+volumes:
+  vol_shared:
+    external: true
+    name: volume_swarm_shared
+  vol_certificates:
+    external: true
+    name: volume_swarm_certificates
+
+networks:
+  {{ app_actual.internal_network | default('SyntalixNet', true) }}:
+    external: true
+    attachable: true
+    name: {{ app_actual.internal_network | default('SyntalixNet', true) }}
+, '$') }}"
 
 volumes:
   vol_shared:

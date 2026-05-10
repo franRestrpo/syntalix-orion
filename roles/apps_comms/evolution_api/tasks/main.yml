@@ -18,7 +18,6 @@
       dominio: "{{ lookup('vars', 'EVOLUTION_API__DOMAIN', default=lookup('vars', 'EVOLUTION_API_DOMAIN', default='evolution.localhost')) }}"
       acme_email: "{{ lookup('vars', 'TRAEFIK__ACME_EMAIL', default='admin@localhost') }}"
       api_key: "{{ lookup('vars', 'EVOLUTION_API__EV_API_KEY', default='securekey') }}"
-      password_db: "{{ lookup('vars', 'POSTGRES_PGVECTOR__POSTGRES_PASSWORD', default='securepass') }}"
       maria_user: "{{ lookup('vars', 'MARIADB__MARIADB_ROOT_USERNAME', default='admin') }}"
       maria_pass: "{{ lookup('vars', 'MARIADB__MYSQL_ROOT_PASSWORD', default=MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true)) }}"
 
