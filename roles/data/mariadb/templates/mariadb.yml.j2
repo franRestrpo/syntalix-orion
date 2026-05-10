@@ -22,6 +22,8 @@ services:
     environment:
       - "MARIADB_ROOT_PASSWORD={{ MARIADB__MYSQL_ROOT_PASSWORD | default('securepass', true) }}"
       - "MARIADB_DATABASE={{ MARIADB__DATABASE | default('evolutionapi', true) }}"
+    command:
+      - --innodb-use-native-aio=0
 
 volumes:
   mariadb_data:
