@@ -28,6 +28,25 @@
   register: vol_creation
   changed_when: false
 
+- name: "Asegurar que TRAEFIK__PASSWORD tenga un valor por defecto si no está definido"
+  ansible.builtin.set_fact:
+    TRAEFIK__PASSWORD: "{{ TRAEFIK__PASSWORD | default('password_seguro', true) }}"
+
+- name: "Hash Traefik password if it is in plain text"
+  ansible.builtin.shell:
+    cmd: "{{ playbook_dir }}/.venv/bin/python -c \"import os, bcrypt; pwd = os.environ['PLAINTEXT_PWD']; print(bcrypt.hashpw(pwd.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$'))\""
+  environment:
+    PLAINTEXT_PWD: "{{ TRAEFIK__PASSWORD }}"
+  register: traefik_pwd_hash
+  when: "not TRAEFIK__PASSWORD.startswith('$2')"
+  changed_when: false
+  ignore_errors: true
+
+- name: "Update TRAEFIK__PASSWORD with hashed value"
+  ansible.builtin.set_fact:
+    TRAEFIK__PASSWORD: "{{ traefik_pwd_hash.stdout }}"
+  when: "not traefik_pwd_hash.skipped | default(false) and traefik_pwd_hash.stdout is defined and traefik_pwd_hash.stdout != ''"
+
 - name: "Generar archivo .env para traefik en secrets/"
   ansible.builtin.template:
     src: "{{ role_path }}/templates/traefik.env.j2"
