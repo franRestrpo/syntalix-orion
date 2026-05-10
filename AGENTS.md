@@ -316,6 +316,9 @@ sudo ./setup.sh --deploy
 
 **IMPORTANTE:** El desarrollo se realiza localmente pero la ejecución y testing se validan en el VPS remoto. **Commit y push inmediatos** tras cada cambio funcional.
 
+### Estándar de Commits (Git)
+Todos los mensajes de commit de Git deben redactarse en **español** de manera profesional, clara y descriptiva. Se recomienda el uso de la convención de "Conventional Commits" manteniendo el prefijo técnico (ej. `feat:`, `fix:`, `refactor:`, `docs:`) pero con el resumen y cuerpo del mensaje íntegramente en español (ej. `fix(n8n): corrige el error 522 de conexión en traefik`).
+
 ### Verificación de imports tras cambios
 
 ```bash
